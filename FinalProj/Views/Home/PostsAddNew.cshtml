@@ -1,0 +1,141 @@
+﻿
+@{
+    ViewBag.Title = "Add New (Posts)";
+}
+
+<style>
+    .custom-img {
+        width: 20px;
+        height: 20px;
+    }
+    table {
+        margin: 2%;
+        margin-top:0;
+    }
+    td{
+        padding:3px 10px;
+        border-radius: 5px;
+    }
+    td:hover {
+        background-color:lightgray;
+    }
+    #editor{
+        border: 1px solid gray;
+        margin:2%;
+        width:96%;
+        min-height:500px;
+    }
+    .container{
+        margin-right:180px;
+    }
+</style>
+<script>
+    var boldStatus = false;
+    function bold() {
+        var bold = document.getElementById("bold");
+        if (document.getSelection().baseNode.parentNode.id == "editor") {
+            bold.style.backgroundColor = "lightgray"
+            document.execCommand("bold", false, "");
+            boldStatus = true;
+        } else if (boldStatus) {
+            bold.style.backgroundColor = "";
+            document.execCommand("bold", false, "");
+            boldStatus = false;
+        }
+    }
+    function italic() {
+        document.execCommand("italic", false, "");
+    }
+    function underline() {
+        document.execCommand("underline", false, "");
+    }
+    function unOrderedList() {
+        document.execCommand("insertUnorderedList", false, "");
+    }
+    function orderedList() {
+        document.execCommand("insertorderedList", false, "");
+    }
+    function leftAlign() {
+        document.execCommand("justifyLeft", false, "");
+    }
+    function centerAlign() {
+        document.execCommand("justifyCenter", false, "");
+    }
+    function indent() {
+        document.execCommand("indent", false, "");
+    }
+    function fontColor(color) {
+        document.execCommand("foreColor", false, color);
+    }
+    function execCommandOnElement(el, commandName, value) {
+        if (typeof value == "undefined") {
+            value = null;
+        }
+
+        if (typeof window.getSelection != "undefined") {
+            // Non-IE case
+            var sel = window.getSelection();
+
+            // Save the current selection
+            var savedRanges = [];
+            for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+                savedRanges[i] = sel.getRangeAt(i).cloneRange();
+            }
+
+            // Temporarily enable designMode so that
+            // document.execCommand() will work
+            document.designMode = "on";
+
+            // Select the element's content
+            sel = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // Execute the command
+            document.execCommand(commandName, false, value);
+
+            // Disable designMode
+            document.designMode = "off";
+
+            // Restore the previous selection
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            for (var i = 0, len = savedRanges.length; i < len; ++i) {
+                sel.addRange(savedRanges[i]);
+            }
+        } else if (typeof document.body.createTextRange != "undefined") {
+            // IE case
+            var textRange = document.body.createTextRange();
+            textRange.moveToElementText(el);
+            textRange.execCommand(commandName, false, value);
+        }
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div class="container">
+        <div>
+            <table cellpadding="2">
+                <tr>
+                    <td class="editor_icon" id="bold"><img class="custom-img" src="~/TextEditor_Icon/bold.png" onclick="bold();" /></td>
+                    <td class="editor_icon" id="italic"><img class="custom-img" src="~/TextEditor_Icon/italic.png" onclick="italic();" /></td>
+                    <td class="editor_icon" id="underline"><img class="custom-img" src="~/TextEditor_Icon/underline.png" onclick="underline();" /></td>
+                    <td class="editor_icon" id="unOrderedList"><img class="custom-img" src="~/TextEditor_Icon/unOrderedList.png" onclick="unOrderedList();" /></td>
+                    <td class="editor_icon" id="orderedList"><img class="custom-img" src="~/TextEditor_Icon/orderedList.png" onclick="orderedList();" /></td>
+                    <td class="editor_icon" id="leftAlign"><img class="custom-img" src="~/TextEditor_Icon/left-align.png" onclick="leftAlign();" /></td>
+                    <td class="editor_icon" id="centerAlign"><img class="custom-img" src="~/TextEditor_Icon/center-alignment.png" onclick="centerAlign();" /></td>
+                    <td class="editor_icon" id="indent"><img class="custom-img" src="~/TextEditor_Icon/indent.png" onclick="indent();" /></td>
+                    <td class="editor_icon" id="fontColor">
+                        Select Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div contenteditable="true" id="editor" >
+
+        </div>
+    </div>
+</div>

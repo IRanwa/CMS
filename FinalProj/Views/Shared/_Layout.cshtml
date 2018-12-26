@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <style>
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Times New Roman';
+            font-weight: bold;
+        }
+
+        .Custom-Button {
+            float: right;
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: orangered;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .Sub-Container {
+            background-color: lightgrey;
+            color: black;
+            margin: 30%;
+            margin-top: 5%;
+            margin-bottom: 0;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        .alert {
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: medium;
+            padding: 20px;
+            background-color: #808080;
+            color: white;
+            top: 5%;
+            left: 5%;
+            right: 5%;
+        }
+
+        .closebtn {
+            margin-left: 15px;
+            color: white;
+            font-weight: bold;
+            float: right;
+            font-size: 22px;
+            line-height: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+            .closebtn:hover {
+                color: black;
+            }
+
+        .sidenav {
+            height: 100%;
+            width: 160px;
+            position: fixed;
+            left: 0;
+            background-color: #222;
+            border-color: #101010;
+            overflow-x: hidden;
+            padding-top: 20px;
+            z-index: -1;
+        }
+
+        .sidenav a {
+            padding: 6px 8px 6px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #818181;
+            display: block;
+        }
+
+        .sidenav a:hover {
+            color: #ccc;
+            text-decoration: none;
+        }
+
+        .sidenav-menu {
+            display: none;
+            background-color: #333;
+            padding-left: 20px;
+        }
+
+        .sidenav-menu a {
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 16px;
+        }
+
+        .sidenav-item:hover .sidenav-menu {
+            display: block;
+        }
+        .pagination a {
+            color: black;
+            float: left;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color .3s;
+        }
+
+            .pagination a.active {
+                background-color: dodgerblue;
+                color: white;
+            }
+
+            .pagination a:hover:not(.active) {
+                background-color: #ddd;
+            }
+    </style>
+
+</head>
+<body>
+    @if (Session["user"] != null)
+    {
+        <div class="navbar navbar-fixed-top">
+            @*<div class="container">
+
+                    <div class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav">
+                            <li>@Html.ActionLink("Visit Website", "Index", "Home")</li>
+                        </ul>
+                        <ul class="nav navbar-nav" style="float:right">
+                            <li>@Html.ActionLink("Log Out", "Contact", "Home")</li>
+                        </ul>
+                    </div>
+
+                </div>*@
+            <div class="sidenav">
+                <div class="sidenav-item" style="margin-bottom:30px">
+                    @Html.ActionLink("Visit Website", "VisitWebsite", "Home")
+                </div>
+                <div class="sidenav-item">
+                    @Html.ActionLink("Dashboard", "Dashboard", "Home")
+                </div>
+                <div class="sidenav-item">
+                    @Html.ActionLink("Images", "ImageLibrary", "ImageLibrary")
+                    <div class="sidenav-menu">
+                        @Html.ActionLink("Library", "ImageLibrary", "ImageLibrary")
+                        @Html.ActionLink("Add New", "LibraryAddNew", "ImageLibrary")
+                    </div>
+                </div>
+
+                <div class="sidenav-item">
+                    @Html.ActionLink("Category", "Category", "Category")
+                    <div class="sidenav-menu">
+                        @Html.ActionLink("All Categories", "Category", "Category")
+                        @Html.ActionLink("Add New", "CategoryAddNew", "Category")
+                    </div>
+                </div>
+
+                <div class="sidenav-item">
+                    @Html.ActionLink("Posts", "Posts", "Home")
+                    <div class="sidenav-menu">
+                        @Html.ActionLink("All Posts", "Posts", "Home")
+                        @Html.ActionLink("Add New", "PostsAddNew", "Home")
+                    </div>
+                </div>
+
+                <div class="sidenav-item">
+                    @Html.ActionLink("Settings", "Settings", "Home")
+                    <div class="sidenav-menu">
+                        @Html.ActionLink("General", "Settings", "Home")
+                        @Html.ActionLink("Image Library", "LibrarySettings", "Home")
+                    </div>
+                </div>
+                <div class="sidenav-item" style="margin-bottom:10px; bottom:0; position: absolute;">
+                    <a href="#about">Log Out</a>
+                </div>
+            </div>
+        </div>
+
+    }
+    <div class="container body-content">
+        <div class="alert" style="display:@ViewBag.Display; margin-left:@ViewBag.alertSize">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            @ViewBag.Message
+        </div>
+        @RenderBody()
+        <hr />
+        <footer>
+            @*<p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>*@
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

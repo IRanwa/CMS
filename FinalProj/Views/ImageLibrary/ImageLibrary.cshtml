@@ -1,0 +1,79 @@
+﻿@model FinalProj.Models.ImageLibrary
+@{
+    ViewBag.Title = "Image Library";
+}
+<style>
+    table{
+        text-align:center;
+    }
+    .image-container {
+        padding: 2%;
+        word-wrap: break-word;
+    }
+    .image-container:hover {
+        background-color: #ddd;
+        cursor:pointer;
+    }
+    
+</style>
+<script>
+</script>
+
+<div style="margin-left:160px">
+    <h2>Image Library</h2>
+    <hr />
+    @if (ViewBag.DisplayImages != null)
+    {
+        <table style="width:100%">
+            @{
+                int totalCount = ViewBag.DisplayImages.Count;
+            }
+            @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+            {
+                if (row % 4 == 0)
+                {
+                    int maxIndex = row + 4;
+                    if (maxIndex > totalCount)
+                    {
+                        maxIndex = totalCount;
+                    }
+
+                    <tr>
+                        @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                        {
+                        <td class="image-container">
+                            <input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />
+                            <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                            <br />
+                            <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                        </td>
+                        }
+                    </tr>
+                }
+            }
+        </table>
+        <div class="pagination">
+            @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
+            {
+                if (ViewBag.LibraryProp.currentPage == page)
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, currentPage = ViewBag.LibraryProp.currentPage }, new { @class = "active" })
+                }
+                else
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, currentPage = ViewBag.LibraryProp.currentPage })
+                }
+
+            }
+        </div>
+        
+    }
+    else
+    {
+        <div>
+            No Images found!
+        </div>
+    }
+</div>

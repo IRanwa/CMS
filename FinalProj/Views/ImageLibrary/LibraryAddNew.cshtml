@@ -1,0 +1,42 @@
+﻿@model FinalProj.Models.ImageLibrary
+@{
+    ViewBag.Title = "Add New (Image Library)";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    .upload-container{
+        margin:2% 25%;
+        padding:2%;
+    }
+</style>
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div  class="jumbotron upload-container">
+        @using (Html.BeginForm("LibraryAddNew", "ImageLibrary", FormMethod.Post,
+                            new { enctype = "multipart/form-data" }))
+        {
+            <table>
+                <tr>
+                    <td><label for="file">Upload Images:</label></td>
+                </tr>
+                <tr>
+                    <td>@Html.TextBoxFor(model => model.files, "", new { @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif" })</td>
+                    <td><input type="submit" value="Upload" id="UploadBtn" class="Custom-Button" style="float:right; padding: 5px 15px;" /></td>
+                </tr>
+            </table>
+            <br />
+        }
+    </div>
+    @if (ViewBag.UploadFiles != null)
+    {
+        <hr />
+        <h3>Uploaded Files list</h3>
+        <ul>
+            @foreach (var file in ViewBag.UploadFiles)
+            {
+                <li>@file</li>
+            }
+        </ul>
+    }
+</div>
