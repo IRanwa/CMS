@@ -295,6 +295,37 @@ namespace FinalProj.Models
             }
             return 0;
         }
+
+        public void deleteCategory(Category cat)
+        {
+            string query = "Delete from Categories where catID = @catID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@catID", cat.catID);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void deleteCategory(List<int> catList)
+        {
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand();
+                string[] parameters = new string[catList.Count];
+                for (int i = 0; i < catList.Count; i++)
+                {
+                    parameters[i] = string.Format("@catID{0}", i);
+                    cmd.Parameters.AddWithValue(parameters[i], catList[i]);
+                }
+                cmd.CommandText = string.Format("Delete from categories where catID in ({0})", string.Join(", ", parameters));
+                cmd.Connection = connection;
+                
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
         //Category Query End
     }
 }

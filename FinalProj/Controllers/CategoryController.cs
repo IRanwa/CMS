@@ -9,13 +9,6 @@ namespace FinalProj.Controllers
 {
     public class CategoryController : Controller
     {
-        //public ActionResult Category()
-        //{
-        //    DBConnect db = new DBConnect();
-        //    db.getCatList(0,20)
-        //    ViewBag.Display = "none";
-        //    return View();
-        //}
         public ActionResult Category()
         {
             ViewBag.Display = "none";
@@ -104,6 +97,23 @@ namespace FinalProj.Controllers
             ViewBag.Message = "Category Added Successfully!";
             ModelState.Clear();
             return View();
+        }
+
+        public ActionResult deleteCategory(int catID)
+        {
+            DBConnect db = new DBConnect();
+            db.deleteCategory(new Category(catID));
+            Category();
+            return View("Category");
+        }
+
+        public ActionResult deleteAllCategories(List<int> catList )
+        {
+            //Response.Write("script>alert('" + catList.Count + "')</script>");
+            //Console.WriteLine(catList.Count);
+            DBConnect db = new DBConnect();
+            db.deleteCategory(catList);
+            return View("Category");
         }
     }
 }

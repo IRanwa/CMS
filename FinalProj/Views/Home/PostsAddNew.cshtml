@@ -8,16 +8,21 @@
         width: 20px;
         height: 20px;
     }
-    table {
+    .top-container {
+        margin: 2%;
+        margin-top: 0;
+        width:100%;
+    }
+    .editor-options {
         margin: 2%;
         margin-top:0;
     }
-    td{
-        padding:3px 10px;
+    .editor-options td {
+        padding: 3px 10px;
         border-radius: 5px;
     }
-    td:hover {
-        background-color:lightgray;
+    .editor-options td:hover {
+        background-color: lightgray;
     }
     #editor{
         border: 1px solid gray;
@@ -25,8 +30,8 @@
         width:96%;
         min-height:500px;
     }
-    .container{
-        margin-right:180px;
+    .Custom-Button{
+        padding:5px 10px;
     }
 </style>
 <script>
@@ -116,9 +121,20 @@
 <div style="margin-left:160px">
     <h2>Add New</h2>
     <hr />
-    <div class="container">
+    <div>
         <div>
-            <table cellpadding="2">
+            <table class="top-container">
+                <tr>
+                    <td>
+                        <input class="Custom-Button" type="button" value="Save as Draft" />
+                        <input class="Custom-Button" type="button" value="Publish" />
+                    </td>
+                </tr>
+            </table>
+            
+        </div>
+        <div>
+            <table cellpadding="2" class="editor-options">
                 <tr>
                     <td class="editor_icon" id="bold"><img class="custom-img" src="~/TextEditor_Icon/bold.png" onclick="bold();" /></td>
                     <td class="editor_icon" id="italic"><img class="custom-img" src="~/TextEditor_Icon/italic.png" onclick="italic();" /></td>

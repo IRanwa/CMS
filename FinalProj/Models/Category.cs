@@ -14,5 +14,14 @@ namespace FinalProj.Models
         public int currentPage { get; set; }
         public int totalCategoryCount { get; set; }
         public int noOfPages { get; set; }
+
+        public Category()
+        {
+        }
+
+        public Category(int catID)
+        {
+            this.catID = catID;
+        }
     }
 }

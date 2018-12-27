@@ -34,10 +34,10 @@
         float: none;
         margin: 5px;
         padding: 5px 10px;
-        background-color: #ff1919;
         color: white;
         border-radius: 5px;
         font-size: small;
+        text-decoration:none;
     }
     td {
         width: 80px;
@@ -63,16 +63,35 @@
             $('#chckHead:checked').prop("checked", false);
         }
 
-        var favorite = [];
+        var categories = [];
         $.each($("input[class='categorySelection']:checked"), function () {
-            favorite.push($(this).val());
+            categories.push($(this).val());
         });
-        if (favorite.length == 0) {
+        if (categories.length == 0) {
             document.getElementById("deleteAll").hidden = true;
         } else {
             document.getElementById("deleteAll").hidden = false;
         }
 
+    }
+    function deleteAll() {
+        var categories = [];
+        $.each($("input[class='categorySelection']:checked"), function () {
+            categories.push($(this).val());
+        });
+        
+        $.ajax({
+            type: "POST",
+            url: "/Category/deleteAllCategories",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ catList: categories }),
+            success: function () {
+                alert("success");
+                window.location.reload(); 
+            }, error: function () {
+                alert("Error occured!")
+            }
+        });
     }
 </script>
 <div style="margin-left:160px">
@@ -80,7 +99,7 @@
     <hr />
     @if (ViewBag.DisplayCategories != null)
     {
-        <input class="Custom-Button" id="deleteAll" type="button" value="Delete All" hidden />
+        <input class="Custom-Button" id="deleteAll" type="button" onclick="deleteAll()" value="Delete All" hidden />
         <table id="customers">
             <tr>
                 <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
@@ -92,10 +111,12 @@
             @foreach (var cat in ViewBag.DisplayCategories)
             {
                 <tr>
-                    <td><input class="categorySelection" type="checkbox" value="false" onchange="chechBoxSingle(this.checked)" /></td>
+                    <td>
+                        <input class="categorySelection" type="checkbox" value="@cat.catID" onchange="chechBoxSingle(this.checked)" />
+                    </td>
                     <td>@cat.title</td>
                     <td>@cat.desc</td>
-                    <td><input type="button" onclick="delete(@cat.catID)" class="Custom-Button" value="Delete" /></td>
+                    <td>@Html.ActionLink("Delete", "deleteCategory", new { catID = @cat.catID }, new { @class = "Custom-Button" })</td>
                 </tr>
             }
         </table>
@@ -118,7 +139,7 @@
     }
     else
     {
-        <table>
+        <table style="width:100%">
             <tr>
                 <td>No Category Found!</td>
             </tr>
