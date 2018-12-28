@@ -16,8 +16,7 @@ namespace FinalProj.Controllers
         public ActionResult ImageLibrary()
         {
             ViewBag.Display = "none";
-            ImageLibrary img = getTotalImageCount();
-            displayImages(img);
+            getTotalImageCount();
             return View();
         }
 
@@ -26,13 +25,13 @@ namespace FinalProj.Controllers
             if (img.currentPage!=0) {
                 int startIndex = (img.currentPage - 1) * 20;
                 DBConnect db = new DBConnect();
-                List<ImageLibrary> images = db.getImages(startIndex, startIndex+20);
+                List<ImageLibrary> images = db.getImages(startIndex, 20);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }
         }
 
-        private ImageLibrary getTotalImageCount()
+        private void getTotalImageCount()
         {
             DBConnect db = new DBConnect();
             int count = db.getImageCount();
@@ -43,42 +42,36 @@ namespace FinalProj.Controllers
             if (count>0) {
                 img.currentPage = 1;
             }
-            return img;
+            displayImages(img);
         }
 
-        public ActionResult nextPage(int nextPage, int currentPage)
+        public ActionResult nextPage(int nextPage)
         {
-            if (nextPage>currentPage)
-            {
-                currentPage++;
-            }
-            else
-            {
-                currentPage--;
-            }
+            
             DBConnect db = new DBConnect();
             int count = db.getImageCount();
             ImageLibrary img = new ImageLibrary();
             img.totalImageCount = count;
             img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
-            if (currentPage > img.noOfPages)
+            if (nextPage > img.noOfPages)
             {
-                currentPage = img.noOfPages;
+                nextPage = img.noOfPages;
             }
 
-            img.currentPage = currentPage;
+            img.currentPage = nextPage;
             
 
-            if (currentPage != 0)
+            if (nextPage != 0)
             {
-                int startIndex = (currentPage - 1) * 20;
-                List<ImageLibrary> images = db.getImages(startIndex, startIndex + 20);
+                int startIndex = (nextPage - 1) * 20;
+                List<ImageLibrary> images = db.getImages(startIndex, 20);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }
             ViewBag.Display = "none";
             return View("ImageLibrary");
         }
+
         public ActionResult LibraryAddNew()
         {
             ViewBag.Display = "none";
@@ -113,22 +106,27 @@ namespace FinalProj.Controllers
 
                         int count;
                         string ServerSavePath;
-                        path = db.checkImageExists(new ImageLibrary(fileName));
+                        path = db.checkImageExists(new ImageLibrary(serverPath + fileName + Extension));
                         if (path!=null)
                         {
-                            string tempPath= path.Replace(serverPath,"")
-                                .Replace(Extension,"")
-                                .Replace(InputFileName,"")
-                                .Replace("_","");
-                            if (tempPath.Length==0)
+                            do
                             {
-                                count = 1;
-                            }
-                            else
-                            {
-                                count = Int32.Parse(tempPath) + 1;
-                            }
-                            fileName += '_' + count.ToString();
+                                string tempPath = path.Replace(serverPath, "")
+                                    .Replace(Extension, "")
+                                    .Replace(InputFileName, "")
+                                    .Replace("_", "");
+                                if (tempPath.Length == 0)
+                                {
+                                    count = 1;
+                                }
+                                else
+                                {
+                                    count = Int32.Parse(tempPath) + 1;
+                                }
+                                fileName += '_' + count.ToString();
+                                
+                                path = db.checkImageExists(new ImageLibrary(serverPath + fileName + Extension));
+                            } while (path!=null);
                             ServerSavePath = Path.Combine(Server.MapPath(serverPath) + fileName + Extension);
                         }
                         else

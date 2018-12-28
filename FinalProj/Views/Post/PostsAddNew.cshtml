@@ -1,0 +1,290 @@
+﻿
+@{
+    ViewBag.Title = "Add New (Posts)";
+}
+
+<style>
+    .custom-img {
+        width: 20px;
+        height: 20px;
+    }
+    .top-container {
+        margin: 2%;
+        margin-top: 0;
+        width:100%;
+    }
+    .editor-options {
+        margin: 2%;
+        margin-top:0;
+    }
+    .editor-options td {
+        padding: 3px 10px;
+        border-radius: 5px;
+    }
+    .editor-options td:hover {
+        background-color: lightgray;
+    }
+    #editor{
+        border: 1px solid gray;
+        margin:2%;
+        width:96%;
+        min-height:500px;
+    }
+    .Custom-Button{
+        padding:5px 10px;
+    }
+    table {
+        text-align: center;
+    }
+</style>
+<script>
+    var boldStatus = false;
+    function bold() {
+        var bold = document.getElementById("bold");
+        if (document.getSelection().baseNode.parentNode.id == "editor") {
+            bold.style.backgroundColor = "lightgray"
+            document.execCommand("bold", false, "");
+            boldStatus = true;
+        } else if (boldStatus) {
+            bold.style.backgroundColor = "";
+            document.execCommand("bold", false, "");
+            boldStatus = false;
+        }
+    }
+    function italic() {
+        document.execCommand("italic", false, "");
+    }
+    function underline() {
+        document.execCommand("underline", false, "");
+    }
+    function unOrderedList() {
+        document.execCommand("insertUnorderedList", false, "");
+    }
+    function orderedList() {
+        document.execCommand("insertorderedList", false, "");
+    }
+    function leftAlign() {
+        document.execCommand("justifyLeft", false, "");
+    }
+    function centerAlign() {
+        document.execCommand("justifyCenter", false, "");
+    }
+    function indent() {
+        document.execCommand("indent", false, "");
+    }
+    function fontColor(color) {
+        document.execCommand("foreColor", false, color);
+    }
+    function execCommandOnElement(el, commandName, value) {
+        if (typeof value == "undefined") {
+            value = null;
+        }
+
+        if (typeof window.getSelection != "undefined") {
+            // Non-IE case
+            var sel = window.getSelection();
+
+            // Save the current selection
+            var savedRanges = [];
+            for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+                savedRanges[i] = sel.getRangeAt(i).cloneRange();
+            }
+
+            // Temporarily enable designMode so that
+            // document.execCommand() will work
+            document.designMode = "on";
+
+            // Select the element's content
+            sel = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // Execute the command
+            document.execCommand(commandName, false, value);
+
+            // Disable designMode
+            document.designMode = "off";
+
+            // Restore the previous selection
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            for (var i = 0, len = savedRanges.length; i < len; ++i) {
+                sel.addRange(savedRanges[i]);
+            }
+        } else if (typeof document.body.createTextRange != "undefined") {
+            // IE case
+            var textRange = document.body.createTextRange();
+            textRange.moveToElementText(el);
+            textRange.execCommand(commandName, false, value);
+        }
+    }
+    
+    
+</script>
+
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div>
+        <div>
+            <table class="top-container">
+                <tr>
+                    <td>
+                        <input class="Custom-Button" type="button" value="Save as Draft" />
+                        <input class="Custom-Button" type="button" value="Publish" />
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div>
+            <table cellpadding="2" class="editor-options">
+                <tr>
+                    <td class="editor_icon" id="bold"><img class="custom-img" src="~/TextEditor_Icon/bold.png" onclick="bold();" /></td>
+                    <td class="editor_icon" id="italic"><img class="custom-img" src="~/TextEditor_Icon/italic.png" onclick="italic();" /></td>
+                    <td class="editor_icon" id="underline"><img class="custom-img" src="~/TextEditor_Icon/underline.png" onclick="underline();" /></td>
+                    <td class="editor_icon" id="unOrderedList"><img class="custom-img" src="~/TextEditor_Icon/unOrderedList.png" onclick="unOrderedList();" /></td>
+                    <td class="editor_icon" id="orderedList"><img class="custom-img" src="~/TextEditor_Icon/orderedList.png" onclick="orderedList();" /></td>
+                    <td class="editor_icon" id="leftAlign"><img class="custom-img" src="~/TextEditor_Icon/left-align.png" onclick="leftAlign();" /></td>
+                    <td class="editor_icon" id="centerAlign"><img class="custom-img" src="~/TextEditor_Icon/center-alignment.png" onclick="centerAlign();" /></td>
+                    <td class="editor_icon" id="indent"><img class="custom-img" src="~/TextEditor_Icon/indent.png" onclick="indent();" /></td>
+                    <td class="editor_icon" id="fontColor">
+                        Select Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
+                    </td>
+                    <td class="editor_icon" id="fontColor">
+                        <input class="Custom-Button" type="button" value="Insert Image" style="padding:2px 8px" id="insertImage" onclick="insertImage()" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div contenteditable="true" id="editor">
+        </div>
+    </div>
+</div>
+<div class="popup" style="display:@ViewBag.popup">
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <div>
+            <h3>Insert Image</h3>
+            <hr />
+            @if (ViewBag.DisplayImages != null)
+            {
+                <table style="width:100%">
+                    @{
+                        int totalCount = ViewBag.DisplayImages.Count;
+                    }
+                    @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+                    {
+                        if (row % 3 == 0)
+                        {
+                            int maxIndex = row + 3;
+                            if (maxIndex > totalCount)
+                            {
+                                maxIndex = totalCount;
+                            }
+
+                            <tr>
+                                @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                                {
+                                    <td class="image-container" onclick="imageClick(this)">
+                                        @*<input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />*@
+                                        <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                        <br />
+                                        <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                                        <table class="image-selection" style="visibility:hidden; width:100%">
+                                            <tr>
+                                                <td>
+                                                    <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;">
+                                                        <option value="thumb">Small</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="large">Large</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="button" value="Submit" class="Custom-Button" style="padding:2px 8px;
+                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)',this)"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </table>
+                <div class="pagination">
+                    @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
+                    {
+                        if (ViewBag.LibraryProp.currentPage == page)
+                        {
+                            @Html.ActionLink(page.ToString(), "nextPage"
+                           , new { nextPage = page}, new { @class = "active" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink(page.ToString(), "nextPage"
+                           , new { nextPage = page})
+                        }
+
+                    }
+                </div>
+            }
+            else
+            {
+                <div>
+                    No Images found!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get the modal
+    var popup = document.getElementsByClassName('popup')[0];
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function insertImage() {
+        popup.style.display = "block";
+
+    }
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        popup.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == popup) {
+            popup.style.display = "none";
+        }
+    }
+
+    function imageClick(image) {
+        var current = document.getElementsByClassName("image-container");
+        for (var x = 0; x < current.length;x++) {
+            current[x].style.backgroundColor = "";
+            current[x].getElementsByClassName("image-selection")[0].style.visibility = "hidden";
+        }
+        image.style.backgroundColor = "#C0C0C0";
+        image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
+    }
+
+    function addImage(imageUrl,image) {
+        var url = imageUrl.split('/');
+        var filename = (url[url.length - 1]).split('.').slice(0, -1).join('.');
+        var extension = (url[url.length - 1]).replace(filename, "");
+        var size = image.parentNode.parentNode.getElementsByClassName("Custom-Button")[0].value;
+        var file = filename + '_' + size + extension;
+        var path = imageUrl.replace(filename + extension, "");
+        //alert(path + file);
+        document.getElementById("editor").innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
+        popup.style.display = "none";
+    }
+</script>
+

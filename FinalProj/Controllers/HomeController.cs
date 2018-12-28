@@ -16,18 +16,6 @@ namespace FinalProj.Controllers
             return View();
         }
 
-        public ActionResult Posts()
-        {
-            ViewBag.Display = "none";
-            return View();
-        }
-
-        public ActionResult PostsAddNew()
-        {
-            ViewBag.Display = "none";
-            return View();
-        }
-
         public ActionResult Settings()
         {
             ViewBag.Display = "none";

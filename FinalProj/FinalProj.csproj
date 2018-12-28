@@ -130,6 +130,7 @@
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ImageLibraryController.cs" />
+    <Compile Include="Controllers\PostController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -182,8 +183,8 @@
     <Content Include="Views\ImageLibrary\LibraryAddNew.cshtml" />
     <Content Include="Views\Category\Category.cshtml" />
     <Content Include="Views\Category\CategoryAddNew.cshtml" />
-    <Content Include="Views\Home\Posts.cshtml" />
-    <Content Include="Views\Home\PostsAddNew.cshtml" />
+    <Content Include="Views\Post\Posts.cshtml" />
+    <Content Include="Views\Post\PostsAddNew.cshtml" />
     <Content Include="Views\Home\Settings.cshtml" />
     <Content Include="Views\Home\LibrarySettings.cshtml" />
   </ItemGroup>

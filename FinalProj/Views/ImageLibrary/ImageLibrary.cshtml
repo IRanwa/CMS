@@ -6,14 +6,7 @@
     table{
         text-align:center;
     }
-    .image-container {
-        padding: 2%;
-        word-wrap: break-word;
-    }
-    .image-container:hover {
-        background-color: #ddd;
-        cursor:pointer;
-    }
+    
     
 </style>
 <script>
@@ -58,12 +51,12 @@
                 if (ViewBag.LibraryProp.currentPage == page)
                 {
                     @Html.ActionLink(page.ToString(), "nextPage"
-                   , new { nextPage = page, currentPage = ViewBag.LibraryProp.currentPage }, new { @class = "active" })
+                   , new { nextPage = page }, new { @class = "active" })
                 }
                 else
                 {
                     @Html.ActionLink(page.ToString(), "nextPage"
-                   , new { nextPage = page, currentPage = ViewBag.LibraryProp.currentPage })
+                   , new { nextPage = page })
                 }
 
             }

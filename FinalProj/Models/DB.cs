@@ -103,10 +103,10 @@ namespace FinalProj.Models
                 cmd.Parameters.AddWithValue("@noOfPosts", 10);
                 cmd.Parameters.AddWithValue("@thumbWidth",100);
                 cmd.Parameters.AddWithValue("@thumbHeight", 100);
-                cmd.Parameters.AddWithValue("@mediumWidth", 100);
-                cmd.Parameters.AddWithValue("@mediumHeight", 100);
-                cmd.Parameters.AddWithValue("@largeWidth", 100);
-                cmd.Parameters.AddWithValue("@largeHeight", 100);
+                cmd.Parameters.AddWithValue("@mediumWidth", 200);
+                cmd.Parameters.AddWithValue("@mediumHeight", 200);
+                cmd.Parameters.AddWithValue("@largeWidth", 300);
+                cmd.Parameters.AddWithValue("@largeHeight", 300);
 
                 cmd.CommandText = query;
                 cmd.Connection = connection;
