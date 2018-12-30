@@ -3,6 +3,172 @@
     ViewBag.Title = "Posts";
 }
 
+<style>
+    #Posts {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        text-align: center;
+    }
+
+        #Posts td, #Posts th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #Posts tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #Posts tr:hover {
+            background-color: #ddd;
+        }
+
+        #Posts th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: center;
+            background-color: #357EC7;
+            color: white;
+        }
+
+    .Custom-Button {
+        float: none;
+        margin: 5px;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 5px;
+        font-size: small;
+        text-decoration: none;
+    }
+
+    td {
+        width: 80px;
+    }
+
+        td + td {
+            width: auto;
+        }
+</style>
+<script>
+    function checkBoxAllClick(checked) {
+        if (checked == false) {
+            $('.postsSelection:checked').prop('checked', false);
+            document.getElementById("bulk-options").hidden = true;
+        }
+        else {
+            $('.postsSelection:not(:checked)').prop('checked', true);
+            document.getElementById("bulk-options").hidden = false;
+        }
+    }
+    function chechBoxSingle(checked) {
+        if (checked == false) {
+            $('#chckHead:checked').prop("checked", false);
+        }
+
+        var posts = [];
+        $.each($("input[class='postsSelection']:checked"), function () {
+            posts.push($(this).val());
+        });
+        if (posts.length == 0) {
+            document.getElementById("bulk-options").hidden = true;
+        } else {
+            document.getElementById("bulk-options").hidden = false;
+        }
+
+    }
+    
+    function bulkAction() {
+        var posts = [];
+        $.each($("input[class='postsSelection']:checked"), function () {
+            posts.push($(this).val());
+        });
+
+        var action = document.getElementById("bulk-selection").value;
+        $.ajax({
+            type: "POST",
+            url: "/Post/bulkPostAction",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ postsList: posts, action: action }),
+            success: function () {
+                alert("success");
+                window.location.href = window.location.href;
+                //window.location.reload();
+            }, error: function () {
+                alert("Error occured!")
+            }
+        });
+    }
+</script>
 <div style="margin-left:160px">
     <h2>Posts</h2>
+    <hr />
+    @if (ViewBag.DisplayPosts != null)
+    {
+    <div id="bulk-options" hidden>
+        <label style="font-weight:bold">Bulk Actions :</label>
+        <select id="bulk-selection">
+            <option value="deleteAll">Delete</option>
+            <option value="publishAll">Publish</option>
+            <option value="draftAll">Save As Draft</option>
+        </select>
+        <input class="Custom-Button" id="action" type="button" onclick="bulkAction()" value="Apply" />
+    </div>
+        <table id="Posts">
+            <tr>
+                <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Last Modified</th>
+                <th>Action</th>
+            </tr>
+
+            @foreach (var post in ViewBag.DisplayPosts)
+            {
+                <tr>
+                    <td>
+                        <input class="postsSelection" type="checkbox" value="@post.postId" onchange="chechBoxSingle(this.checked)" />
+                    </td>
+                    <td>@post.postTitle</td>
+                    <td>@post.postStatus</td>
+                    <td>@post.modifyDate</td>
+                    <td>
+                        @Html.ActionLink("Delete", "deletePost", new { postId = post.postId }, new { @class = "Custom-Button" })
+                        @if (@post.postStatus == "Publish")
+                        {
+                            @Html.ActionLink("Save as Draft", "changeStatus", new { postId = post.postId, status = "Draft" }, new { @class = "Custom-Button" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink("Publish", "changeStatus", new { postId = post.postId, status = "Publish" }, new { @class = "Custom-Button" })
+                        }
+                    </td>
+                </tr>
+            }
+        </table>
+        <div class="pagination">
+            @for (int page = 1; page <= ViewBag.PostsProp.noOfPages; page++)
+            {
+                if (ViewBag.PostsProp.currentPage == page)
+                {
+                    @Html.ActionLink(page.ToString(), "nextPostsPage"
+                   , new { nextPage = page }, new { @class = "active" })
+                }
+                else
+                {
+                    @Html.ActionLink(page.ToString(), "nextPostsPage"
+                   , new { nextPage = page })
+                }
+
+            }
+        </div>
+    }
+    else
+    {
+        <table style="width:100%">
+            <tr>
+                <td>No Posts Found!</td>
+            </tr>
+        </table>
+    }
 </div>

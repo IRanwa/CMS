@@ -314,12 +314,12 @@
                     {
                         if (ViewBag.LibraryProp.currentPage == page)
                         {
-                            @Html.ActionLink(page.ToString(), "nextPage"
+                            @Html.ActionLink(page.ToString(), "nextImagePage"
                            , new { nextPage = page}, new { @class = "active" })
                         }
                         else
                         {
-                            @Html.ActionLink(page.ToString(), "nextPage"
+                            @Html.ActionLink(page.ToString(), "nextImagePage"
                            , new { nextPage = page})
                         }
 

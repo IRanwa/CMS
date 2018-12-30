@@ -58,6 +58,14 @@ namespace FinalProj.Controllers
                 {
                     reg.user.role = "Administrator";
                     login = db.registerWebsite(reg);
+
+                    Category category = new Category();
+                    category.webID = login.webID;
+                    category.title = "Un-Category";
+                    category.desc = "Un-Category";
+
+                    db.addCategory(category);
+
                     Session.Add("user", login);
                     ViewBag.Display = "none";
                     return View("../Home/Dashboard");

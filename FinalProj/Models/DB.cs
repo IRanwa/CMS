@@ -347,6 +347,145 @@ namespace FinalProj.Models
                 uploadPostCat(post);
             }
         }
+
+        public int getPostsCount()
+        {
+            string query = "select count(*) from Posts";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                int count = int.Parse(cmd.ExecuteScalar().ToString());
+                this.CloseConnection();
+                return count;
+            }
+            return 0;
+        }
+
+        public List<Post> getPostList(int startIndex, int endIndex)
+        {
+            List<Post> posts = new List<Post>();
+            string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
+                " limit @startIndex, @endIndex";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@startIndex", startIndex);
+                cmd.Parameters.AddWithValue("@endIndex", endIndex);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    Post post = new Post();
+                    post.postId = Int32.Parse(dataReader["postID"].ToString());
+                    post.catId = Int32.Parse(dataReader["catID"].ToString());
+                    post.postTitle = dataReader["postTitle"].ToString();
+                    post.postLoc = dataReader["postLoc"].ToString();
+                    post.postStatus = dataReader["postStatus"].ToString();
+                    post.createdDate = Convert.ToDateTime(dataReader["createdDate"].ToString());
+                    post.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
+
+                    posts.Add(post);
+                }
+                this.CloseConnection();
+                return posts;
+            }
+            return posts;
+        }
+
+        public string getPostLoc(Post post)
+        {
+            String postLoc = "";
+            string query = "select postLoc from posts where postID=@postID";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+                
+                while (dataReader.Read())
+                {
+                    postLoc = dataReader["postLoc"].ToString();
+                }
+                this.CloseConnection();
+            }
+            return postLoc;
+        }
+        public void deletePosts(Post post)
+        {
+            string query = "Delete from Posts where postID = @postID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void deletePosts(List<int> postsList)
+        {
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand();
+                string[] parameters = new string[postsList.Count];
+                for (int i = 0; i < postsList.Count; i++)
+                {
+                    parameters[i] = string.Format("@postID{0}", i);
+                    cmd.Parameters.AddWithValue(parameters[i], postsList[i]);
+                }
+                cmd.CommandText = string.Format("Delete from posts where postID in ({0})", string.Join(", ", parameters));
+                cmd.Connection = connection;
+
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void changePostStatus(Post post)
+        {
+            string query = "Update posts set postStatus=@postStatus where postID=@postID";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postStatus", post.postStatus);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void changePostStatus(List<int> postsList,string status)
+        {
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand();
+                string[] parameters = new string[postsList.Count];
+                for (int i = 0; i < postsList.Count; i++)
+                {
+                    parameters[i] = string.Format("@postID{0}", i);
+                    cmd.Parameters.AddWithValue(parameters[i], postsList[i]);
+                }
+                cmd.Parameters.AddWithValue("@postStatus", status);
+                cmd.CommandText = string.Format("Update posts set postStatus=@postStatus where postID in ({0})", string.Join(", ", parameters));
+                cmd.Connection = connection;
+
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void changePostLoc(Post post)
+        {
+            string query = "Update posts set postLoc=@postLoc where postID=@postID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postLoc", post.postLoc);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
         //Posts Query End
 
         //Posts Category Query Start
