@@ -30,8 +30,16 @@
         width:96%;
         min-height:500px;
     }
-    .Custom-Button{
-        padding:5px 10px;
+    #title {
+        border: 0px;
+        border-bottom: 1px solid lightgray;
+        margin: 2%;
+        font-size: 40px;
+        min-width: 96%;
+        
+    }
+    .Custom-Button {
+        padding: 5px 10px;
     }
     table {
         text-align: center;
@@ -39,29 +47,97 @@
 </style>
 <script>
     var boldStatus = false;
+    var italicStatus = false;
+    var underlineStatus = false;
+    var unOrderedListStatus = false;
+    var orderedListStatus = false;
+
     function bold() {
         var bold = document.getElementById("bold");
-        if (document.getSelection().baseNode.parentNode.id == "editor") {
-            bold.style.backgroundColor = "lightgray"
-            document.execCommand("bold", false, "");
-            boldStatus = true;
-        } else if (boldStatus) {
-            bold.style.backgroundColor = "";
-            document.execCommand("bold", false, "");
-            boldStatus = false;
+        var bool;
+        if (boldStatus) {
+            bool = document.execCommand("bold", false, "");
+            if (bool) {
+                bold.style.backgroundColor = "";
+                boldStatus = false;
+            }
+        } else {
+            bool = document.execCommand("bold", false, "");
+            if (bool) {
+                bold.style.backgroundColor = "lightgray";
+                boldStatus = true;
+            }
         }
     }
     function italic() {
-        document.execCommand("italic", false, "");
+        var italic = document.getElementById("italic");
+        var bool;
+        if (italicStatus) {
+            bool = document.execCommand("italic", false, "");
+            if (bool) {
+                italic.style.backgroundColor = "";
+                italicStatus = false;
+            }
+        } else {
+            bool = document.execCommand("italic", false, "");
+            if (bool) {
+                italic.style.backgroundColor = "lightgray";
+                italicStatus = true;
+            }
+        }
     }
     function underline() {
-        document.execCommand("underline", false, "");
+        var underline = document.getElementById("underline");
+        var bool;
+        if (underlineStatus) {
+            bool = document.execCommand("underline", false, "");
+            if (bool) {
+                underline.style.backgroundColor = "";
+                underlineStatus = false;
+            }
+        } else {
+            bool = document.execCommand("underline", false, "");
+            if (bool) {
+                underline.style.backgroundColor = "lightgray";
+                underlineStatus = true;
+            }
+        }
     }
     function unOrderedList() {
-        document.execCommand("insertUnorderedList", false, "");
+        var unOrderedList = document.getElementById("unOrderedList");
+        var bool;
+        if (unOrderedListStatus) {
+            bool = document.execCommand("insertUnorderedList", false, "");
+            if (bool) {
+                unOrderedList.style.backgroundColor = "";
+                unOrderedListStatus = false;
+            }
+        } else {
+            bool = document.execCommand("insertUnorderedList", false, "");
+            if (bool) {
+                unOrderedList.style.backgroundColor = "lightgray";
+                unOrderedListStatus = true;
+            }
+        }
+        //document.execCommand("insertUnorderedList", false, "");
     }
     function orderedList() {
-        document.execCommand("insertorderedList", false, "");
+        var orderedList = document.getElementById("orderedList");
+        var bool;
+        if (orderedListStatus) {
+            bool = document.execCommand("insertorderedList", false, "");
+            if (bool) {
+                orderedList.style.backgroundColor = "";
+                orderedListStatus = false;
+            }
+        } else {
+            bool = document.execCommand("insertorderedList", false, "");
+            if (bool) {
+                orderedList.style.backgroundColor = "lightgray";
+                orderedListStatus = true;
+            }
+        }
+        //document.execCommand("insertorderedList", false, "");
     }
     function leftAlign() {
         document.execCommand("justifyLeft", false, "");
@@ -75,53 +151,52 @@
     function fontColor(color) {
         document.execCommand("foreColor", false, color);
     }
-    function execCommandOnElement(el, commandName, value) {
-        if (typeof value == "undefined") {
-            value = null;
+    var prevSelection=0;
+    function fontSize(size) {
+        var bool;
+        if (size != 0) {
+            bool = document.execCommand("fontSize", false, size);
+        } else {
+            bool = document.execCommand("fontSize", false, "2");
         }
 
-        if (typeof window.getSelection != "undefined") {
-            // Non-IE case
-            var sel = window.getSelection();
-
-            // Save the current selection
-            var savedRanges = [];
-            for (var i = 0, len = sel.rangeCount; i < len; ++i) {
-                savedRanges[i] = sel.getRangeAt(i).cloneRange();
+        if (bool) {
+            prevSelection = size;
+        } else {
+            document.getElementById("font-size-selection").value = prevSelection;
+        }
+        
+    }
+    function uploadPost(val) {
+        var title = document.getElementById("title").value;
+        if (title != "") {
+            if (val == "Save as Draft") {
+                val = "Draft";
             }
-
-            // Temporarily enable designMode so that
-            // document.execCommand() will work
-            document.designMode = "on";
-
-            // Select the element's content
-            sel = window.getSelection();
-            var range = document.createRange();
-            range.selectNodeContents(el);
-            sel.removeAllRanges();
-            sel.addRange(range);
-
-            // Execute the command
-            document.execCommand(commandName, false, value);
-
-            // Disable designMode
-            document.designMode = "off";
-
-            // Restore the previous selection
-            sel = window.getSelection();
-            sel.removeAllRanges();
-            for (var i = 0, len = savedRanges.length; i < len; ++i) {
-                sel.addRange(savedRanges[i]);
-            }
-        } else if (typeof document.body.createTextRange != "undefined") {
-            // IE case
-            var textRange = document.body.createTextRange();
-            textRange.moveToElementText(el);
-            textRange.execCommand(commandName, false, value);
+            var data = JSON.stringify({
+                'status': val,
+                'content': document.getElementById("editor").innerHTML.toString(),
+                'title':title
+            });
+            alert(data);
+            $.ajax({
+                type: "POST",
+                url: "/Post/uploadPost", // the URL of the controller action method
+                data: data,
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    alert(result.result);
+                },
+                error: function () {
+                    alert("error");
+                }
+            });
+        } else {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert")[0].innerHTML += "Please enter title!";
         }
     }
-    
-    
 </script>
 
 <div style="margin-left:160px">
@@ -132,15 +207,20 @@
             <table class="top-container">
                 <tr>
                     <td>
-                        <input class="Custom-Button" type="button" value="Save as Draft" />
-                        <input class="Custom-Button" type="button" value="Publish" />
+                        <input class="Custom-Button" type="button" value="Save as Draft" onclick="uploadPost(this.value)"/>
+                        <input class="Custom-Button" type="button" value="Publish" onclick="uploadPost(this.value)"/>
                     </td>
                 </tr>
             </table>
 
         </div>
         <div>
-            <table cellpadding="2" class="editor-options">
+            <span>
+                <input type="text" id="title" placeholder="Title" maxlength="150" />
+            </span>
+        </div>
+        <div>
+            <table cellpadding="2" class="editor-options" >
                 <tr>
                     <td class="editor_icon" id="bold"><img class="custom-img" src="~/TextEditor_Icon/bold.png" onclick="bold();" /></td>
                     <td class="editor_icon" id="italic"><img class="custom-img" src="~/TextEditor_Icon/italic.png" onclick="italic();" /></td>
@@ -151,15 +231,29 @@
                     <td class="editor_icon" id="centerAlign"><img class="custom-img" src="~/TextEditor_Icon/center-alignment.png" onclick="centerAlign();" /></td>
                     <td class="editor_icon" id="indent"><img class="custom-img" src="~/TextEditor_Icon/indent.png" onclick="indent();" /></td>
                     <td class="editor_icon" id="fontColor">
-                        Select Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
+                        Font Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
                     </td>
-                    <td class="editor_icon" id="fontColor">
+                    <td class="editor_icon" id="fontSize">
+                        Font Size: 
+                        <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;"
+                                onclick="fontSize(this.value)" id="font-size-selection">
+                            <option value="0">Default</option>
+                            <option value="7" style="font-size:3em">Header 1</option>
+                            <option value="6" style="font-size:2em">Header 2</option>
+                            <option value="5" style="font-size:1.5em">Header 3</option>
+                            <option value="4" style="font-size:1.13em">Paragraph 1</option>
+                            <option value="3" style="font-size:1.0em">Paragraph 2</option>
+                            <option value="2" style="font-size:0.82em">Paragraph 3</option>
+                            <option value="1" style="font-size:0.63em">Paragraph 4</option>
+                        </select>
+                    </td>
+                    <td class="editor_icon">
                         <input class="Custom-Button" type="button" value="Insert Image" style="padding:2px 8px" id="insertImage" onclick="insertImage()" />
                     </td>
                 </tr>
             </table>
         </div>
-        <div contenteditable="true" id="editor">
+        <div contenteditable="true" id="editor" style="font-size:13px">
         </div>
     </div>
 </div>
@@ -283,6 +377,7 @@
         var file = filename + '_' + size + extension;
         var path = imageUrl.replace(filename + extension, "");
         //alert(path + file);
+        
         document.getElementById("editor").innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
         popup.style.display = "none";
     }

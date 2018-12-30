@@ -139,6 +139,7 @@
     <Compile Include="Models\DB.cs" />
     <Compile Include="Models\ImageLibrary.cs" />
     <Compile Include="Models\Login.cs" />
+    <Compile Include="Models\Post.cs" />
     <Compile Include="Models\Registration.cs" />
     <Compile Include="Models\Website.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

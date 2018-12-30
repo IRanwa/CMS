@@ -1,6 +1,7 @@
 ﻿using FinalProj.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -75,6 +76,41 @@ namespace FinalProj.Controllers
             ViewBag.Display = "none";
             ViewBag.popup = "block";
             return View("PostsAddNew");
+        }
+
+        public ActionResult uploadPost(string status, string content, string title)
+        {
+            DateTime date = DateTime.Now;
+            string serverPath = "~/Posts/" + date.ToString("yyyy-MM-dd") + "/"+status+"/";
+            string path = Server.MapPath(serverPath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+
+            }
+
+            path = serverPath + title + ".txt";
+            bool exists = false;
+            int count = 0;
+            do
+            {
+                if (count==0)
+                {
+                    path = serverPath + title + ".txt";
+                }
+                else
+                {
+                    path = serverPath + title + '_' + count + ".txt";
+                }
+                exists = System.IO.File.Exists(Server.MapPath(path));
+                count++;
+            } while (exists);
+
+            System.IO.File.WriteAllText(Server.MapPath(path), content);
+            DBConnect db = new DBConnect();
+            Website web = db.getWebsite((Login)Session["user"]);
+            db.uploadPost(new Post(1, web.webID,title, path,status, date, date));
+            return Json(new { result = "Success" }, JsonRequestBehavior.AllowGet);
         }
     }
 }

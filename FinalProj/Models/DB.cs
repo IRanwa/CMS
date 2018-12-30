@@ -327,5 +327,46 @@ namespace FinalProj.Models
             }
         }
         //Category Query End
+
+        //Posts Query Start
+        public void uploadPost(Post post)
+        {
+            string query = "Insert into posts (postTitle,postLoc,postStatus) value (@postTitle,@postLoc,@postStatus)";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postTitle",post.postTitle);
+                cmd.Parameters.AddWithValue("@postLoc", post.postLoc);
+                cmd.Parameters.AddWithValue("@postStatus", post.postStatus);
+
+                cmd.ExecuteNonQuery();
+                long id = cmd.LastInsertedId;
+                post.postId = id;
+                
+                this.CloseConnection();
+                uploadPostCat(post);
+            }
+        }
+        //Posts Query End
+
+        //Posts Category Query Start
+        public void uploadPostCat(Post post)
+        {
+            string query = "Insert into posts_categories (postID,catID,webID,createdDate,modifyDate) " +
+                "value(@postID,@catID,@webID,@createdDate,@modifyDate)";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.Parameters.AddWithValue("@catID", post.catId);
+                cmd.Parameters.AddWithValue("@webID", post.webId);
+                cmd.Parameters.AddWithValue("@createdDate", post.createdDate);
+                cmd.Parameters.AddWithValue("@modifyDate", post.modifyDate);
+
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+        //Posts Category Query End
     }
 }
