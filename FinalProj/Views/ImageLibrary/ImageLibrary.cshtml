@@ -10,6 +10,7 @@
     
 </style>
 <script>
+    var layout= @ViewBag.layoutView;
     function checkBoxAllClick(checked) {
         if (checked == false) {
             $('.selection:checked').prop('checked', false);
@@ -41,15 +42,15 @@
         $.each($("input[class='selection']:checked"), function () {
             images.push($(this).val());
         });
-
+        
         $.ajax({
             type: "POST",
             url: "/ImageLibrary/deletAllImages",
             contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({ imageList: images }),
+            data: JSON.stringify({ imageList: images, layout : layout }),
             success: function () {
                 alert("success");
-                window.location.reload();
+                window.location.href = window.location.href;
             }, error: function () {
                 alert("Error occured!")
             }
@@ -146,12 +147,12 @@
                 if (ViewBag.LibraryProp.currentPage == page)
                 {
                     @Html.ActionLink(page.ToString(), "nextPage"
-                   , new { nextPage = page }, new { @class = "active" })
+                   , new { nextPage = page, layout = @ViewBag.layoutView }, new { @class = "active" })
                 }
                 else
                 {
                     @Html.ActionLink(page.ToString(), "nextPage"
-                   , new { nextPage = page })
+                   , new { nextPage = page, layout = @ViewBag.layoutView })
                 }
 
             }

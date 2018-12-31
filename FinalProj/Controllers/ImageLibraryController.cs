@@ -56,7 +56,7 @@ namespace FinalProj.Controllers
             displayImages(img);
         }
 
-        public ActionResult nextPage(int nextPage)
+        public ActionResult nextPage(int nextPage, string layout)
         {
             
             DBConnect db = new DBConnect();
@@ -80,6 +80,7 @@ namespace FinalProj.Controllers
                 ViewBag.LibraryProp = img;
             }
             ViewBag.Display = "none";
+            ViewBag.layoutView = layout;
             return View("ImageLibrary");
         }
 
@@ -202,12 +203,26 @@ namespace FinalProj.Controllers
 
         public ActionResult deleteImage(int imageID, string layout)
         {
+            deleteSingleImage(imageID);
+            changeLayout(layout);
+            return View("ImageLibrary");
+        }
+
+        public void deletAllImages(List<int> imageList, string layout)
+        {
+            foreach (int imageIndex in imageList)
+            {
+                deleteSingleImage(imageIndex);
+            }
+            changeLayout(layout);
+        }
+
+        public void deleteSingleImage(int imageID)
+        {
             DBConnect db = new DBConnect();
             string imageLoc = db.getImageLoc(new ImageLibrary(imageID));
             db.deleteImage(new ImageLibrary(imageID));
-            changeLayout(layout);
 
-            
             if (System.IO.File.Exists(Server.MapPath(imageLoc)))
             {
                 System.IO.File.Delete(Request.MapPath(imageLoc));
@@ -237,9 +252,6 @@ namespace FinalProj.Controllers
                 }
 
             }
-            return View("ImageLibrary");
         }
-
-        
     }
 }
