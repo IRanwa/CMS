@@ -10,41 +10,136 @@
     
 </style>
 <script>
+    function checkBoxAllClick(checked) {
+        if (checked == false) {
+            $('.selection:checked').prop('checked', false);
+            document.getElementById("deleteAll").hidden = true;
+        }
+        else {
+            $('.selection:not(:checked)').prop('checked', true);
+            document.getElementById("deleteAll").hidden = false;
+        }
+    }
+    function chechBoxSingle(checked) {
+        if (checked == false) {
+            $('#chckHead:checked').prop("checked", false);
+        }
+
+        var images = [];
+        $.each($("input[class='selection']:checked"), function () {
+            images.push($(this).val());
+        });
+        if (images.length == 0) {
+            document.getElementById("deleteAll").hidden = true;
+        } else {
+            document.getElementById("deleteAll").hidden = false;
+        }
+
+    }
+    function deleteAll() {
+        var images = [];
+        $.each($("input[class='selection']:checked"), function () {
+            images.push($(this).val());
+        });
+
+        $.ajax({
+            type: "POST",
+            url: "/ImageLibrary/deletAllImages",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ imageList: images }),
+            success: function () {
+                alert("success");
+                window.location.reload();
+            }, error: function () {
+                alert("Error occured!")
+            }
+        });
+    }
 </script>
 
 <div style="margin-left:160px">
     <h2>Image Library</h2>
     <hr />
+
     @if (ViewBag.DisplayImages != null)
     {
-        <table style="width:100%">
-            @{
-                int totalCount = ViewBag.DisplayImages.Count;
-            }
-            @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+        <div class="pagination">
+            @if (ViewBag.layoutView == "Grid")
             {
-                if (row % 4 == 0)
-                {
-                    int maxIndex = row + 4;
-                    if (maxIndex > totalCount)
-                    {
-                        maxIndex = totalCount;
-                    }
+                @Html.ActionLink("Grid View", "changeLayout"
+                       , new { layout = "Grid" }, new { @class = "active" })
+                @Html.ActionLink("List View", "changeLayout"
+                       , new { layout = "List" })
+            }
+            else
+            {
+                @Html.ActionLink("Grid View", "changeLayout"
+                       , new { layout = "Grid" })
+                @Html.ActionLink("List View", "changeLayout"
+                       , new { layout = "List" }, new { @class = "active" })
+            }
 
-                    <tr>
-                        @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+
+        </div>
+        if (ViewBag.layoutView == "Grid")
+        {
+            <table style="width:100%">
+                @{
+                    int totalCount = ViewBag.DisplayImages.Count;
+                }
+                @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+                {
+                    if (row % 4 == 0)
+                    {
+                        int maxIndex = row + 4;
+                        if (maxIndex > totalCount)
                         {
-                        <td class="image-container">
-                            <input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />
-                            <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
-                            <br />
-                            <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
-                        </td>
+                            maxIndex = totalCount;
                         }
+
+                        <tr>
+                            @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                            {
+                                <td class="image-container">
+                                    <input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />
+                                    <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                    <br />
+                                    <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </table>
+        }
+        else
+        {
+            <input class="Custom-Button" id="deleteAll" type="button" onclick="deleteAll()" value="Delete All" hidden />
+            <table id="list-view">
+                <tr>
+                    <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Last Modified</th>
+                    <th>Action</th>
+                </tr>
+
+                @foreach (var img in ViewBag.DisplayImages)
+                {
+                    <tr>
+                        <td>
+                            <input class="selection" type="checkbox" value="@img.imageID" onchange="chechBoxSingle(this.checked)" />
+                        </td>
+                        <td><img src="@Url.Content(@img.imgLoc)" width="50" height="50" /></td>
+                        <td>@img.title</td>
+                        <td>@img.imgDesc</td>
+                        <td>@img.modifyDate</td>
+                        <td>@Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout=@ViewBag.layoutView }, new { @class = "Custom-Button" })</td>
                     </tr>
                 }
-            }
-        </table>
+            </table>
+        }
         <div class="pagination">
             @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
             {
@@ -61,7 +156,7 @@
 
             }
         </div>
-        
+
     }
     else
     {

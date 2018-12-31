@@ -1,5 +1,7 @@
 ﻿using FinalProj.Models;
+using Microsoft.Web.Administration;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -16,8 +18,17 @@ namespace FinalProj.Controllers
         public ActionResult ImageLibrary()
         {
             ViewBag.Display = "none";
+            ViewBag.layoutView = "Grid";
             getTotalImageCount();
             return View();
+        }
+
+        public ActionResult changeLayout(string layout)
+        {
+            ViewBag.Display = "none";
+            ViewBag.layoutView = layout;
+            getTotalImageCount();
+            return View("ImageLibrary");
         }
 
         private void displayImages(ImageLibrary img)
@@ -102,57 +113,55 @@ namespace FinalProj.Controllers
                     {
                         string InputFileName = Path.GetFileNameWithoutExtension(file.FileName);
                         string Extension = Path.GetExtension(file.FileName);
-                        string fileName = InputFileName;
+                        string fileName;
 
-                        int count;
+                        int count=0;
                         string ServerSavePath;
-                        path = db.checkImageExists(new ImageLibrary(serverPath + fileName + Extension));
-                        if (path!=null)
+                        do
                         {
-                            do
+                            fileName = InputFileName;
+                            if (count==0)
                             {
-                                string tempPath = path.Replace(serverPath, "")
-                                    .Replace(Extension, "")
-                                    .Replace(InputFileName, "")
-                                    .Replace("_", "");
-                                if (tempPath.Length == 0)
-                                {
-                                    count = 1;
-                                }
-                                else
-                                {
-                                    count = Int32.Parse(tempPath) + 1;
-                                }
-                                fileName += '_' + count.ToString();
-                                
-                                path = db.checkImageExists(new ImageLibrary(serverPath + fileName + Extension));
-                            } while (path!=null);
-                            ServerSavePath = Path.Combine(Server.MapPath(serverPath) + fileName + Extension);
-                        }
-                        else
-                        {
-                            ServerSavePath = Path.Combine(Server.MapPath(serverPath) + fileName + Extension);
-                        }
+                                ServerSavePath = serverPath + fileName + Extension;
+                            }
+                            else
+                            {
+                                fileName = fileName + '_' + count;
+                                ServerSavePath = serverPath + fileName + Extension;
+                            }
+                            path = db.checkImageExists(new ImageLibrary(ServerSavePath));
+                            count++;
+                        } while (path!=null);
                         
+                        ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
                         file.SaveAs(ServerSavePath);
-                       
+                        
+                       Image imgPhoto = Image.FromFile(ServerSavePath);
 
-                        Image imgPhoto = Image.FromFile(ServerSavePath);
+
                         Bitmap image = ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_thumb" + Extension));
+                        image.Dispose();
+                        imgPhoto.Dispose();
 
                         imgPhoto = Image.FromFile(ServerSavePath);
                         image = ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_medium" + Extension));
+                        image.Dispose();
+                        imgPhoto.Dispose();
 
                         imgPhoto = Image.FromFile(ServerSavePath);
                         image = ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_large" + Extension));
-                        
+                        image.Dispose();
+                        imgPhoto.Dispose();
+
                         images.Add(new ImageLibrary(web.webID, InputFileName, "", serverPath+fileName+Extension, date , date));
                         ViewBag.Message = "Images Uploaded Successfully!";
                         ViewBag.Display = "Block";
                         filesList.Add(InputFileName);
+
+                        
                     }
                     else
                     {
@@ -190,5 +199,47 @@ namespace FinalProj.Controllers
             }
             return destImage;
         }
+
+        public ActionResult deleteImage(int imageID, string layout)
+        {
+            DBConnect db = new DBConnect();
+            string imageLoc = db.getImageLoc(new ImageLibrary(imageID));
+            db.deleteImage(new ImageLibrary(imageID));
+            changeLayout(layout);
+
+            
+            if (System.IO.File.Exists(Server.MapPath(imageLoc)))
+            {
+                System.IO.File.Delete(Request.MapPath(imageLoc));
+
+                string filename = imageLoc.Split('/')[3];
+                int index = filename.LastIndexOf(".");
+                string extension = filename.Substring(filename.LastIndexOf("."));
+                string path = imageLoc.Substring(0, imageLoc.IndexOf(filename));
+                filename = filename.Replace(extension, "");
+
+                string newFilePath = path + filename + "_thumb" + extension;
+                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                {
+                    System.IO.File.Delete(Server.MapPath(newFilePath));
+                }
+
+                newFilePath = path + filename + "_medium" + extension;
+                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                {
+                    System.IO.File.Delete(Server.MapPath(newFilePath));
+                }
+
+                newFilePath = path + filename + "_large" + extension;
+                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                {
+                    System.IO.File.Delete(Server.MapPath(newFilePath));
+                }
+
+            }
+            return View("ImageLibrary");
+        }
+
+        
     }
 }

@@ -23,6 +23,11 @@ namespace FinalProj.Models
         {
         }
 
+        public ImageLibrary(int imageID)
+        {
+            this.imageID = imageID;
+        }
+
         public ImageLibrary(string imgLoc)
         {
             this.imgLoc = imgLoc;

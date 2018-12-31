@@ -217,7 +217,10 @@ namespace FinalProj.Models
                     ImageLibrary img = new ImageLibrary();
                     img.imageID = Int32.Parse(dataReader["imageID"].ToString());
                     img.title = dataReader["title"].ToString();
+                    img.imgDesc = dataReader["imgDesc"].ToString();
                     img.imgLoc = dataReader["imgLoc"].ToString();
+                    img.uploadDate = Convert.ToDateTime(dataReader["uploadDate"].ToString());
+                    img.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
                     images.Add(img);
                 }
                 this.CloseConnection();
@@ -237,6 +240,37 @@ namespace FinalProj.Models
                 return count;
             }
             return 0;
+        }
+
+        public string getImageLoc(ImageLibrary image)
+        {
+            String imageLoc = "";
+            string query = "select imgLoc from image_library where imageID=@imageID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@imageID", image.imageID);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    imageLoc = dataReader["imgLoc"].ToString();
+                }
+                this.CloseConnection();
+            }
+            return imageLoc;
+        }
+
+        public void deleteImage(ImageLibrary image)
+        {
+            string query = "delete from image_library where ImageID=@ImageID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@ImageID", image.imageID);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
         }
         //Image Library Query End
 
