@@ -272,6 +272,20 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
         }
+
+        public void updateImage(ImageLibrary image) {
+            string query = "update image_library set title=@title, imgDesc=@imgDesc where ImageID=@ImageID";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query,connection);
+                cmd.Parameters.AddWithValue("@title", image.title);
+                cmd.Parameters.AddWithValue("@imgDesc", image.imgDesc);
+                cmd.Parameters.AddWithValue("@ImageID", image.imageID);
+                cmd.ExecuteNonQuery();
+                
+                this.CloseConnection();
+            }
+        }
         //Image Library Query End
 
         //Category Query Stat

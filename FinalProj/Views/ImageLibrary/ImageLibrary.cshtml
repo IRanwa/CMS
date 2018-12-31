@@ -6,7 +6,15 @@
     table{
         text-align:center;
     }
-    
+    #imageProp-container {
+        background-color: lightgrey;
+        color: black;
+        margin-bottom: 0;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+    #imageProp-container td {
+        padding:10px 20px;
+    }
     
 </style>
 <script>
@@ -42,7 +50,7 @@
         $.each($("input[class='selection']:checked"), function () {
             images.push($(this).val());
         });
-        
+
         $.ajax({
             type: "POST",
             url: "/ImageLibrary/deletAllImages",
@@ -56,6 +64,8 @@
             }
         });
     }
+
+    
 </script>
 
 <div style="margin-left:160px">
@@ -101,12 +111,18 @@
                         <tr>
                             @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
                             {
-                                <td class="image-container">
-                                    <input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />
-                                    <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
-                                    <br />
-                                    <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
-                                </td>
+                            <td class="image-container" ondblclick="displayImageProp(this)">
+                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].imageID" hidden />
+                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].title" hidden />
+                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].imgDesc" hidden />
+                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].uploadDate" hidden />
+                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].modifyDate" hidden />
+                                <input type="text" value="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" hidden />
+
+                                <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                <br />
+                                <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                            </td>
                             }
                         </tr>
                     }
@@ -128,7 +144,15 @@
 
                 @foreach (var img in ViewBag.DisplayImages)
                 {
-                    <tr>
+                    <tr >
+                        <td id="listview-image-container" hidden>
+                            <input type="text" value="@img.imageID" hidden />
+                            <input type="text" value="@img.title" hidden />
+                            <input type="text" value="@img.imgDesc" hidden />
+                            <input type="text" value="@img.uploadDate" hidden />
+                            <input type="text" value="@img.modifyDate" hidden />
+                            <input type="text" value="@Url.Content(@img.imgLoc)" hidden />
+                        </td>
                         <td>
                             <input class="selection" type="checkbox" value="@img.imageID" onchange="chechBoxSingle(this.checked)" />
                         </td>
@@ -136,7 +160,10 @@
                         <td>@img.title</td>
                         <td>@img.imgDesc</td>
                         <td>@img.modifyDate</td>
-                        <td>@Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout=@ViewBag.layoutView }, new { @class = "Custom-Button" })</td>
+                        <td>
+                            <a href="javascript:void(0);" onclick="displayImageProp(document.getElementById('listview-image-container'));" class="Custom-Button">Edit</a>
+                            @Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout = @ViewBag.layoutView }, new { @class = "Custom-Button" })
+                        </td>
                     </tr>
                 }
             </table>
@@ -166,3 +193,138 @@
         </div>
     }
 </div>
+<div class="popup" style="display:@ViewBag.popup">
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <table>
+            <tr>
+                <td>
+                    <img src="" id="popup-image" style="width:400px; height:400px;"/>
+                </td>
+                <td style="border-right:2px solid lightgray; padding-right:10px" >
+                </td>
+                <td>
+                    @using (Html.BeginForm("imagePropChange", "ImageLibrary", new {img = Model, layout = ViewBag.layoutView }, FormMethod.Post))
+                    {
+                    <table class="jumbotron" id="imageProp-container" style="margin-left:10px;">
+                        <tr>
+                            <td>
+                                Title:
+                            </td>
+                            <td>
+                                @Html.TextBoxFor(m => m.title, new
+                           {
+                               Style = "width:100%; margin:15px; padding:2px;",
+                               Placeholder = "title",
+                               type = "text",
+                               required = "required",
+                               size = "50",
+                               maxlength = "50",
+                               id = "popup-title"
+                           })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Description:
+                            </td>
+                            <td>
+                                @Html.TextAreaFor(m => m.imgDesc, new
+                           {
+                               Style = "width:100%; margin:15px; padding:2px;"
+    ,
+                               Placeholder = "description",
+                               type = "text",
+                               size = "150",
+                               maxlength = "150",
+                               id = "popup-desc"
+                           })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Upload Date:
+                            </td>
+                            <td class="popup-upload">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Modify Date:
+                            </td>
+                            <td class="popup-modify">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                @Html.HiddenFor(m => m.uploadDate, new { @class = "popup-upload" })
+                                @Html.HiddenFor(m => m.modifyDate, new { @class = "popup-modify" })
+                                @Html.HiddenFor(m => m.imageID, new { id = "popup-id" })
+                                @Html.HiddenFor(m => m.modifyDate, new { id = "popup-img-modify" })
+                                <input type="button" class="Custom-Button" value="Delete" onclick="deleteImage()"/>
+                                <input type="submit" value="Update" class="Custom-Button"/>
+                            </td>
+                        </tr>
+                    </table>
+                    }
+                </td>
+            </tr>
+        </table>
+        <div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get the modal
+    var popup = document.getElementsByClassName('popup')[0];
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function displayImageProp(image) {
+        var id = image.getElementsByTagName('input')[0];
+        var title = image.getElementsByTagName('input')[1];
+        var desc = image.getElementsByTagName('input')[2];
+        var upload = image.getElementsByTagName('input')[3];
+        var modify = image.getElementsByTagName('input')[4];
+        var imgLoc = image.getElementsByTagName('input')[5];
+
+        
+        document.getElementById("popup-id").value = id.value;
+        document.getElementById("popup-image").src = imgLoc.value;
+        document.getElementById("popup-title").value = title.value;
+        if (desc.value != "") {
+            document.getElementById("popup-desc").value = desc.value;
+        }
+
+        
+        document.getElementsByClassName("popup-upload")[0].innerHTML = upload.value;
+        document.getElementsByClassName("popup-upload")[1].value = upload.value;
+
+        document.getElementsByClassName("popup-modify")[0].innerHTML = modify.value;
+        document.getElementsByClassName("popup-modify")[1].value = modify.value;
+        popup.style.display = "block";
+    }
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        popup.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == popup) {
+            popup.style.display = "none";
+        }
+    }
+
+    function deleteImage() {
+        var imageIndex = document.getElementById("popup-id").value;
+        $.post("@Url.Action("deleteImage", "ImageLibrary")", { imageID: imageIndex, layout: '@ViewBag.layoutView' }, new function (data) {
+            window.location.href = window.location.href;
+        });
+    }
+</script>

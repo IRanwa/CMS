@@ -250,8 +250,16 @@ namespace FinalProj.Controllers
                 {
                     System.IO.File.Delete(Server.MapPath(newFilePath));
                 }
-
             }
+        }
+
+        [HttpPost]
+        public ActionResult imagePropChange(ImageLibrary img, string layout)
+        {
+            DBConnect db = new DBConnect();
+            db.updateImage(img);
+            changeLayout(layout);
+            return View("ImageLibrary");
         }
     }
 }
