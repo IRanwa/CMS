@@ -11,6 +11,7 @@ namespace FinalProj.Models
         public int catId { get; set; }
         public int webId { get; set; }
         public string postTitle { get; set; }
+        public string postData { get;set }
         public string postLoc { get; set; }
         public string postStatus { get; set; }
         public DateTime createdDate { get; set; }
