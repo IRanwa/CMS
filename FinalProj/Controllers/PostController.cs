@@ -76,6 +76,9 @@ namespace FinalProj.Controllers
         {
             ViewBag.Display = "none";
             getTotalImageCount();
+            DBConnect db = new DBConnect();
+            int categoryCount = db.getCategoryCount();
+            ViewBag.catList = db.getCatList(0, categoryCount);
             return View();
         }
 
@@ -134,39 +137,54 @@ namespace FinalProj.Controllers
             return View("PostsAddNew");
         }
 
-        public ActionResult uploadPost(string status, string content, string title)
+        public ActionResult uploadPost(string status, string content, string title, int category, int uploadId)
         {
             DateTime date = DateTime.Now;
-            string serverPath = "~/Posts/" + date.ToString("yyyy-MM-dd") + "/"+status+"/";
-            string path = Server.MapPath(serverPath);
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-
-            }
-
-            path = serverPath + title + ".txt";
-            bool exists = false;
-            int count = 0;
-            do
-            {
-                if (count==0)
-                {
-                    path = serverPath + title + ".txt";
-                }
-                else
-                {
-                    path = serverPath + title + '_' + count + ".txt";
-                }
-                exists = System.IO.File.Exists(Server.MapPath(path));
-                count++;
-            } while (exists);
-
-            System.IO.File.WriteAllText(Server.MapPath(path), content);
             DBConnect db = new DBConnect();
-            Website web = db.getWebsite((Login)Session["user"]);
-            db.uploadPost(new Post(1, web.webID,title, path,status, date, date));
-            return Json(new { result = "Success" }, JsonRequestBehavior.AllowGet);
+            if (uploadId==0) {
+                string serverPath = "~/Posts/" + date.ToString("yyyy-MM-dd") + "/" + status + "/";
+                string path = Server.MapPath(serverPath);
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+
+                }
+
+                path = serverPath + title + ".txt";
+                bool exists = false;
+                int count = 0;
+                do
+                {
+                    if (count == 0)
+                    {
+                        path = serverPath + title + ".txt";
+                    }
+                    else
+                    {
+                        path = serverPath + title + '_' + count + ".txt";
+                    }
+                    exists = System.IO.File.Exists(Server.MapPath(path));
+                    count++;
+                } while (exists);
+
+                System.IO.File.WriteAllText(Server.MapPath(path), content);
+                
+                Website web = db.getWebsite((Login)Session["user"]);
+                long id = db.uploadPost(new Post(category, web.webID, title, path, status, date, date));
+                return Json(new { postID = id }, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                db.updatePost(new Post(uploadId,category,title,status,date));
+                string postLoc = db.getPostLoc(new Post(uploadId));
+                if (System.IO.File.Exists(Server.MapPath(postLoc)))
+                {
+                    System.IO.File.WriteAllText(Server.MapPath(postLoc), content);
+
+                }
+                changeStatus(uploadId, status);
+            }
+            return Json(new { postID = uploadId }, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult deletePost(int postId)

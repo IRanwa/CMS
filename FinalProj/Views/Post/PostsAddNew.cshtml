@@ -167,18 +167,23 @@
         }
         
     }
+    var uploadId = 0;
     function uploadPost(val) {
         var title = document.getElementById("title").value;
         if (title != "") {
+            var category = document.getElementById("post-category").value;
+
             if (val == "Save as Draft") {
                 val = "Draft";
             }
             var data = JSON.stringify({
                 'status': val,
                 'content': document.getElementById("editor").innerHTML.toString(),
-                'title':title
+                'title': title,
+                'category': category,
+                'uploadId': uploadId
             });
-            alert(data);
+            alert(uploadId);
             $.ajax({
                 type: "POST",
                 url: "/Post/uploadPost", // the URL of the controller action method
@@ -186,7 +191,8 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (result) {
-                    alert(result.result);
+                    uploadId = result.postID;
+                    alert(uploadId);
                 },
                 error: function () {
                     alert("error");
@@ -207,8 +213,21 @@
             <table class="top-container">
                 <tr>
                     <td>
-                        <input class="Custom-Button" type="button" value="Save as Draft" onclick="uploadPost(this.value)"/>
-                        <input class="Custom-Button" type="button" value="Publish" onclick="uploadPost(this.value)"/>
+                        <input class="Custom-Button" type="button" value="Save as Draft" onclick="uploadPost(this.value)" />
+                        <input class="Custom-Button" type="button" value="Publish" onclick="uploadPost(this.value)" />
+                    </td>
+                </tr>
+                <tr style="float:left;">
+                    <td>
+                        <label style="font-size:15px">Category : </label>
+                    </td>
+                    <td>
+                        <select id="post-category" class="Custom-Button img-selection" style="background-color:white; color:black;">
+                            @foreach (var cat in ViewBag.catList)
+                            {
+                                <option value="@cat.catID">@cat.title</option>
+                            }
+                        </select>
                     </td>
                 </tr>
             </table>

@@ -377,7 +377,7 @@ namespace FinalProj.Models
         //Category Query End
 
         //Posts Query Start
-        public void uploadPost(Post post)
+        public long uploadPost(Post post)
         {
             string query = "Insert into posts (postTitle,postLoc,postStatus) value (@postTitle,@postLoc,@postStatus)";
             if (this.OpenConnection()==true)
@@ -393,7 +393,9 @@ namespace FinalProj.Models
                 
                 this.CloseConnection();
                 uploadPostCat(post);
+                return id;
             }
+            return 0;
         }
 
         public int getPostsCount()
@@ -534,6 +536,21 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
         }
+
+        public void updatePost(Post post)
+        {
+            string query = "update posts set postTitle=@postTitle, postStatus=@postStatus where postID=@postID";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postTitle", post.postTitle);
+                cmd.Parameters.AddWithValue("@postStatus", post.postStatus);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+                updatePostCat(post);
+            }
+        }
         //Posts Query End
 
         //Posts Category Query Start
@@ -548,6 +565,21 @@ namespace FinalProj.Models
                 cmd.Parameters.AddWithValue("@catID", post.catId);
                 cmd.Parameters.AddWithValue("@webID", post.webId);
                 cmd.Parameters.AddWithValue("@createdDate", post.createdDate);
+                cmd.Parameters.AddWithValue("@modifyDate", post.modifyDate);
+
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void updatePostCat(Post post)
+        {
+            string query = "Update posts_categories set catID=@catID, modifyDate=@modifyDate where postID=@postID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                cmd.Parameters.AddWithValue("@catID", post.catId);
                 cmd.Parameters.AddWithValue("@modifyDate", post.modifyDate);
 
                 cmd.ExecuteNonQuery();

@@ -11,7 +11,7 @@ namespace FinalProj.Models
         public int catId { get; set; }
         public int webId { get; set; }
         public string postTitle { get; set; }
-        public string postData { get;set }
+        public string postData { get; set; }
         public string postLoc { get; set; }
         public string postStatus { get; set; }
         public DateTime createdDate { get; set; }
@@ -42,6 +42,14 @@ namespace FinalProj.Models
             this.postLoc = postLoc;
             this.postStatus = postStatus;
             this.createdDate = createdDate;
+            this.modifyDate = modifyDate;
+        }
+
+        public Post(long postId, int catId, string postTitle, string postStatus, DateTime modifyDate) : this(postId)
+        {
+            this.catId = catId;
+            this.postTitle = postTitle;
+            this.postStatus = postStatus;
             this.modifyDate = modifyDate;
         }
     }
