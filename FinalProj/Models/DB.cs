@@ -152,6 +152,22 @@ namespace FinalProj.Models
             }
             return null;
         }
+
+        public void updateWebsite(Website website)
+        {
+            string query = "update website set webTitle=@webTitle, noOfPosts=@noOfPosts, " +
+                "featuredImg=@featuredImg where webID=@webID";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webTitle", website.webTitle);
+                cmd.Parameters.AddWithValue("@noOfPosts", website.noOfPosts);
+                cmd.Parameters.AddWithValue("@featuredImg", website.featuredImage);
+                cmd.Parameters.AddWithValue("@webID", website.webID);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
         //Website Query End
 
         //Image Library Query Start

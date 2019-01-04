@@ -1,4 +1,4 @@
-﻿
+﻿@model FinalProj.Models.Website
 @{
     ViewBag.Title = "Settings (General)";
 }
@@ -52,42 +52,53 @@
     <h2>Settings</h2>
     <hr />
     <div class="jumbotron">
-        
-        <table id="update-table" style="border-collapse:1px">
-            <tr>
-                <td>Website Title : </td>
-                <td>
-                    <input type="text" style="width:100%;" placeholder="Website Title" maxlength="30" 
-                           value="@ViewBag.website.webTitle" required />
-                </td>
-            </tr>
-            <tr>
-                <td>Website No of Posts : </td>
-                <td>
-                    <input type="number" style="width:100%;" placeholder="No of Posts" maxlength="2" 
-                           value="@ViewBag.website.noOfPosts" required />
-                </td>
-            </tr>
-            <tr>
-                <td>Featured Image : </td>
-                <td>
-                    @if (ViewBag.website.featuredImage != "")
-                    {
-                        <img src="@ViewBag.website.featuredImage" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
-                    }
-                    else
-                    {
-                        <img src="~/TextEditor_Icon/no-image-found.png" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
-                    }
-                    <br />
-                    <input class="Custom-Button" style="float:left" type="button" value="Upload Image" onclick="insertImage()" />
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input type="submit" value="Save" class="Custom-Button" /></td>
-            </tr>
-        </table>
+        @using (Html.BeginForm("changeSettings", "Home", FormMethod.Post))
+        {
+            @Html.HiddenFor(m => m.webID, new {Value= ViewBag.website.webID })
+            <table id="update-table">
+                <tr>
+                    <td>Website Title : </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.webTitle, new {Style= "width:100%;", type="text",
+                       Placeholder = "Website Title", maxlength="30", @required="true", Value= ViewBag.website.webTitle})
+                    </td>
+                </tr>
+                <tr>
+                    <td>Website No of Posts : </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.noOfPosts, new
+                   {
+                       Style = "width:100%;",
+                       maxlength="2",
+                       Placeholder = "No of Posts",
+                       @required = "true",
+                       @onkeypress = "return isNumberKey(event)",
+                       Value = ViewBag.website.noOfPosts
+                   })
+                    </td>
+                </tr>
+                <tr>
+                    <td>Featured Image : </td>
+                    <td>
+                        @Html.HiddenFor(m => m.featuredImage, new { id = "hidden-img", Value = ViewBag.website.featuredImage })
+                        @if (ViewBag.website.featuredImage != "")
+                        {
+                            <img src="@ViewBag.website.featuredImage" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+                        }
+                        else
+                        {
+                            <img src="~/TextEditor_Icon/no-image-found.png" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+                        }
+                        <br />
+                        <input class="Custom-Button" style="float:left" type="button" value="Upload Image" onclick="insertImage()" />
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="submit" value="Save" class="Custom-Button" /></td>
+                </tr>
+            </table>
+        }
     </div>
 </div>
 <div class="popup" style="display:@ViewBag.popup">
@@ -124,7 +135,7 @@
                                             <tr>
                                                 <td>
                                                     <input type="button" value="Select" class="Custom-Button" style="padding:2px 8px;
-                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)',this)" />
+                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)')" />
                                                 </td>
                                             </tr>
                                         </table>
@@ -193,8 +204,16 @@
         image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
     }
 
-    function addImage(imageUrl, image) {
+    function addImage(imageUrl) {
         document.getElementById("featured-img").src = imageUrl;
+        document.getElementById("hidden-img").value = imageUrl;
         popup.style.display = "none";
+    }
+
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode > 31 && (charCode < 49 || charCode > 57))
+            return false;
+        return true;
     }
 </script>

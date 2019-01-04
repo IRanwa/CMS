@@ -81,6 +81,14 @@ namespace FinalProj.Controllers
             return View("Settings");
         }
 
+        public ActionResult changeSettings(Website website)
+        {
+            DBConnect db = new DBConnect();
+            db.updateWebsite(website);
+            Settings();
+            return View("Settings");
+        }
+
         public ActionResult LibrarySettings()
         {
             ViewBag.Display = "none";
