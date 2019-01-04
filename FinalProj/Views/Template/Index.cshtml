@@ -8,10 +8,10 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    <title>@ViewBag.webTitle</title>
     <style>
         body{
-            background-color:black;
+            background-color:white;
         }
         
         #backgroundimg{
@@ -21,22 +21,18 @@
             opacity:0.8;
             
         }
-        #title {
+        .container {
+            position: relative;
             text-align: center;
-            width: 100%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        #title label{
             color: white;
+        }
+        .container label {
+            color: black;
             font-size: 100px;
         }
         .post-container {
-            margin-left: 300px;
             margin-right: 50px;
-            background-color: white;
+            background-color: lightgrey;
             margin-top: 30px;
             border-radius:5px;
             padding:20px;
@@ -50,80 +46,107 @@
         }
         .sidenav {
             height: 100%;
-            width: 280px;
             left: 0;
             border-color: #101010;
             overflow-x: hidden;
             padding-top: 20px;
             z-index: -1;
-            color: white;
+            color: black;
             margin-left: 20px;
             font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
             font-size: 25px;
         }
 
         .sidenav-menu {
-            color: white;
+            color: black;
             padding-left: 40px;
             word-wrap: break-word;
         }
 
-        .sidenav-menu a {
-            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-            font-size: 18px;
-            text-decoration:none;
-            color:white;
-        }
+            .sidenav-menu a {
+                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                font-size: 18px;
+                text-decoration: none;
+                color: black;
+            }
         .sidenav-menu a:hover{
-            color:lightgray;
+            color:gray;
+        }
+        .centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
+    <script>var count = 0;</script>
 </head>
 <body>
-    
-    <div>
-
-        @*<img src="@Url.Content(ViewBag.BackgroundImage)" style="width:100%; height:75%;" id="backgroundimg" />*@
-
-    </div>
-    <div id="title">
-        <label>Title</label>
-
-    </div>
-    <div>
-        @foreach (var post in ViewBag.PostsList) {
-            <div class="post-container">
-                <div>
-                    <div>
-                        <label class="post-title">@post.postTitle Sample Post</label>
-                    </div>
-                    <div class="post-date">
-                        <label>Upload Date</label>
-                        <label>@post.createdDate</label>
-                    </div>
-                    <div class="post-date">
-                        <label>Upload Date</label>
-                        <label>@post.modifyDate</label>
-                    </div>
-                    <div style="margin-top:10px;">
-                        <label>@post.postData</label>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        @if (ViewBag.BackgroundImage != null)
+        {
+            <img src="@Url.Content(ViewBag.BackgroundImage)" style="width:100%; height:75%;" id="backgroundimg" />
         }
+        <div class="centered"><label>@ViewBag.webTitle</label></div>
 
-        <div class="navbar navbar-fixed-top">
-            <div class="sidenav">
-                <div class="sidenav-item">
-                    Category
-                    <div class="sidenav-menu">
-                        @Html.ActionLink("Category 1", "ImageLibrary", "ImageLibrary")
-                        <br />
-                        @Html.ActionLink("Category 2", "ImageLibrary", "ImageLibrary")
+    </div>
+    <table style="width:100%">
+        <tr valign="top">
+            <td width="30%">
+                <div class="navbar navbar-fixed-top">
+                    <div class="sidenav">
+                        <div class="sidenav-item">
+                            Category
+                            <div class="sidenav-menu">
+                                @foreach (var category in ViewBag.catList)
+                                {
+                                    @Html.ActionLink((string)category.title, "changeCategory", "Template")
+                                    <br />
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </td>   
+            <td width="100%">
+                <div>
+                    @foreach (var post in ViewBag.PostsList)
+                    {
+                        <div class="post-container">
+                            <div>
+                                <div>
+                                    <label class="post-title">@post.postTitle</label>
+                                </div>
+                                <div class="post-date">
+                                    <label style="font-weight:bold">Upload Date : </label>
+                                    <label>@post.createdDate</label>
+                                </div>
+                                <div class="post-date">
+                                    <label style="font-weight:bold">Modify Date : </label>
+                                    <label>@post.modifyDate</label>
+                                </div>
+                                <hr />
+                                <div style="margin-top:10px;" class="post-data" con>
+
+
+                                    <iframe srcdoc="@post.postData" class="src-doc" hidden></iframe>
+                                </div>
+                                <script>
+                                    document.getElementsByClassName("post-data")[count].innerHTML
+                                        = document.getElementsByClassName("src-doc")[0].srcdoc;
+                                    count++;
+                                </script>
+                            </div>
+                        </div>
+                    }
+
+
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    
+
 </body>
 </html>

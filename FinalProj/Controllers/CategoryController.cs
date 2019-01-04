@@ -23,7 +23,8 @@ namespace FinalProj.Controllers
             {
                 int startIndex = (cat.currentPage - 1) * 20;
                 DBConnect db = new DBConnect();
-                List<Category> categories = db.getCatList(startIndex, startIndex + 20);
+                Login login = (Login)Session["user"];
+                List<Category> categories = db.getCatList(startIndex, startIndex + 20,login);
                 if (categories.Count>1) {
                     ViewBag.DisplayCategories = categories;
                 }
@@ -72,7 +73,8 @@ namespace FinalProj.Controllers
             if (currentPage != 0)
             {
                 int startIndex = (currentPage - 1) * 20;
-                List<Category> categories = db.getCatList(startIndex, startIndex + 20);
+                Login login = (Login)Session["user"];
+                List<Category> categories = db.getCatList(startIndex, startIndex + 20,login);
                 ViewBag.DisplayCategories = categories;
                 ViewBag.CategoryProp = cat;
             }

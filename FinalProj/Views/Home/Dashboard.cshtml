@@ -2,7 +2,43 @@
 @{
     ViewBag.Title = "Dashboard";
 }
-
+<style>
+    table{
+       width:100%;
+    }
+    table td{
+        padding-right:30px;
+    }
+    .Sub-Container {
+        margin: 0;
+        margin-top: 3%;
+        padding: 10px 30px;
+        margin-right:60%;
+    }
+</style>
 <div style="margin-left:160px">
     <h2>Dashboard</h2>
+    <hr />
+    <div class="jumbotron Sub-Container">
+        <table>
+            <tr>
+                <td>No of Published Posts</td>
+                <td>@ViewBag.noOfPublishPosts</td>
+            </tr>
+            <tr>
+                <td>No of Draft Posts</td>
+                <td>@ViewBag.noOfDraftPosts</td>
+            </tr>
+            <tr>
+                <td>No of Images</td>
+                <td>@ViewBag.noOfImages</td>
+            </tr>
+        </table>
+    </div>
+    <hr />
+    <div>
+        <h2>Live Preview</h2>
+            <iframe src="/Template/Index" border="1px solid gray" width="1000" height="1000"></iframe>
+            @*@Html.Partial("../Template/Index", new {Style="left:200px;" });*@
+    </div>
 </div>

@@ -82,7 +82,6 @@ namespace FinalProj.Models
                     login.webID = long.Parse(dataReader["webID"].ToString());
                 }
                 this.CloseConnection();
-                return login;
             }
             return login;
 
@@ -115,7 +114,6 @@ namespace FinalProj.Models
                 this.CloseConnection();
                 registerUser(reg.user, id);
                 reg.user.webID = id;
-                return reg.user;
             }
             return reg.user;
 
@@ -323,15 +321,16 @@ namespace FinalProj.Models
             }
         }
 
-        public List<Category> getCatList(int startIndex,int endIndex)
+        public List<Category> getCatList(int startIndex,int endIndex, Login login)
         {
             List<Category> categories = new List<Category>();
-            string query = "select * from Categories limit @startIndex, @endIndex ";
+            string query = "select * from Categories where webID=@webID limit @startIndex, @endIndex ";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@startIndex", startIndex);
                 cmd.Parameters.AddWithValue("@endIndex", endIndex);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())
@@ -427,16 +426,60 @@ namespace FinalProj.Models
             return 0;
         }
 
-        public List<Post> getPostList(int startIndex, int endIndex)
+        public int getPostsCountByStatus(string status)
+        {
+            string query = "select count(*) from Posts where postStatus=@postStatus";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@postStatus", status);
+                int count = int.Parse(cmd.ExecuteScalar().ToString());
+                this.CloseConnection();
+                return count;
+            }
+            return 0;
+        }
+
+        public List<Post> getPostList(int startIndex, int endIndex, Login login)
         {
             List<Post> posts = new List<Post>();
             string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
-                " limit @startIndex, @endIndex";
+                " and pc.webID=@webID limit @startIndex, @endIndex";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@startIndex", startIndex);
                 cmd.Parameters.AddWithValue("@endIndex", endIndex);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    Post post = new Post();
+                    post.postId = Int32.Parse(dataReader["postID"].ToString());
+                    post.catId = Int32.Parse(dataReader["catID"].ToString());
+                    post.postTitle = dataReader["postTitle"].ToString();
+                    post.postLoc = dataReader["postLoc"].ToString();
+                    post.postStatus = dataReader["postStatus"].ToString();
+                    post.createdDate = Convert.ToDateTime(dataReader["createdDate"].ToString());
+                    post.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
+
+                    posts.Add(post);
+                }
+                this.CloseConnection();
+            }
+            return posts;
+        }
+
+        public List<Post> getPostsByStatus(Login login, string status)
+        {
+            List<Post> posts = new List<Post>();
+            string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
+                " and pc.webID=@webID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())

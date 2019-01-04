@@ -13,8 +13,28 @@ namespace FinalProj.Controllers
         public ActionResult Dashboard()
         {
             ViewBag.Display = "none";
+            DBConnect db = new DBConnect();
+            ViewBag.noOfImages = db.getImageCount();
+            ViewBag.noOfPublishPosts = db.getPostsCountByStatus("Publish");
+            ViewBag.noOfDraftPosts = db.getPostsCountByStatus("Draft");
+
+            //templateView();
             return View();
         }
+
+        //public void templateView()
+        //{
+        //    DBConnect db = new DBConnect();
+        //    Login login = (Login)Session["user"];
+        //    Website web = db.getWebsite(login);
+        //    ViewBag.webTitle = web.webTitle;
+        //    List<Post> postList = db.getPostsByStatus(login, "Publish");
+        //    foreach (Post post in postList)
+        //    {
+        //        post.postData = System.IO.File.ReadAllText(Server.MapPath(post.postLoc));
+        //    }
+        //    ViewBag.PostsList = postList;
+        //}
 
         public ActionResult Settings()
         {

@@ -199,18 +199,6 @@
     @if (Session["user"] != null)
     {
         <div class="navbar navbar-fixed-top">
-            @*<div class="container">
-
-                    <div class="navbar-collapse collapse">
-                        <ul class="nav navbar-nav">
-                            <li>@Html.ActionLink("Visit Website", "Index", "Home")</li>
-                        </ul>
-                        <ul class="nav navbar-nav" style="float:right">
-                            <li>@Html.ActionLink("Log Out", "Contact", "Home")</li>
-                        </ul>
-                    </div>
-
-                </div>*@
             <div class="sidenav">
                 <div class="sidenav-item" style="margin-bottom:30px">
                     @Html.ActionLink("Visit Website", "VisitWebsite", "Home")

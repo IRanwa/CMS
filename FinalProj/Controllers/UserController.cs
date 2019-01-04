@@ -32,8 +32,8 @@ namespace FinalProj.Controllers
                 Session.Add("user", login);
                 ViewBag.Display = "none";
                 Session.Add("user", login);
-               // Response.Redirect("~/Home/Dashboard");
-                return View("../Home/Dashboard");
+                Response.Redirect("~/Home/Dashboard");
+                //return View("../Home/Dashboard");
             }
             else
             {
@@ -68,7 +68,7 @@ namespace FinalProj.Controllers
 
                     Session.Add("user", login);
                     ViewBag.Display = "none";
-                    return View("../Home/Dashboard");
+                    Response.Redirect("~/Home/Dashboard");
                 }
                 else
                 {

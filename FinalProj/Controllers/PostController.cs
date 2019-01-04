@@ -25,7 +25,8 @@ namespace FinalProj.Controllers
             {
                 int startIndex = (post.currentPage - 1) * 20;
                 DBConnect db = new DBConnect();
-                List<Post> posts = db.getPostList(startIndex, startIndex + 20);
+                Login login = (Login)Session["user"];
+                List<Post> posts = db.getPostList(startIndex, startIndex + 20, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
@@ -64,7 +65,8 @@ namespace FinalProj.Controllers
             if (nextPage != 0)
             {
                 int startIndex = (nextPage - 1) * 20;
-                List<Post> posts = db.getPostList(startIndex, startIndex + 20);
+                Login login = (Login)Session["user"];
+                List<Post> posts = db.getPostList(startIndex, startIndex + 20, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
@@ -78,7 +80,8 @@ namespace FinalProj.Controllers
             getTotalImageCount();
             DBConnect db = new DBConnect();
             int categoryCount = db.getCategoryCount();
-            ViewBag.catList = db.getCatList(0, categoryCount);
+            Login login = (Login)Session["user"];
+            ViewBag.catList = db.getCatList(0, categoryCount,login);
             return View();
         }
 
