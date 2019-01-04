@@ -24,7 +24,9 @@ namespace FinalProj.Controllers
                 int startIndex = (cat.currentPage - 1) * 20;
                 DBConnect db = new DBConnect();
                 List<Category> categories = db.getCatList(startIndex, startIndex + 20);
-                ViewBag.DisplayCategories = categories;
+                if (categories.Count>1) {
+                    ViewBag.DisplayCategories = categories;
+                }
                 ViewBag.CategoryProp = cat;
             }
         }

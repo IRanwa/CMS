@@ -143,6 +143,7 @@ namespace FinalProj.Models
                     web.mediumHeight = Int32.Parse(dataReader["mediumHeight"].ToString());
                     web.largeWidth = Int32.Parse(dataReader["largeWidth"].ToString());
                     web.largeHeight = Int32.Parse(dataReader["largeHeight"].ToString());
+                    web.featuredImage = dataReader["featuredImg"].ToString();
 
                 }
                 this.CloseConnection();
@@ -309,7 +310,7 @@ namespace FinalProj.Models
         public List<Category> getCatList(int startIndex,int endIndex)
         {
             List<Category> categories = new List<Category>();
-            string query = "select * from Categories limit @startIndex, @endIndex";
+            string query = "select * from Categories limit @startIndex, @endIndex ";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
@@ -326,7 +327,6 @@ namespace FinalProj.Models
                     categories.Add(cat);
                 }
                 this.CloseConnection();
-                return categories;
             }
             return categories;
         }
@@ -437,7 +437,6 @@ namespace FinalProj.Models
                     posts.Add(post);
                 }
                 this.CloseConnection();
-                return posts;
             }
             return posts;
         }

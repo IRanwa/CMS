@@ -19,7 +19,66 @@ namespace FinalProj.Controllers
         public ActionResult Settings()
         {
             ViewBag.Display = "none";
+            getTotalImageCount();
+            DBConnect db = new DBConnect();
+            Website web = db.getWebsite((Login)Session["user"]);
+            ViewBag.website = web;
             return View();
+        }
+
+        private void displayImages(ImageLibrary img)
+        {
+            if (img.currentPage != 0)
+            {
+                int startIndex = (img.currentPage - 1) * 12;
+                DBConnect db = new DBConnect();
+                List<ImageLibrary> images = db.getImages(startIndex, 12);
+                ViewBag.DisplayImages = images;
+                ViewBag.LibraryProp = img;
+            }
+        }
+
+        private void getTotalImageCount()
+        {
+            DBConnect db = new DBConnect();
+            int count = db.getImageCount();
+
+            ImageLibrary img = new ImageLibrary();
+            img.totalImageCount = count;
+            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
+            if (count > 0)
+            {
+                img.currentPage = 1;
+            }
+            displayImages(img);
+        }
+
+        public ActionResult nextImagePage(int nextPage)
+        {
+
+            DBConnect db = new DBConnect();
+            int count = db.getImageCount();
+            ImageLibrary img = new ImageLibrary();
+            img.totalImageCount = count;
+            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
+            if (nextPage > img.noOfPages)
+            {
+                nextPage = img.noOfPages;
+            }
+
+            img.currentPage = nextPage;
+
+
+            if (nextPage != 0)
+            {
+                int startIndex = (nextPage - 1) * 12;
+                List<ImageLibrary> images = db.getImages(startIndex, 12);
+                ViewBag.DisplayImages = images;
+                ViewBag.LibraryProp = img;
+            }
+            ViewBag.Display = "none";
+            ViewBag.popup = "block";
+            return View("Settings");
         }
 
         public ActionResult LibrarySettings()

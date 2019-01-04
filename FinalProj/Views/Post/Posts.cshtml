@@ -132,8 +132,7 @@
                     <td>@post.postTitle</td>
                     <td>@post.postStatus</td>
                     <td>@post.modifyDate</td>
-                    <td>
-                        @Html.ActionLink("Delete", "deletePost", new { postId = post.postId }, new { @class = "Custom-Button" })
+                    <td style="text-align:right">
                         @if (@post.postStatus == "Publish")
                         {
                             @Html.ActionLink("Save as Draft", "changeStatus", new { postId = post.postId, status = "Draft" }, new { @class = "Custom-Button" })
@@ -142,6 +141,7 @@
                         {
                             @Html.ActionLink("Publish", "changeStatus", new { postId = post.postId, status = "Publish" }, new { @class = "Custom-Button" })
                         }
+                        @Html.ActionLink("Delete", "deletePost", new { postId = post.postId }, new { @class = "Custom-Button" })
                     </td>
                 </tr>
             }
