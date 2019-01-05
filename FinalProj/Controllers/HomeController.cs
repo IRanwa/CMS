@@ -9,12 +9,17 @@ using System.Web.Mvc;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Diagnostics;
 
 namespace FinalProj.Controllers
 {
     public class HomeController : Controller
     {
-
+        private readonly object locker = new object();
         public ActionResult Dashboard()
         {
             ViewBag.Display = "none";
@@ -103,7 +108,165 @@ namespace FinalProj.Controllers
         public ActionResult LibrarySettings()
         {
             ViewBag.Display = "none";
+            DBConnect db = new DBConnect();
+            Website web = db.getWebsite((Login)Session["user"]);
+            ViewBag.website = web;
             return View();
+        }
+
+        public void changeImgLibSettings(Website web)
+        {
+            DBConnect db = new DBConnect();
+            Login login = (Login)Session["user"];
+            Website previousWeb = db.getWebsite(login);
+            db.updateImgLibSettings(web);
+            int imgCount = db.getImageCount();
+            List<ImageLibrary> imgList = db.getImages(0, imgCount, login);
+            
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            Task mainTask = Task.Factory.StartNew((obj) =>
+             {
+                 Parallel.ForEach(imgList, img =>
+                 {
+                     string filename = img.imgLoc.Split('/')[3];
+                     int index = filename.LastIndexOf(".");
+                     string extension = filename.Substring(filename.LastIndexOf("."));
+                     string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
+                     filename = filename.Replace(extension, "");
+                     List<Task> tasksList = new List<Task>();
+                     if (previousWeb.thumbWidth!=web.thumbWidth || previousWeb.thumbHeight!=web.thumbHeight) {
+                         Task thumbTask = Task.Factory.StartNew(() =>
+                            {
+                                string newFilePath = path + filename + "_thumb" + extension;
+                                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                                {
+                                    System.IO.File.Delete(Server.MapPath(newFilePath));
+                                }
+                                Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
+                                Bitmap image = ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
+                                image.Save(Path.Combine(Server.MapPath(path) + filename + "_thumb" + extension));
+                                image.Dispose();
+                                imgPhoto.Dispose();
+                            });
+                         tasksList.Add(thumbTask);
+                     }
+
+                     if (previousWeb.mediumWidth != web.mediumWidth || previousWeb.mediumHeight != web.mediumHeight)
+                     {
+                         Task mediumTask = Task.Factory.StartNew(() =>
+                         {
+                             string newFilePath = path + filename + "_medium" + extension;
+                             if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                             {
+                                 System.IO.File.Delete(Server.MapPath(newFilePath));
+                             }
+                             Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
+                             Bitmap image = ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
+                             image.Save(Path.Combine(Server.MapPath(path) + filename + "_medium" + extension));
+                             image.Dispose();
+                             imgPhoto.Dispose();
+                         });
+                         tasksList.Add(mediumTask);
+                     }
+
+                     if (previousWeb.largeWidth != web.largeWidth || previousWeb.largeHeight != web.largeHeight)
+                     {
+                         Task largeTask = Task.Factory.StartNew(() =>
+                         {
+                             string newFilePath = path + filename + "_large" + extension;
+                             if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                             {
+                                 System.IO.File.Delete(Server.MapPath(newFilePath));
+                             }
+                             Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
+                             Bitmap image = ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
+                             image.Save(Path.Combine(Server.MapPath(path) + filename + "_large" + extension));
+                             image.Dispose();
+                             imgPhoto.Dispose();
+                         });
+                         tasksList.Add(largeTask);
+                     }
+                     
+                     Task.WaitAll(tasksList.ToArray());
+
+                 });
+             }, imgList);
+            mainTask.Wait();
+
+
+            //foreach (ImageLibrary img in imgList)
+            //{
+            //    string filename = img.imgLoc.Split('/')[3];
+            //    int index = filename.LastIndexOf(".");
+            //    string extension = filename.Substring(filename.LastIndexOf("."));
+            //    string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
+            //    filename = filename.Replace(extension, "");
+
+            //    Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
+
+
+            //    string newFilePath = path + filename + "_thumb" + extension;
+            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+            //    {
+            //        System.IO.File.Delete(Server.MapPath(newFilePath));
+            //        Bitmap image = ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
+            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_thumb" + extension));
+            //        image.Dispose();
+            //        //imgPhoto.Dispose();
+            //    }
+
+            //    newFilePath = path + filename + "_medium" + extension;
+            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+            //    {
+            //        System.IO.File.Delete(Server.MapPath(newFilePath));
+            //        Bitmap image = ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
+            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_medium" + extension));
+            //        image.Dispose();
+            //        //imgPhoto.Dispose();
+            //    }
+
+            //    newFilePath = path + filename + "_large" + extension;
+            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+            //    {
+            //        System.IO.File.Delete(Server.MapPath(newFilePath));
+            //        Bitmap image = ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
+            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_large" + extension));
+            //        image.Dispose();
+
+            //    }
+            //    imgPhoto.Dispose();
+            //}
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            Console.Write(ts);
+            Response.Redirect("~/Home/LibrarySettings");
+        }
+
+        public Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+            //lock (locker) {
+                float img = image.HorizontalResolution;
+                float img2 = image.VerticalResolution;
+                destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+            //}
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+            return destImage;
         }
 
         public ActionResult Export()

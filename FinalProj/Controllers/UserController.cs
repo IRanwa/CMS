@@ -30,8 +30,8 @@ namespace FinalProj.Controllers
             if (login.role != null)
             {
                 Session.Add("user", login);
-                ViewBag.Display = "none";
-                Session.Add("user", login);
+                //ViewBag.Display = "none";
+                //Session.Add("user", login);
                 Response.Redirect("~/Home/Dashboard");
                 //return View("../Home/Dashboard");
             }

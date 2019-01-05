@@ -166,6 +166,26 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
         }
+
+        public void updateImgLibSettings(Website web)
+        {
+            string query = "update website set thumbWidth=@thumbWidth, thumbHeight=@thumbHeight, " +
+                "mediumWidth=@mediumWidth, mediumHeight=@mediumHeight, largeWidth=@largeWidth, " +
+                "largeHeight=@largeHeight where webID=@webID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@thumbWidth", web.thumbWidth);
+                cmd.Parameters.AddWithValue("@thumbHeight", web.thumbHeight);
+                cmd.Parameters.AddWithValue("@mediumWidth", web.mediumWidth);
+                cmd.Parameters.AddWithValue("@mediumHeight", web.mediumHeight);
+                cmd.Parameters.AddWithValue("@largeWidth", web.largeWidth);
+                cmd.Parameters.AddWithValue("@largeHeight", web.largeHeight);
+                cmd.Parameters.AddWithValue("@webID", web.webID);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
         //Website Query End
 
         //Image Library Query Start
@@ -499,11 +519,12 @@ namespace FinalProj.Models
         {
             List<Post> posts = new List<Post>();
             string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
-                " and pc.webID=@webID";
+                " and pc.webID=@webID and p.postStatus=@postStatus";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@webID", login.webID);
+                cmd.Parameters.AddWithValue("@postStatus", status);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())

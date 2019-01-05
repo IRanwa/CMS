@@ -1,8 +1,134 @@
-﻿
+﻿@model FinalProj.Models.Website
 @{
     ViewBag.Title = "Settings (Image Library)";
 }
+<style>
+    .Custom-Button {
+        padding: 5px 15px;
+    }
 
+    .jumbotron {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+    #update-table {
+        width: 100%;
+        border-spacing: 10px;
+        border-collapse: separate;
+    }
+</style>
+<script>
+    function isNumberKey(textbox, evt) {
+        var value = 48;
+        if (textbox.value.length == 0) {
+            value = 49;
+        }
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode > 31 && (charCode < value || charCode > 57))
+            return false;
+
+        return true;
+        
+    }
+    function checkTextBox(textbox) {
+        if (textbox.value == 0) {
+            textbox.value = "";
+        }
+    }
+</script>
 <div style="margin-left:160px">
-    <h2>LibrarySettings</h2>
+    <h2>Image Library Settings</h2>
+    <hr />
+    <div class="jumbotron">
+        @using (Html.BeginForm("changeImgLibSettings", "Home", FormMethod.Post))
+        {
+            @Html.HiddenFor(m => m.webID, new { Value = ViewBag.website.webID })
+        <table id="update-table">
+            <tr>
+                <td>Thumbnail Width : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.thumbWidth, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.thumbWidth
+               })
+                </td>
+            </tr>
+            <tr>
+                <td>Thumbnail Height : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.thumbHeight, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.thumbHeight
+               })
+                </td>
+            </tr>
+
+            <tr>
+                <td>Medium Width : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.mediumWidth, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.mediumWidth
+               })
+                </td>
+            </tr>
+            <tr>
+                <td>Medium Height : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.mediumHeight, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.mediumHeight
+               })
+                </td>
+            </tr>
+
+            <tr>
+                <td>Large Width : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.largeWidth, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.largeWidth
+               })
+                </td>
+            </tr>
+            <tr>
+                <td>Large Height : </td>
+                <td>
+                    @Html.TextBoxFor(m => m.largeHeight, new {
+                   Style = "width:100%;",
+                   maxlength = "4",
+                   @required = "true",
+                   @onkeypress = "return isNumberKey(this,event)",
+                   @onkeyup = "checkTextBox(this)",
+                   Value = ViewBag.website.largeHeight
+               })
+                </td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Save" class="Custom-Button" /></td>
+            </tr>
+        </table>
+        }
+    </div>
 </div>
