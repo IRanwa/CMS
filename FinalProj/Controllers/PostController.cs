@@ -91,7 +91,8 @@ namespace FinalProj.Controllers
             {
                 int startIndex = (img.currentPage - 1) * 12;
                 DBConnect db = new DBConnect();
-                List<ImageLibrary> images = db.getImages(startIndex,12);
+                Login login = (Login)Session["user"];
+                List<ImageLibrary> images = db.getImages(startIndex,12,login);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }
@@ -131,7 +132,8 @@ namespace FinalProj.Controllers
             if (nextPage != 0)
             {
                 int startIndex = (nextPage - 1) * 12;
-                List<ImageLibrary> images = db.getImages(startIndex, 12);
+                Login login = (Login)Session["user"];
+                List<ImageLibrary> images = db.getImages(startIndex, 12,login);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }

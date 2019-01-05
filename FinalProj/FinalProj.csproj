@@ -52,6 +52,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -197,6 +198,7 @@
     <Content Include="Views\Home\Settings.cshtml" />
     <Content Include="Views\Home\LibrarySettings.cshtml" />
     <Content Include="Views\Template\Index.cshtml" />
+    <Content Include="Views\Home\Export.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

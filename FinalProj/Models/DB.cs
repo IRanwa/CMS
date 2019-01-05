@@ -217,14 +217,15 @@ namespace FinalProj.Models
             return imgLoc;
         } 
 
-        public List<ImageLibrary> getImages(int startIndex, int endIndex)
+        public List<ImageLibrary> getImages(int startIndex, int endIndex, Login login)
         {
             List<ImageLibrary> images = new List<ImageLibrary>();
-            string query = "select * from Image_Library limit @startIndex, @endIndex";
+            string query = "select * from Image_Library where webID=@webID limit @startIndex, @endIndex";
             if (this.OpenConnection()==true){
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@startIndex", startIndex);
                 cmd.Parameters.AddWithValue("@endIndex", endIndex);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())
@@ -344,6 +345,29 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
             return categories;
+        }
+
+        public Category getCategoryByPost(Post post, Login login)
+        {
+            string query = "select * from Categories where catID=@catID and webID=@webID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@catID", post.catId);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    Category cat = new Category();
+                    cat.catID = Int32.Parse(dataReader["catID"].ToString());
+                    cat.title = dataReader["catTitle"].ToString();
+                    cat.desc = dataReader["catDesc"].ToString();
+                    this.CloseConnection();
+                    return cat;
+                }
+            }
+            return null;
         }
 
         public int getCategoryCount()

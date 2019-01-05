@@ -235,6 +235,8 @@
                     <div class="sidenav-menu">
                         @Html.ActionLink("General", "Settings", "Home")
                         @Html.ActionLink("Image Library", "LibrarySettings", "Home")
+                        @Html.ActionLink("Export", "Export", "Home")
+                        @Html.ActionLink("Import", "Import", "Home")
                     </div>
                 </div>
                 <div class="sidenav-item" style="margin-bottom:10px; bottom:0; position: absolute;">
@@ -247,7 +249,7 @@
     <div class="container body-content">
         <div class="alert" style="display:@ViewBag.Display; margin-left:@ViewBag.alertSize">
             <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-            @ViewBag.Message
+            <p class="alert-message">@ViewBag.Message</p>
         </div>
         @RenderBody()
         <hr />

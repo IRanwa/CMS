@@ -1,0 +1,144 @@
+﻿
+@{
+    ViewBag.Title = "Export";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    .Sub-Container{
+        padding:10px 20px;
+    }
+    .Custom-Button{
+        padding:5px 10px;
+        float:right;
+    }
+</style>
+<script>
+    
+    function exportAll(checkbox) {
+        var status = checkbox.checked;
+        var chkboxes = document.getElementsByClassName("sub-checkbox");
+        if (status) {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxes[count].checked = false;
+                chkboxes[count].disabled = true;
+            }
+        } else {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxes[count].disabled = false;
+            }
+        }
+    }
+    function exportData() {
+        var chkBoxAll = document.getElementById("checkBoxAll");
+        var chkboxValues = [];
+        var chkboxes = document.getElementsByClassName("sub-checkbox");
+        if (chkBoxAll.checked) {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxValues.push(chkboxes[count].value);
+            }
+        } else {
+            for (var count = 0; count < chkboxes.length; count++) {
+                if (chkboxes[count].checked) {
+                    chkboxValues.push(chkboxes[count].value);
+                }
+            }
+        }
+        
+        if (chkboxValues.length == 0) {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Please select an option!";
+        } else {
+            document.getElementsByClassName("alert")[0].style.display = "none";
+            document.getElementsByClassName("progress-bar-container")[0].style.display = "block";
+            var status = false;
+            var success = false;
+            $.ajax({
+                type: "POST",
+                url: "/Home/Export",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ checkboxes: chkboxValues }),
+                beforeSend: function () {
+                    document.getElementById("progress-bar-text").innerHTML = "Exporting...";
+                    intervalId = window.setInterval(function () {
+                        document.getElementById("progress-bar").style.width = count + "%";
+                        count++;
+                        if (count > 100) {
+                            count = 0;
+                        }
+                        if (status) {
+                            clearInterval(intervalId);
+                            if (success) {
+                                document.getElementById("progress-bar").className = "progress-bar-success";
+                                document.getElementById("progress-bar-text").innerHTML = "Completed";
+                            } else {
+                                document.getElementById("progress-bar").className = "progress-bar-warning";
+                                document.getElementById("progress-bar-text").innerHTML = "Exporting Error!";
+                            }
+                            document.getElementById("progress-bar").style.width = "100%";
+                            
+                        }
+                    },10);
+                },
+                success: function () {
+                    success = true;
+                    status = true;
+                },
+                error: function () {
+                    alert("Error occured!")
+                    status = true;
+                }
+            });
+            
+        }
+    }
+    //function exportData(){
+    //    var taskId = 543;
+    //    //alert("hi");
+    //    $.post('/Home/SomeTaskAsync', { id: taskId }, function (result) {
+    //        //window.clearInterval(intervalId);
+    //        alert(result);
+    //        document.getElementById("result").innerHTML += result;
+    //    });
+
+    //    var intervalId = window.setInterval(function () {
+    //        $.getJSON('/Home/SomeTaskProgress', { id: taskId }, function (json) {
+    //            document.getElementById("progress-bar").style.width = json.Progress + '%';
+    //            document.getElementById("progress-bar-text").innerHTML = json.Progress + '%';
+               
+    //        },0);
+    //    });
+    //}
+</script>
+<div style="margin-left:160px">
+    <h2>Export</h2>
+    <hr />
+    <div class="jumbotron Sub-Container">
+        <table style="width:100%">
+            <tr><th>Export Options</th></tr>
+            <tr><td><input type="checkbox" id="checkBoxAll" onchange="exportAll(this)" />All</td></tr>
+            <tr><td><input type="checkbox" value="posts" class="sub-checkbox" />Posts</td></tr>
+            <tr><td><input type="checkbox" value="images" class="sub-checkbox" />Images</td></tr>
+            <tr><td><input type="checkbox" value="categories" class="sub-checkbox" />Categories</td></tr>
+            <tr><td><input type="checkbox" value="website" class="sub-checkbox" />Website Setting</td></tr>
+            <tr><td><br /></td></tr>
+            <tr>
+                <td>
+                    <div class="progress-bar-container" hidden>
+                        Exporting
+                        <div class="progress-bar-info" id="progress-bar" style="height:24px;width:0%; text-align:center;">
+                            <label id="progress-bar-text">Waiting...</label>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr><td><br /></td></tr>
+            <tr>
+                <td>
+                    <input type="button" class="Custom-Button" value="Export" onclick="exportData();" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
