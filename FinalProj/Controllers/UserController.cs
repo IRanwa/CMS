@@ -29,10 +29,10 @@ namespace FinalProj.Controllers
             login = db.checkUserReg(login);
             if (login.role != null)
             {
-                Session.Add("user", login);
+                //Session["user"] = login;
                 //ViewBag.Display = "none";
-                //Session.Add("user", login);
-                Response.Redirect("~/Home/Dashboard");
+                Session.Add("user", login);
+                Response.Redirect("~/Home/Dashboard",false);
                 //return View("../Home/Dashboard");
             }
             else
@@ -83,5 +83,14 @@ namespace FinalProj.Controllers
             }
             return View();
         }
+
+        public ActionResult LogOut()
+        {
+            ViewBag.Display = "none";
+            Session["user"] = null;
+            return View("Index");
+        }
     }
+
+    
 }

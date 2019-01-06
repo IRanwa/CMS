@@ -159,6 +159,10 @@ namespace FinalProj.Controllers
                         image.Dispose();
                         imgPhoto.Dispose();
 
+                        if (InputFileName.Length>50)
+                        {
+                            InputFileName = InputFileName.Substring(0, 50);
+                        }
                         images.Add(new ImageLibrary(web.webID, InputFileName, "", serverPath+fileName+Extension, date , date));
                         ViewBag.Message = "Images Uploaded Successfully!";
                         ViewBag.Display = "Block";

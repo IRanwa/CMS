@@ -433,6 +433,23 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
         }
+
+        public Category checkCategoryAvailable(Category category)
+        {
+            string query = "select * from Categories where catTitle=@catTitle";
+            if (this.OpenConnection()==true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query,connection);
+                cmd.Parameters.AddWithValue("@catTitle", category.title);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    category.catID = Int32.Parse(dataReader["catID"].ToString());
+                }
+                this.CloseConnection();
+            }
+            return category;
+        }
         //Category Query End
 
         //Posts Query Start
@@ -654,6 +671,8 @@ namespace FinalProj.Models
                 updatePostCat(post);
             }
         }
+
+        
         //Posts Query End
 
         //Posts Category Query Start

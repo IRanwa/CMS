@@ -145,7 +145,7 @@
                 @foreach (var img in ViewBag.DisplayImages)
                 {
                     <tr >
-                        <td id="listview-image-container" hidden>
+                        <td id="@img.imageID" hidden>
                             <input type="text" value="@img.imageID" hidden />
                             <input type="text" value="@img.title" hidden />
                             <input type="text" value="@img.imgDesc" hidden />
@@ -161,7 +161,7 @@
                         <td>@img.imgDesc</td>
                         <td>@img.modifyDate</td>
                         <td>
-                            <a href="javascript:void(0);" onclick="displayImageProp(document.getElementById('listview-image-container'));" class="Custom-Button">Edit</a>
+                            <a href="javascript:void(0);" onclick="displayImageProp(document.getElementById('@img.imageID'));" class="Custom-Button">Edit</a>
                             @Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout = @ViewBag.layoutView }, new { @class = "Custom-Button" })
                         </td>
                     </tr>

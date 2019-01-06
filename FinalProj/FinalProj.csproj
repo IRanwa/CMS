@@ -199,6 +199,7 @@
     <Content Include="Views\Home\LibrarySettings.cshtml" />
     <Content Include="Views\Template\Index.cshtml" />
     <Content Include="Views\Home\Export.cshtml" />
+    <Content Include="Views\Home\Import.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -13,7 +13,7 @@ namespace FinalProj.Controllers
         public ActionResult Index()
         {
             DBConnect db = new DBConnect();
-            Login login = (Login)Session["user"];
+            Login login = Session["user"] as Login;
             Website web = db.getWebsite(login);
             ViewBag.webTitle = web.webTitle;
             ViewBag.BackgroundImage = web.featuredImage;

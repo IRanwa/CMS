@@ -24,6 +24,11 @@ namespace FinalProj.Models
             this.catID = catID;
         }
 
+        public Category(string title)
+        {
+            this.title = title;
+        }
+
         public Category(int catID, string title, string desc) : this(catID)
         {
             this.title = title;

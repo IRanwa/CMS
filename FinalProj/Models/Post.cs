@@ -9,7 +9,7 @@ namespace FinalProj.Models
     {
         public long postId { get; set; }
         public int catId { get; set; }
-        public int webId { get; set; }
+        public long webId { get; set; }
         public string postTitle { get; set; }
         public string postData { get; set; }
         public string postLoc { get; set; }

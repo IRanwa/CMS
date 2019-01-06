@@ -1,0 +1,233 @@
+﻿@model FinalProj.Models.ImageLibrary
+@{
+    ViewBag.Title = "Import";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    .Sub-Container {
+        padding: 10px 20px;
+        margin: 0 20%;
+    }
+
+    .Custom-Button {
+        padding: 5px 10px;
+        float: right;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    input {
+        margin: 10px;
+    }
+
+    upload-btn-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    .btn {
+        border: 2px solid gray;
+        color: gray;
+        background-color: white;
+        padding: 5px 15px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: bold;
+        margin: 10px;
+    }
+
+    .upload-btn-wrapper input[type=file] {
+        font-size: 80px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+    }
+</style>
+<script>
+    
+    function importData() {
+        var files = [];
+        var posts_upload = document.getElementById("posts-upload").files;
+        var images_upload_csv = document.getElementById("images-upload-csv").files;
+        var images_upload_zip = document.getElementById("images-upload-zip").files;
+        var categories_upload = document.getElementById("categories-upload").files;
+        var website_upload = document.getElementById("website-upload").files;
+
+        if (posts_upload.length > 0) {
+            files.push(posts_upload[0]);
+        }
+        if (images_upload_csv.length > 0) {
+            files.push(images_upload_csv[0]);
+        }
+        if (images_upload_zip.length > 0) {
+            files.push(images_upload_zip[0]);
+        }
+        if (categories_upload.length > 0) {
+            files.push(categories_upload[0]);
+        }
+        if (website_upload.length > 0) {
+            files.push(website_upload[0]);
+        }
+
+        if (files.length > 0) {
+            var form = $('#fileUploadForm')[0];
+
+            var data = new FormData(form);
+            var fd = new FormData();
+            fd.append("files", files);
+
+            var status = false;
+            var success = false;
+            $.ajax({
+                type: "POST",
+                url: "/Home/Import",
+                data: data,
+                enctype: 'multipart/form-data',
+                processData: false,  // Important!
+                contentType: false,
+                cache: false,
+                beforeSend: function () {
+                    document.getElementById("progress-bar-text").innerHTML = "Importing...";
+                    intervalId = window.setInterval(function () {
+                        document.getElementById("progress-bar").style.width = count + "%";
+                        count++;
+                        if (count > 100) {
+                            count = 0;
+                        }
+                        if (status) {
+                            clearInterval(intervalId);
+                            if (success) {
+                                document.getElementById("progress-bar").className = "progress-bar-success";
+                                document.getElementById("progress-bar-text").innerHTML = "Completed";
+                            } else {
+                                document.getElementById("progress-bar").className = "progress-bar-warning";
+                                document.getElementById("progress-bar-text").innerHTML = "Exporting Error!";
+                            }
+                            document.getElementById("progress-bar").style.width = "100%";
+
+                        }
+                    }, 10);
+                },
+                success: function () {
+                    status = true;
+                    success = true;
+                    alert("success");
+                },
+                error: function () {
+                    status = true;
+                    alert("Error occured!")
+                }
+            });
+        } else {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Please fill the details!";
+        }
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Import</h2>
+    <hr />
+    <div class="jumbotron Sub-Container">
+        @using (Html.BeginForm("Import", "Home", FormMethod.Post,
+                            new { enctype = "multipart/form-data", id= "fileUploadForm" }))
+        {
+            <table style="width:100%">
+                <tr><th>Import Details</th></tr>
+                <tr>
+                    <td>
+                        Posts
+                    </td>
+                    <td>
+                        <div class="upload-btn-wrapper">
+                            <label for="posts-upload" class="btn">Upload Posts</label>
+                            @Html.TextBoxFor(model => model.files, "", new { @type = "file", @accept = ".csv", id="posts-upload"
+                           , @onchange= "document.getElementById('posts-name').innerHTML=files[0].name" })
+                            <label id="posts-name">No File Choosen</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Images
+                    </td>
+                    <td>
+                        <div class="upload-btn-wrapper">
+                            <label for="images-upload-csv" class="btn">Upload Image CSV</label>
+                            @Html.TextBoxFor(model => model.files, "", new { @type = "file", @accept = ".csv", id="images-upload-csv"
+                           , @onchange= "document.getElementById('images-name-csv').innerHTML=files[0].name" })
+
+                            @*<input type="file" accept=".csv" id="images-upload-csv"
+                                   onchange="document.getElementById('images-name-csv').innerHTML=files[0].name" />*@
+                            <label id="images-name-csv">No File Choosen</label>
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <label for="images-upload-zip" class="btn">Upload Image Zip</label>
+                            @Html.TextBoxFor(model => model.files, "", new { @type = "file", @accept = ".zip", id="images-upload-zip"
+                           , @onchange= "document.getElementById('images-name-zip').innerHTML=files[0].name" })
+
+                            @*<input type="file" accept=".zip" id="images-upload-zip"
+                                   onchange="document.getElementById('images-name-zip').innerHTML=files[0].name" />*@
+                            <label id="images-name-zip">No File Choosen</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Categories
+                    </td>
+                    <td>
+                        <div class="upload-btn-wrapper">
+                            <label for="categories-upload" class="btn">Upload Categories</label>
+                            @Html.TextBoxFor(model => model.files, "", new { @type = "file", @accept = ".csv", id="categories-upload"
+                           , @onchange= "document.getElementById('categories-name').innerHTML=files[0].name"})
+
+                            @*<input type="file" accept=".csv" id="categories-upload"
+                                   onchange="document.getElementById('categories-name').innerHTML=files[0].name" />*@
+                            <label id="categories-name">No File Choosen</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Website Settings
+                    </td>
+                    <td>
+                        <div class="upload-btn-wrapper">
+                            <label for="website-upload" class="btn">Upload Website Settings</label>
+                            @Html.TextBoxFor(model => model.files, "", new { @type = "file", @accept = ".csv", id="website-upload"
+                           , @onchange= "document.getElementById('website-name').innerHTML=files[0].name" })
+
+                            @*<input type="file" accept=".csv" id="website-upload"
+                                   onchange="document.getElementById('website-name').innerHTML=files[0].name" />*@
+                            <label id="website-name">No File Choosen</label>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr><td><br /></td></tr>
+                <tr>
+                    <td>
+                        <div class="progress-bar-container" hidden>
+                            Exporting
+                            <div class="progress-bar-info" id="progress-bar" style="height:24px;width:0%; text-align:center;">
+                                <label id="progress-bar-text">Waiting...</label>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr><td><br /></td></tr>
+                <tr>
+                    <td>
+                        <input type="button" class="Custom-Button" value="Import" onclick="importData();" />
+                    </td>
+                </tr>
+            </table>
+        }
+        </div>
+</div>
+
+

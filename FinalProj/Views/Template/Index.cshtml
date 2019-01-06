@@ -86,11 +86,16 @@
         @if (ViewBag.BackgroundImage != "")
         {
             <img src="@Url.Content(ViewBag.BackgroundImage)" style="width:100%; height:75%;" id="backgroundimg" />
+            <div class="centered"><label>@ViewBag.webTitle</label></div>
         }
-        <div class="centered"><label>@ViewBag.webTitle</label></div>
+        else
+        {
+            <div ><label>@ViewBag.webTitle</label></div>
+        }
+
 
     </div>
-    <table style="width:100%">
+    <table style="width:100%;">
         <tr valign="top">
             <td width="30%">
                 <div class="navbar navbar-fixed-top">

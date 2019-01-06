@@ -50,6 +50,7 @@
         } else {
             document.getElementsByClassName("alert")[0].style.display = "none";
             document.getElementsByClassName("progress-bar-container")[0].style.display = "block";
+            document.getElementById("progress-bar").className = "progress-bar-info";
             var status = false;
             var success = false;
             $.ajax({
@@ -77,14 +78,17 @@
                             document.getElementById("progress-bar").style.width = "100%";
                             
                         }
-                    },10);
+                    });
                 },
                 success: function () {
                     success = true;
                     status = true;
                 },
-                error: function () {
-                    alert("Error occured!")
+                error: function (result) {
+                    alert("Error occured!");
+                    alert(result.exception);
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = result;
                     status = true;
                 }
             });
