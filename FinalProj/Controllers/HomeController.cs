@@ -19,7 +19,6 @@ namespace FinalProj.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly object locker = new object();
         public ActionResult Dashboard()
         {
             ViewBag.Display = "none";
@@ -137,7 +136,9 @@ namespace FinalProj.Controllers
                      string extension = filename.Substring(filename.LastIndexOf("."));
                      string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
                      filename = filename.Replace(extension, "");
+
                      List<Task> tasksList = new List<Task>();
+
                      if (previousWeb.thumbWidth!=web.thumbWidth || previousWeb.thumbHeight!=web.thumbHeight) {
                          Task thumbTask = Task.Factory.StartNew(() =>
                             {
@@ -250,11 +251,10 @@ namespace FinalProj.Controllers
         {
             var destRect = new Rectangle(0, 0, width, height);
             var destImage = new Bitmap(width, height);
-            //lock (locker) {
-                float img = image.HorizontalResolution;
-                float img2 = image.VerticalResolution;
-                destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-            //}
+            float img = image.HorizontalResolution;
+            float img2 = image.VerticalResolution;
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
             using (var graphics = Graphics.FromImage(destImage))
             {
                 graphics.CompositingMode = CompositingMode.SourceCopy;
@@ -277,14 +277,12 @@ namespace FinalProj.Controllers
             ViewBag.Display = "none";
             return View();
         }
-
+        
         [HttpPost]
         public ActionResult Export(List<string> checkboxes)
         {
                 Console.Write(checkboxes.Count);
                 Login login = (Login)Session["user"];
-
-                //List<Task> taskList = new List<Task>();
 
                 if (Directory.Exists(Server.MapPath("~/Export/")))
                 {
@@ -298,7 +296,9 @@ namespace FinalProj.Controllers
                     Directory.CreateDirectory(Server.MapPath("~/Export/"));
                 }
                 List<Task> taskList = new List<Task>();
-                Task<int> mainTask = Task.Factory.StartNew(() =>
+            HttpContext.Application["taskCount"] = 0;
+            WebSettings.exportProgress = 0;
+            Task<int> mainTask = Task.Factory.StartNew(() =>
                  {
                      int count = 0;
                      foreach (string chkbox in checkboxes)
@@ -325,43 +325,38 @@ namespace FinalProj.Controllers
                                  }, new { tempCount, login });
                                  taskList.Add(currentTask);
                                  break;
-                //             case "website":
-                //                 tempCount = 1;
-                //                 currentTask = Task.Factory.StartNew((obj) =>
-                //                 {
-                //                     exportWebsite(login);
-                //                 }, login);
-                //                 taskList.Add(currentTask);
-                //                 break;
-                //             case "categories":
-                //                 tempCount = db.getCategoryCount();
-                //                 currentTask = Task.Factory.StartNew((obj) =>
-                //                 {
-                //                     exportCategories(tempCount, login);
-                //                 }, new { tempCount, login });
-                //                 taskList.Add(currentTask);
-                //                 break;
+                             case "website":
+                                 tempCount = 1;
+                                 currentTask = Task.Factory.StartNew((obj) =>
+                                 {
+                                     exportWebsite(login);
+                                 }, new { login });
+                                 taskList.Add(currentTask);
+                                 break;
+                             case "categories":
+                                 tempCount = db.getCategoryCount();
+                                 currentTask = Task.Factory.StartNew((obj) =>
+                                 {
+                                     exportCategories(tempCount, login);
+                                 }, new { tempCount, login });
+                                 taskList.Add(currentTask);
+                                 break;
                          }
                          count += tempCount;
                      }
-
+                     count += 4;
                      return count;
                 });
 
 
-                //if (System.IO.File.Exists(Server.MapPath("~/Export.zip")))
-                //{
-                //    System.IO.File.Delete(Server.MapPath("~/Export.zip"));
-                //}
-                //int result = mainTask.Result;
-                //Task.WaitAll(taskList.ToArray());
-                //ZipFile.CreateFromDirectory(Server.MapPath("~/Export/"), Server.MapPath("~/Export.zip"));
-                //byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath("~/Export.zip"));
-                //string fileName = "Export.zip";
-                //return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
-                return View();
             
-            return View();
+            //int result = mainTask.Result;
+            //Task.WaitAll(taskList.ToArray());
+            //ZipFile.CreateFromDirectory(Server.MapPath("~/Export/"), Server.MapPath("~/Export.zip"));
+            //byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath("~/Export.zip"));
+            //string fileName = "Export.zip";
+            return Json(new { totalCount = mainTask.Result }, JsonRequestBehavior.AllowGet);
+            //return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
 
         public void exportPosts(int count,Login login)
@@ -377,13 +372,24 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<Post> postsList = db.getPostList(0, count, login);
             List<string> catList = new List<string>();
+            int taskCount;
             foreach (Post post in postsList)
             {
 
                 DBConnect paralleDB = new DBConnect();
                 string catTitle = paralleDB.getCategoryByPost(post, login).title;
-                string postContent = "\""+System.IO.File.ReadAllText(Server.MapPath(post.postLoc))+"\"";
-                dt.Rows.Add(post.postTitle, catTitle, postContent, post.postStatus, post.createdDate, post.modifyDate);
+                string postContent = System.IO.File.ReadAllText(Server.MapPath(post.postLoc));
+                if (postContent.Contains("\n"))
+                {
+                    int index = postContent.LastIndexOf("\n");
+                    postContent = postContent.Substring(0, index);
+                }
+                dt.Rows.Add(post.postTitle, catTitle, postContent, post.postStatus
+                    , post.createdDate, post.modifyDate);
+                taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString())+1;
+                HttpContext.Application["taskCount"] = taskCount;
+
+                WebSettings.setExportProgress(1);
             }
 
             StringBuilder builder = new StringBuilder();
@@ -414,6 +420,10 @@ namespace FinalProj.Controllers
             builder.Append(string.Join("\n", rows.ToArray()));
             
             System.IO.File.WriteAllText(Server.MapPath("~/Export/ExportPosts.csv"), builder.ToString());
+
+            taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString()) + 1;
+            HttpContext.Application["taskCount"] = taskCount;
+            WebSettings.setExportProgress(1);
         }
 
         public void exportImages(int count, Login login)
@@ -427,22 +437,21 @@ namespace FinalProj.Controllers
 
             DBConnect db = new DBConnect();
             List<ImageLibrary> imageslist = db.getImages(0, count, login);
-
-            
             foreach (ImageLibrary Img in imageslist)
             {
                 if (System.IO.File.Exists(Server.MapPath(Img.imgLoc)))
                 {
                     string filename = Img.imgLoc.Split('/')[3];
                     string path = Img.imgLoc.Substring(0, Img.imgLoc.IndexOf(filename)).Replace("~/","");
-                    if (!Directory.Exists(Server.MapPath("~/Export/"+path)))
+                    if (!Directory.Exists(Server.MapPath("~/TempImages/" + path)))
                     {
-                        Directory.CreateDirectory(Server.MapPath("~/Export/" + path));
+                        Directory.CreateDirectory(Server.MapPath("~/TempImages/" + path));
                     }
                     System.IO.File.Copy(Server.MapPath(Img.imgLoc)
-                        , Server.MapPath("~/Export/" + path + "/" + filename));
+                        , Server.MapPath("~/TempImages/" + path + "/" + filename));
                 }
                 dt.Rows.Add(Img.title, Img.imgDesc, Img.imgLoc, Img.uploadDate, Img.modifyDate);
+                WebSettings.setExportProgress(1);
             }
             StringBuilder builder = new StringBuilder();
             List<string> columnNames = new List<string>();
@@ -476,10 +485,11 @@ namespace FinalProj.Controllers
             {
                 System.IO.File.Delete(Server.MapPath("~/Export/ImagesLibrary.zip"));
             }
-            if (Directory.Exists(Server.MapPath("~/Export/Images/")))
+            if (Directory.Exists(Server.MapPath("~/TempImages/Images/")))
             {
-                ZipFile.CreateFromDirectory(Server.MapPath("~/Export/Images/"), Server.MapPath("~/Export/ImagesLibrary.zip"));
-                foreach (string path in Directory.GetDirectories(Server.MapPath("~/Export/Images/")))
+                ZipFile.CreateFromDirectory(Server.MapPath("~/TempImages/Images/"), Server.MapPath("~/Export/ImagesLibrary.zip"));
+                
+                foreach (string path in Directory.GetDirectories(Server.MapPath("~/TempImages/Images/")))
                 {
                     foreach (string file in Directory.GetFiles(path))
                     {
@@ -488,8 +498,7 @@ namespace FinalProj.Controllers
                     Directory.Delete(path);
                 }
             }
-            
-            
+            WebSettings.setExportProgress(1);
         }
 
         public void exportCategories(int count, Login login)
@@ -500,8 +509,13 @@ namespace FinalProj.Controllers
 
             DBConnect db = new DBConnect();
             List<Category> catList = db.getCatList(0, count, login);
+            int taskCount;
             foreach (Category cat in catList) { 
                 dt.Rows.Add(cat.title, cat.desc);
+
+                taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString()) + 1;
+                HttpContext.Application["taskCount"] = taskCount;
+                WebSettings.setExportProgress(1);
             }
 
             StringBuilder builder = new StringBuilder();
@@ -532,6 +546,9 @@ namespace FinalProj.Controllers
             builder.Append(string.Join("\n", rows.ToArray()));
 
             System.IO.File.WriteAllText(Server.MapPath("~/Export/ExportCategories.csv"), builder.ToString());
+            taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString()) + 1;
+            HttpContext.Application["taskCount"] = taskCount;
+            WebSettings.setExportProgress(1);
         }
 
         public void exportWebsite( Login login)
@@ -550,6 +567,11 @@ namespace FinalProj.Controllers
             Website web = db.getWebsite(login);
             dt.Rows.Add(web.webTitle, web.noOfPosts, web.thumbWidth, web.thumbHeight, web.mediumWidth
                 , web.mediumHeight,web.largeWidth, web.largeHeight);
+
+            int taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString()) + 1;
+            HttpContext.Application["taskCount"] = taskCount;
+            WebSettings.setExportProgress(1);
+
             StringBuilder builder = new StringBuilder();
             List<string> columnNames = new List<string>();
             List<string> rows = new List<string>();
@@ -578,14 +600,30 @@ namespace FinalProj.Controllers
             builder.Append(string.Join("\n", rows.ToArray()));
 
             System.IO.File.WriteAllText(Server.MapPath("~/Export/ExportWebsite.csv"), builder.ToString());
+
+            taskCount = Int32.Parse(HttpContext.Application["taskCount"].ToString()) + 1;
+            HttpContext.Application["taskCount"] = taskCount;
+            WebSettings.setExportProgress(1);
         }
 
         public ActionResult ExportTaskProgress()
         {
             return Json(new
             {
-                Progress = HttpContext.Application["export"]
+                Progress = WebSettings.exportProgress
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        public FileResult downloadExortFile()
+        {
+            if (System.IO.File.Exists(Server.MapPath("~/Export.zip")))
+            {
+                System.IO.File.Delete(Server.MapPath("~/Export.zip"));
+            }
+            ZipFile.CreateFromDirectory(Server.MapPath("~/Export/"), Server.MapPath("~/Export.zip"));
+            byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath("~/Export.zip"));
+            string fileName = "Export.zip";
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
 
         public ActionResult Import()
@@ -653,11 +691,14 @@ namespace FinalProj.Controllers
                             switch (columns[i])
                             {
                                 case "Post Title":
-                                    if (cell.Length>150)
+                                    if (cell.Length > 150)
                                     {
-                                        return false;
+                                        post.postTitle = cell.Substring(0, 150);
                                     }
-                                    post.postTitle = cell;
+                                    else
+                                    {
+                                        post.postTitle = cell;
+                                    }
                                     break;
                                 case "Post Category":
                                     DBConnect db = new DBConnect();
@@ -686,8 +727,9 @@ namespace FinalProj.Controllers
                                     }
                                     else
                                     {
-                                        post.postStatus = "Darft";
+                                        post.postStatus = "Draft";
                                     }
+                                    
                                     break;
                                 case "Post Created Date":
                                     DateTime createdDate;
@@ -716,6 +758,7 @@ namespace FinalProj.Controllers
                             }
                             i++;
                         }
+                        
                         rows.Add(post);
                     }
                 }

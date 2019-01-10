@@ -17,6 +17,6 @@ namespace FinalProj.Models
         public int largeWidth { get; set; }
         public int largeHeight { get; set; }
         public string featuredImage { get; set; }
-
+        
     }
 }

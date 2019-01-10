@@ -14,20 +14,89 @@
 </style>
 <script>
     
-    function exportAll(checkbox) {
-        var status = checkbox.checked;
-        var chkboxes = document.getElementsByClassName("sub-checkbox");
-        if (status) {
-            for (var count = 0; count < chkboxes.length; count++) {
-                chkboxes[count].checked = false;
-                chkboxes[count].disabled = true;
-            }
-        } else {
-            for (var count = 0; count < chkboxes.length; count++) {
-                chkboxes[count].disabled = false;
-            }
-        }
-    }
+    //function exportAll(checkbox) {
+    //    var status = checkbox.checked;
+    //    var chkboxes = document.getElementsByClassName("sub-checkbox");
+    //    if (status) {
+    //        for (var count = 0; count < chkboxes.length; count++) {
+    //            chkboxes[count].checked = false;
+    //            chkboxes[count].disabled = true;
+    //        }
+    //    } else {
+    //        for (var count = 0; count < chkboxes.length; count++) {
+    //            chkboxes[count].disabled = false;
+    //        }
+    //    }
+    //}
+    //function exportData() {
+    //    var chkBoxAll = document.getElementById("checkBoxAll");
+    //    var chkboxValues = [];
+    //    var chkboxes = document.getElementsByClassName("sub-checkbox");
+    //    if (chkBoxAll.checked) {
+    //        for (var count = 0; count < chkboxes.length; count++) {
+    //            chkboxValues.push(chkboxes[count].value);
+    //        }
+    //    } else {
+    //        for (var count = 0; count < chkboxes.length; count++) {
+    //            if (chkboxes[count].checked) {
+    //                chkboxValues.push(chkboxes[count].value);
+    //            }
+    //        }
+    //    }
+        
+    //    if (chkboxValues.length == 0) {
+    //        document.getElementsByClassName("alert")[0].style.display = "block";
+    //        document.getElementsByClassName("alert-message")[0].innerHTML = "Please select an option!";
+    //    } else {
+    //        document.getElementsByClassName("alert")[0].style.display = "none";
+    //        document.getElementsByClassName("progress-bar-container")[0].style.display = "block";
+    //        document.getElementById("progress-bar").className = "progress-bar-info";
+    //        var status = false;
+    //        var success = false;
+    //        $.ajax({
+    //            type: "POST",
+    //            url: "/Home/Export",
+    //            contentType: 'application/json; charset=utf-8',
+    //            data: JSON.stringify({ checkboxes: chkboxValues }),
+    //            beforeSend: function () {
+    //                document.getElementById("progress-bar-text").innerHTML = "Exporting...";
+    //                //intervalId = window.setInterval(function () {
+    //                //    document.getElementById("progress-bar").style.width = count + "%";
+    //                //    count++;
+    //                //    if (count > 100) {
+    //                //        count = 0;
+    //                //    }
+    //                //    if (status) {
+    //                //        clearInterval(intervalId);
+    //                //        if (success) {
+    //                //            document.getElementById("progress-bar").className = "progress-bar-success";
+    //                //            document.getElementById("progress-bar-text").innerHTML = "Completed";
+    //                //        } else {
+    //                //            document.getElementById("progress-bar").className = "progress-bar-warning";
+    //                //            document.getElementById("progress-bar-text").innerHTML = "Exporting Error!";
+    //                //        }
+    //                //        document.getElementById("progress-bar").style.width = "100%";
+                            
+    //                //    }
+    //                //});
+    //            },
+    //            success: function () {
+    //                success = true;
+    //                status = true;
+    //            },
+    //            error: function (result) {
+    //                alert("Error occured!");
+    //                alert(result.exception);
+    //                document.getElementsByClassName("alert")[0].style.display = "block";
+    //                document.getElementsByClassName("alert-message")[0].innerHTML = result;
+    //                status = true;
+    //            }
+    //        });
+            
+    //    }
+    //}
+    var proc;
+    var intervalId;
     function exportData() {
         var chkBoxAll = document.getElementById("checkBoxAll");
         var chkboxValues = [];
@@ -43,75 +112,52 @@
                 }
             }
         }
-        
-        if (chkboxValues.length == 0) {
-            document.getElementsByClassName("alert")[0].style.display = "block";
-            document.getElementsByClassName("alert-message")[0].innerHTML = "Please select an option!";
-        } else {
-            document.getElementsByClassName("alert")[0].style.display = "none";
-            document.getElementsByClassName("progress-bar-container")[0].style.display = "block";
-            document.getElementById("progress-bar").className = "progress-bar-info";
-            var status = false;
-            var success = false;
-            $.ajax({
-                type: "POST",
-                url: "/Home/Export",
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ checkboxes: chkboxValues }),
-                beforeSend: function () {
-                    document.getElementById("progress-bar-text").innerHTML = "Exporting...";
-                    intervalId = window.setInterval(function () {
-                        document.getElementById("progress-bar").style.width = count + "%";
-                        count++;
-                        if (count > 100) {
-                            count = 0;
-                        }
-                        if (status) {
-                            clearInterval(intervalId);
-                            if (success) {
-                                document.getElementById("progress-bar").className = "progress-bar-success";
-                                document.getElementById("progress-bar-text").innerHTML = "Completed";
-                            } else {
-                                document.getElementById("progress-bar").className = "progress-bar-warning";
-                                document.getElementById("progress-bar-text").innerHTML = "Exporting Error!";
-                            }
-                            document.getElementById("progress-bar").style.width = "100%";
-                            
-                        }
-                    });
-                },
-                success: function () {
-                    success = true;
-                    status = true;
-                },
-                error: function (result) {
-                    alert("Error occured!");
-                    alert(result.exception);
-                    document.getElementsByClassName("alert")[0].style.display = "block";
-                    document.getElementsByClassName("alert-message")[0].innerHTML = result;
-                    status = true;
-                }
-            });
-            
-        }
-    }
-    //function exportData(){
-    //    var taskId = 543;
-    //    //alert("hi");
-    //    $.post('/Home/SomeTaskAsync', { id: taskId }, function (result) {
-    //        //window.clearInterval(intervalId);
-    //        alert(result);
-    //        document.getElementById("result").innerHTML += result;
-    //    });
+        var taskCount = 0;
 
-    //    var intervalId = window.setInterval(function () {
-    //        $.getJSON('/Home/SomeTaskProgress', { id: taskId }, function (json) {
-    //            document.getElementById("progress-bar").style.width = json.Progress + '%';
-    //            document.getElementById("progress-bar-text").innerHTML = json.Progress + '%';
+        //alert(taskCount);
+        document.getElementsByClassName("progress-bar-container")[0].hidden = false;
+        $.post('/Home/Export', { checkboxes: chkboxValues }, function (result) {
+            //window.clearInterval(intervalId);
+            //zalert(response);
+            taskCount = result.totalCount;
+            //alert(taskCount);
+            //document.getElementById("result").innerHTML += result;
+        });
+        
+        intervalId = window.setInterval(function () {
+            //$.ajax({
+            //    type: "POST",
+            //    url: "/Home/ExportTaskProgress",
+            //    contentType: 'application/json; charset=utf-8',
+            //    beforeSend: function (json) {
+
+            //    }
+            //});
+            $.getJSON('/Home/ExportTaskProgress', function (json) {
+                //alert(json.Progress);
+                progress = json.Progress;
+                proc = (json.Progress / taskCount) * 100.0;
+                //alert(proc);
+                document.getElementById("progress-bar").style.width = proc + '%';
+                document.getElementById("progress-bar-text").innerHTML = proc + '%';
+                
                
-    //        },0);
-    //    });
-    //}
+            });
+            if (proc >= 100) {
+                $.post("/Home/downloadExortFile",function() {
+                    
+                });
+                clearInterval(intervalId);
+            }
+            //window.setInterval(intervalId);
+        });
+        //alert(taskCount);
+        
+        //var getInterval = window.setInterval(function () {
+            
+        //},100);
+                
+    }
 </script>
 <div style="margin-left:160px">
     <h2>Export</h2>
