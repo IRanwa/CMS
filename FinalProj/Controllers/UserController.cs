@@ -68,7 +68,7 @@ namespace FinalProj.Controllers
 
                     Session.Add("user", login);
                     ViewBag.Display = "none";
-                    Response.Redirect("~/Home/Dashboard");
+                    Response.Redirect("~/Home/Dashboard",false);
                 }
                 else
                 {

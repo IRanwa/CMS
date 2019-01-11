@@ -26,6 +26,7 @@ namespace FinalProj.Controllers
                 Login login = (Login)Session["user"];
                 List<Category> categories = db.getCatList(startIndex, startIndex + 20,login);
                 if (categories.Count>1) {
+                    categories.RemoveAt(0);
                     ViewBag.DisplayCategories = categories;
                 }
                 ViewBag.CategoryProp = cat;

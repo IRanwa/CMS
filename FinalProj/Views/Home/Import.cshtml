@@ -77,11 +77,10 @@
             var form = $('#fileUploadForm')[0];
 
             var data = new FormData(form);
-            var fd = new FormData();
-            fd.append("files", files);
 
             var status = false;
             var success = false;
+            alert(data);
             $.ajax({
                 type: "POST",
                 url: "/Home/Import",
@@ -112,7 +111,12 @@
                         }
                     }, 10);
                 },
-                success: function () {
+                success: function (json) {
+                    
+                    if (json.status == false) {
+                        document.getElementsByClassName("alert")[0].style.display = "block";
+                        document.getElementsByClassName("alert-message")[0].innerHTML = json.message;
+                    }
                     status = true;
                     success = true;
                     alert("success");

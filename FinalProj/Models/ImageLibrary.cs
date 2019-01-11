@@ -9,7 +9,7 @@ namespace FinalProj.Models
     {
         public HttpPostedFileBase[] files { get; set; }
         public int imageID { get; set; }
-        public int webID{ get; set; }
+        public long webID{ get; set; }
         public string title { get; set; }
         public string imgDesc { get; set; }
         public string imgLoc { get; set; }

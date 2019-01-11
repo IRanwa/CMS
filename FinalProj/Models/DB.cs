@@ -209,10 +209,33 @@ namespace FinalProj.Models
                     cmd.CommandText = query;
                     cmd.Connection = connection;
                     cmd.ExecuteNonQuery();
-                    long id = cmd.LastInsertedId;
                     this.CloseConnection();
                 }
             }
+        }
+
+        public void uploadImage(ImageLibrary img)
+        {
+            string query = "Insert into image_library " +
+                "(webID,title,imgDesc,imgLoc,uploadDate,modifyDate) " +
+                "values (@webID,@title,@imgDesc,@imgLoc,@uploadDate,@modifyDate)";
+            
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand();
+                cmd.Parameters.AddWithValue("@webID", img.webID);
+                cmd.Parameters.AddWithValue("@title", img.title);
+                cmd.Parameters.AddWithValue("@imgDesc", img.imgDesc);
+                cmd.Parameters.AddWithValue("@imgLoc", img.imgLoc);
+                cmd.Parameters.AddWithValue("@uploadDate", img.uploadDate);
+                cmd.Parameters.AddWithValue("@modifyDate", img.modifyDate);
+
+                cmd.CommandText = query;
+                cmd.Connection = connection;
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+            
         }
 
         public string checkImageExists(ImageLibrary image)

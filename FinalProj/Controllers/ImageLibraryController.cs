@@ -142,19 +142,19 @@ namespace FinalProj.Controllers
                        Image imgPhoto = Image.FromFile(ServerSavePath);
 
 
-                        Bitmap image = ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
+                        Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_thumb" + Extension));
                         image.Dispose();
                         imgPhoto.Dispose();
 
                         imgPhoto = Image.FromFile(ServerSavePath);
-                        image = ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
+                        image = new ImageResizer().ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_medium" + Extension));
                         image.Dispose();
                         imgPhoto.Dispose();
 
                         imgPhoto = Image.FromFile(ServerSavePath);
-                        image = ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
+                        image = new ImageResizer().ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
                         image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_large" + Extension));
                         image.Dispose();
                         imgPhoto.Dispose();
@@ -181,30 +181,6 @@ namespace FinalProj.Controllers
                 }
             }
             return View();
-        }
-
-        public static Bitmap ResizeImage(Image image, int width, int height)
-        {
-            var destRect = new Rectangle(0, 0, width, height);
-            var destImage = new Bitmap(width, height);
-
-            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
-            using (var graphics = Graphics.FromImage(destImage))
-            {
-                graphics.CompositingMode = CompositingMode.SourceCopy;
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (var wrapMode = new ImageAttributes())
-                {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
-                }
-            }
-            return destImage;
         }
 
         public ActionResult deleteImage(int imageID, string layout)

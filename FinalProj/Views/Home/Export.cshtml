@@ -136,7 +136,7 @@
             $.getJSON('/Home/ExportTaskProgress', function (json) {
                 //alert(json.Progress);
                 progress = json.Progress;
-                proc = (json.Progress / taskCount) * 100.0;
+                proc = ((json.Progress / taskCount)*100.0).toFixed(2);// * 100.0) / 100);
                 //alert(proc);
                 document.getElementById("progress-bar").style.width = proc + '%';
                 document.getElementById("progress-bar-text").innerHTML = proc + '%';
