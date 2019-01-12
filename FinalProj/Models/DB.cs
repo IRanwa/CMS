@@ -189,30 +189,31 @@ namespace FinalProj.Models
         //Website Query End
 
         //Image Library Query Start
-        public void uploadImages(List<ImageLibrary> images)
-        {
-            string query = "Insert into image_library " +
-                "(webID,title,imgDesc,imgLoc,uploadDate,modifyDate) " +
-                "values (@webID,@title,@imgDesc,@imgLoc,@uploadDate,@modifyDate)";
+        //public void uploadImages(List<ImageLibrary> images)
+        //{
+        //    string query = "Insert into image_library " +
+        //        "(webID,title,imgDesc,imgLoc,uploadDate,modifyDate) " +
+        //        "values (@webID,@title,@imgDesc,@imgLoc,@uploadDate,@modifyDate)";
 
-            foreach (ImageLibrary img in images) {
-                if (this.OpenConnection() == true)
-                {
-                    MySqlCommand cmd = new MySqlCommand();
-                    cmd.Parameters.AddWithValue("@webID", img.webID);
-                    cmd.Parameters.AddWithValue("@title", img.title);
-                    cmd.Parameters.AddWithValue("@imgDesc", img.imgDesc);
-                    cmd.Parameters.AddWithValue("@imgLoc", img.imgLoc);
-                    cmd.Parameters.AddWithValue("@uploadDate", img.uploadDate);
-                    cmd.Parameters.AddWithValue("@modifyDate", img.modifyDate);
+        //    foreach (ImageLibrary img in images) {
+        //        uploadImage(img);
+        //        //if (this.OpenConnection() == true)
+        //        //{
+        //        //    MySqlCommand cmd = new MySqlCommand();
+        //        //    cmd.Parameters.AddWithValue("@webID", img.webID);
+        //        //    cmd.Parameters.AddWithValue("@title", img.title);
+        //        //    cmd.Parameters.AddWithValue("@imgDesc", img.imgDesc);
+        //        //    cmd.Parameters.AddWithValue("@imgLoc", img.imgLoc);
+        //        //    cmd.Parameters.AddWithValue("@uploadDate", img.uploadDate);
+        //        //    cmd.Parameters.AddWithValue("@modifyDate", img.modifyDate);
 
-                    cmd.CommandText = query;
-                    cmd.Connection = connection;
-                    cmd.ExecuteNonQuery();
-                    this.CloseConnection();
-                }
-            }
-        }
+        //        //    cmd.CommandText = query;
+        //        //    cmd.Connection = connection;
+        //        //    cmd.ExecuteNonQuery();
+        //        //    this.CloseConnection();
+        //        //}
+        //    }
+        //}
 
         public void uploadImage(ImageLibrary img)
         {
@@ -238,26 +239,28 @@ namespace FinalProj.Models
             
         }
 
-        public string checkImageExists(ImageLibrary image)
+        public ImageLibrary getImage(ImageLibrary img)
         {
-            string imgLoc = null;
-            string query = "select * from Image_Library where imgLoc like @imgLoc";
+            string query = "select * from Image_Library where imageID=@imageID";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
-                cmd.Parameters.AddWithValue("@imgLoc",'%'+image.imgLoc+'%');
+                cmd.Parameters.AddWithValue("@imageID", img.imageID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())
                 {
-                    imgLoc = dataReader["imgLoc"].ToString();
+                    img.title = dataReader["title"].ToString();
+                    img.imgDesc = dataReader["imgDesc"].ToString();
+                    img.imgLoc = dataReader["imgLoc"].ToString();
+                    img.uploadDate = Convert.ToDateTime(dataReader["uploadDate"].ToString());
+                    img.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
 
                 }
                 this.CloseConnection();
-                return imgLoc;
 
             }
-            return imgLoc;
+            return img;
         } 
 
         public List<ImageLibrary> getImages(int startIndex, int endIndex, Login login)

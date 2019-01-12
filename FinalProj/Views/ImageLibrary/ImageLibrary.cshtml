@@ -15,18 +15,26 @@
     #imageProp-container td {
         padding:10px 20px;
     }
-    
+    .Custom-Button {
+        float: none;
+        margin: 5px;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 5px;
+        font-size: small;
+        text-decoration: none;
+    }
 </style>
 <script>
-    var layout= @ViewBag.layoutView;
+    var layout= '@ViewBag.layoutView';
     function checkBoxAllClick(checked) {
         if (checked == false) {
             $('.selection:checked').prop('checked', false);
-            document.getElementById("deleteAll").hidden = true;
+            document.getElementById("bulk-options").hidden = true;
         }
         else {
             $('.selection:not(:checked)').prop('checked', true);
-            document.getElementById("deleteAll").hidden = false;
+            document.getElementById("bulk-options").hidden = false;
         }
     }
     function chechBoxSingle(checked) {
@@ -39,30 +47,46 @@
             images.push($(this).val());
         });
         if (images.length == 0) {
-            document.getElementById("deleteAll").hidden = true;
+            document.getElementById("bulk-options").hidden = true;
         } else {
-            document.getElementById("deleteAll").hidden = false;
+            document.getElementById("bulk-options").hidden = false;
         }
 
     }
-    function deleteAll() {
+    function bulkAction() {
         var images = [];
         $.each($("input[class='selection']:checked"), function () {
             images.push($(this).val());
         });
-
-        $.ajax({
-            type: "POST",
-            url: "/ImageLibrary/deletAllImages",
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({ imageList: images, layout : layout }),
-            success: function () {
-                alert("success");
-                window.location.href = window.location.href;
-            }, error: function () {
-                alert("Error occured!")
-            }
-        });
+        var selection = document.getElementById("bulk-selection").value;
+        if (selection == "deleteAll") {
+            $.ajax({
+                type: "POST",
+                url: "/ImageLibrary/deletAllImages",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ imageList: images, layout: layout }),
+                success: function () {
+                    alert("success");
+                    window.location.href = window.location.href;
+                }, error: function () {
+                    alert("Error occured!")
+                }
+            });
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "/ImageLibrary/downloadImages",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ imageList: images}),
+                success: function () {
+                    alert("success");
+                    window.location.href = window.location.href;
+                }, error: function () {
+                    alert("Error occured!")
+                }
+            });
+        }
+        
     }
 
     
@@ -111,18 +135,18 @@
                         <tr>
                             @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
                             {
-                            <td class="image-container" ondblclick="displayImageProp(this)">
-                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].imageID" hidden />
-                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].title" hidden />
-                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].imgDesc" hidden />
-                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].uploadDate" hidden />
-                                <input type="text" value="@ViewBag.DisplayImages[imageIndex].modifyDate" hidden />
-                                <input type="text" value="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" hidden />
+                                <td class="image-container" ondblclick="displayImageProp(this)">
+                                    <input type="text" value="@ViewBag.DisplayImages[imageIndex].imageID" hidden />
+                                    <input type="text" value="@ViewBag.DisplayImages[imageIndex].title" hidden />
+                                    <input type="text" value="@ViewBag.DisplayImages[imageIndex].imgDesc" hidden />
+                                    <input type="text" value="@ViewBag.DisplayImages[imageIndex].uploadDate" hidden />
+                                    <input type="text" value="@ViewBag.DisplayImages[imageIndex].modifyDate" hidden />
+                                    <input type="text" value="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" hidden />
 
-                                <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
-                                <br />
-                                <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
-                            </td>
+                                    <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                    <br />
+                                    <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                                </td>
                             }
                         </tr>
                     }
@@ -131,7 +155,15 @@
         }
         else
         {
-            <input class="Custom-Button" id="deleteAll" type="button" onclick="deleteAll()" value="Delete All" hidden />
+            
+            <div id="bulk-options" hidden>
+                <label style="font-weight:bold">Bulk Actions :</label>
+                <select id="bulk-selection">
+                    <option value="deleteAll">Delete</option>
+                    <option value="downloadAll">Download</option>
+                </select>
+                <input class="Custom-Button" id="action" type="button" onclick="bulkAction()" value="Apply" />
+            </div>
             <table id="list-view">
                 <tr>
                     <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
@@ -144,7 +176,7 @@
 
                 @foreach (var img in ViewBag.DisplayImages)
                 {
-                    <tr >
+                    <tr>
                         <td id="@img.imageID" hidden>
                             <input type="text" value="@img.imageID" hidden />
                             <input type="text" value="@img.title" hidden />
@@ -163,6 +195,7 @@
                         <td>
                             <a href="javascript:void(0);" onclick="displayImageProp(document.getElementById('@img.imageID'));" class="Custom-Button">Edit</a>
                             @Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout = @ViewBag.layoutView }, new { @class = "Custom-Button" })
+                            @Html.ActionLink("Download", "downloadImage", new { imageID = @img.imageID }, new { @class = "Custom-Button" })
                         </td>
                     </tr>
                 }

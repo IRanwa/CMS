@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -110,6 +111,7 @@ namespace FinalProj.Controllers
                 Website web = db.getWebsite((Login)Session["user"]);
                 List<string> filesList = new List<string>();
                 List<ImageLibrary> images = new List<ImageLibrary>();
+                bool exists = false;
                 foreach (HttpPostedFileBase file in files)
                 {
                     if (file != null)
@@ -132,9 +134,9 @@ namespace FinalProj.Controllers
                                 fileName = fileName + '_' + count;
                                 ServerSavePath = serverPath + fileName + Extension;
                             }
-                            path = db.checkImageExists(new ImageLibrary(ServerSavePath));
+                            exists = System.IO.File.Exists(Server.MapPath(ServerSavePath));
                             count++;
-                        } while (path!=null);
+                        } while (exists);
                         
                         ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
                         file.SaveAs(ServerSavePath);
@@ -176,7 +178,11 @@ namespace FinalProj.Controllers
                     }
                 }
                 if (filesList.Count>0) {
-                    db.uploadImages(images);
+                    foreach (ImageLibrary img in images)
+                    {
+                        db.uploadImage(img);
+                    }
+                    //db.uploadImages(images);
                     ViewBag.UploadFiles = filesList;
                 }
             }
@@ -233,6 +239,52 @@ namespace FinalProj.Controllers
                     System.IO.File.Delete(Server.MapPath(newFilePath));
                 }
             }
+        }
+
+        public FileResult downloadImages(List<int> imageList)
+        {
+            if (System.IO.File.Exists(Server.MapPath("~/downloadImages.zip")))
+            {
+                System.IO.File.Delete(Server.MapPath("~/downloadImages.zip"));
+            }
+            foreach (int imageID in imageList)
+            {
+                ImageLibrary img = new ImageLibrary(imageID);
+                DBConnect db = new DBConnect();
+                img = db.getImage(img);
+                string filename = img.imgLoc.Split('/').Last();
+                string path = img.imgLoc.Replace(filename, "").Replace("~/Images/","");
+                string folderPath = Server.MapPath("~/Images/downloadImages/" + path);
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+                System.IO.File.Copy(Server.MapPath(img.imgLoc),Server.MapPath("~/Images/downloadImages/" + path + filename));
+            }
+            ZipFile.CreateFromDirectory(Server.MapPath("~/Images/downloadImages"), Server.MapPath("~/downloadImages.zip"));
+            DeleteFolders.getInstance(Server).deleteFolders("~/Images/downloadImages");
+            byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath("~/downloadImages.zip"));
+            string fileName = "downloadImages.zip";
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+        }
+
+        public ActionResult downloadImage(int imageID)
+        {
+            ImageLibrary img = new ImageLibrary(imageID);
+            DBConnect db = new DBConnect();
+            img = db.getImage(img);
+            string path = Server.MapPath(img.imgLoc);
+            if (System.IO.File.Exists(path))
+            {
+                byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(img.imgLoc));
+                string extension = img.imgLoc.Split('/').Last().Split('.').Last();
+                string fileName = img.title+'.'+extension;
+                return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+            }
+            ViewBag.Display = "none";
+            ViewBag.layoutView = "List";
+            getTotalImageCount();
+            return View("ImageLibrary");
         }
 
         [HttpPost]

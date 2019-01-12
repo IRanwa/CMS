@@ -114,8 +114,6 @@ namespace FinalProj.Controllers
 
         public ActionResult deleteAllCategories(List<int> catList )
         {
-            //Response.Write("script>alert('" + catList.Count + "')</script>");
-            //Console.WriteLine(catList.Count);
             DBConnect db = new DBConnect();
             db.deleteCategory(catList);
             return View("Category");
