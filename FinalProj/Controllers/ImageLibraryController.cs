@@ -16,11 +16,13 @@ namespace FinalProj.Controllers
 {
     public class ImageLibraryController : Controller
     {
+        private const int NO_OF_IMAGES = 20;
         public ActionResult ImageLibrary()
         {
             ViewBag.Display = "none";
             ViewBag.layoutView = "Grid";
-            getTotalImageCount();
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+            //getTotalImageCount();
             return View();
         }
 
@@ -28,57 +30,30 @@ namespace FinalProj.Controllers
         {
             ViewBag.Display = "none";
             ViewBag.layoutView = layout;
-            getTotalImageCount();
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
             return View("ImageLibrary");
-        }
-
-        private void displayImages(ImageLibrary img)
-        {
-            if (img.currentPage!=0) {
-                int startIndex = (img.currentPage - 1) * 20;
-                DBConnect db = new DBConnect();
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, 20,login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
-        }
-
-        private void getTotalImageCount()
-        {
-            DBConnect db = new DBConnect();
-            int count = db.getImageCount();
-
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
-            if (count>0) {
-                img.currentPage = 1;
-            }
-            displayImages(img);
         }
 
         public ActionResult nextPage(int nextPage, string layout)
         {
-            
             DBConnect db = new DBConnect();
             int count = db.getImageCount();
             ImageLibrary img = new ImageLibrary();
             img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
+            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
             if (nextPage > img.noOfPages)
             {
                 nextPage = img.noOfPages;
             }
 
             img.currentPage = nextPage;
-            
+
 
             if (nextPage != 0)
             {
-                int startIndex = (nextPage - 1) * 20;
+                int startIndex = (nextPage - 1) * NO_OF_IMAGES;
                 Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, 20,login);
+                List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }
@@ -283,7 +258,7 @@ namespace FinalProj.Controllers
             }
             ViewBag.Display = "none";
             ViewBag.layoutView = "List";
-            getTotalImageCount();
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
             return View("ImageLibrary");
         }
 

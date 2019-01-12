@@ -11,6 +11,9 @@ namespace FinalProj.Controllers
 {
     public class PostController : Controller
     {
+        private const int NO_OF_IMAGES = 12;
+        private const int NO_OF_POSTS = 12;
+
         public ActionResult Posts()
         {
             ViewBag.Display = "none";
@@ -23,10 +26,10 @@ namespace FinalProj.Controllers
         {
             if (post.currentPage != 0)
             {
-                int startIndex = (post.currentPage - 1) * 20;
+                int startIndex = (post.currentPage - 1) * NO_OF_POSTS;
                 DBConnect db = new DBConnect();
                 Login login = (Login)Session["user"];
-                List<Post> posts = db.getPostList(startIndex, startIndex + 20, login);
+                List<Post> posts = db.getPostList(startIndex, startIndex + NO_OF_POSTS, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
@@ -39,7 +42,7 @@ namespace FinalProj.Controllers
 
             Post post = new Post();
             post.totalCategoryCount = count;
-            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
+            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_POSTS.ToString())));
             if (count > 0)
             {
                 post.currentPage = 1;
@@ -53,7 +56,7 @@ namespace FinalProj.Controllers
             int count = db.getPostsCount();
             Post post = new Post();
             post.totalCategoryCount = count;
-            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
+            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_POSTS.ToString())));
             if (nextPage > post.noOfPages)
             {
                 nextPage = post.noOfPages;
@@ -64,9 +67,9 @@ namespace FinalProj.Controllers
 
             if (nextPage != 0)
             {
-                int startIndex = (nextPage - 1) * 20;
+                int startIndex = (nextPage - 1) * NO_OF_POSTS;
                 Login login = (Login)Session["user"];
-                List<Post> posts = db.getPostList(startIndex, startIndex + 20, login);
+                List<Post> posts = db.getPostList(startIndex, startIndex + NO_OF_POSTS, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
@@ -77,7 +80,7 @@ namespace FinalProj.Controllers
         public ActionResult PostsAddNew()
         {
             ViewBag.Display = "none";
-            getTotalImageCount();
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
             DBConnect db = new DBConnect();
             int categoryCount = db.getCategoryCount();
             Login login = (Login)Session["user"];
@@ -85,42 +88,14 @@ namespace FinalProj.Controllers
             return View();
         }
 
-        private void displayImages(ImageLibrary img)
-        {
-            if (img.currentPage != 0)
-            {
-                int startIndex = (img.currentPage - 1) * 12;
-                DBConnect db = new DBConnect();
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex,12,login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
-        }
-
-        private void getTotalImageCount()
-        {
-            DBConnect db = new DBConnect();
-            int count = db.getImageCount();
-
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
-            if (count > 0)
-            {
-                img.currentPage = 1;
-            }
-            displayImages(img);
-        }
-
         public ActionResult nextImagePage(int nextPage)
         {
-            
+
             DBConnect db = new DBConnect();
             int count = db.getImageCount();
             ImageLibrary img = new ImageLibrary();
             img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
+            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
             if (nextPage > img.noOfPages)
             {
                 nextPage = img.noOfPages;
@@ -128,15 +103,17 @@ namespace FinalProj.Controllers
 
             img.currentPage = nextPage;
 
-
+            Login login = (Login)Session["user"];
             if (nextPage != 0)
             {
-                int startIndex = (nextPage - 1) * 12;
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, 12,login);
+                int startIndex = (nextPage - 1) * NO_OF_IMAGES;
+                List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
                 ViewBag.DisplayImages = images;
                 ViewBag.LibraryProp = img;
             }
+            int categoryCount = db.getCategoryCount();
+            ViewBag.catList = db.getCatList(0, categoryCount, login);
+
             ViewBag.Display = "none";
             ViewBag.popup = "block";
             return View("PostsAddNew");
