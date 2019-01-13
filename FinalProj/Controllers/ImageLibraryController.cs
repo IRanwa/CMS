@@ -3,12 +3,15 @@ using Microsoft.Web.Administration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -16,13 +19,12 @@ namespace FinalProj.Controllers
 {
     public class ImageLibraryController : Controller
     {
-        private const int NO_OF_IMAGES = 20;
+        private const int NO_OF_IMAGES = 100;
         public ActionResult ImageLibrary()
         {
             ViewBag.Display = "none";
             ViewBag.layoutView = "Grid";
             new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
-            //getTotalImageCount();
             return View();
         }
 
@@ -36,27 +38,8 @@ namespace FinalProj.Controllers
 
         public ActionResult nextPage(int nextPage, string layout)
         {
-            DBConnect db = new DBConnect();
-            int count = db.getImageCount();
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
-            if (nextPage > img.noOfPages)
-            {
-                nextPage = img.noOfPages;
-            }
-
-            img.currentPage = nextPage;
-
-
-            if (nextPage != 0)
-            {
-                int startIndex = (nextPage - 1) * NO_OF_IMAGES;
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
+            Login login = (Login)Session["user"];
+            new DisplayImageLibrary((Login)Session["user"],ViewBag).nextPage(nextPage, NO_OF_IMAGES);
             ViewBag.Display = "none";
             ViewBag.layoutView = layout;
             return View("ImageLibrary");
@@ -71,8 +54,14 @@ namespace FinalProj.Controllers
         [HttpPost]
         public ActionResult LibraryAddNew(HttpPostedFileBase[] files)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            DBConnect db = new DBConnect();
+            Website web = db.getWebsite((Login)Session["user"]);
+
             DateTime date = DateTime.Now;
-            string serverPath = "~/Images/"+ date.ToString("yyyy-MM-dd")+"/";
+            string serverPath = "~/Website_"+web.webID.ToString()+"/Images/"+ date.ToString("yyyy-MM-dd")+"/";
             string path = Server.MapPath(serverPath);
             if (!Directory.Exists(path))
             {
@@ -82,85 +71,134 @@ namespace FinalProj.Controllers
             
             if (files != null)
             {
-                DBConnect db = new DBConnect();
-                Website web = db.getWebsite((Login)Session["user"]);
-                List<string> filesList = new List<string>();
-                List<ImageLibrary> images = new List<ImageLibrary>();
+                List<Task> tasksList = new List<Task>();
                 bool exists = false;
-                foreach (HttpPostedFileBase file in files)
+                CancellationTokenSource source = new CancellationTokenSource();
+                var token = source.Token;
+                Task<List<ImageLibrary>> mainTask = Task.Factory.StartNew(() =>
                 {
-                    if (file != null)
+                    List<ImageLibrary> imagesList = new List<ImageLibrary>();
+                    Parallel.ForEach(files, (file) =>
                     {
-                        string InputFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                        string Extension = Path.GetExtension(file.FileName);
-                        string fileName;
-
-                        int count=0;
-                        string ServerSavePath;
-                        do
+                        if (file != null)
                         {
-                            fileName = InputFileName;
-                            if (count==0)
+                            string InputFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                            string Extension = Path.GetExtension(file.FileName);
+                            string fileName="";
+                            
+                            int count = 0;
+                            string ServerSavePath;
+                            do
                             {
-                                ServerSavePath = serverPath + fileName + Extension;
-                            }
-                            else
+                                fileName = InputFileName;
+                                if (count == 0)
+                                {
+                                    ServerSavePath = serverPath + fileName + Extension;
+                                }
+                                else
+                                {
+                                    fileName = fileName + '_' + count;
+                                    ServerSavePath = serverPath + fileName + Extension;
+                                }
+                                exists = System.IO.File.Exists(Server.MapPath(ServerSavePath));
+                                count++;
+                            } while (exists);
+
+                            if (token.IsCancellationRequested)
                             {
-                                fileName = fileName + '_' + count;
-                                ServerSavePath = serverPath + fileName + Extension;
+                                token.ThrowIfCancellationRequested();
                             }
-                            exists = System.IO.File.Exists(Server.MapPath(ServerSavePath));
-                            count++;
-                        } while (exists);
-                        
-                        ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
-                        file.SaveAs(ServerSavePath);
-                        
-                       Image imgPhoto = Image.FromFile(ServerSavePath);
+                            ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
+                            file.SaveAs(ServerSavePath);
 
+                            if (InputFileName.Length > 50)
+                            {
+                                InputFileName = InputFileName.Substring(0, 50);
+                            }
+                            ImageLibrary tempImage = new ImageLibrary(web.webID, InputFileName, "", serverPath + fileName + Extension, date, date);
+                            imagesList.Add(tempImage);
 
-                        Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
-                        image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_thumb" + Extension));
-                        image.Dispose();
-                        imgPhoto.Dispose();
+                            Task thumbTask = Task.Factory.StartNew(() =>
+                            {
+                                if (token.IsCancellationRequested)
+                                {
+                                    token.ThrowIfCancellationRequested();
+                                }
+                                Image imgPhoto = Image.FromFile(ServerSavePath);
+                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
+                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_thumb" + Extension));
+                                image.Dispose();
+                                imgPhoto.Dispose();
 
-                        imgPhoto = Image.FromFile(ServerSavePath);
-                        image = new ImageResizer().ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
-                        image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_medium" + Extension));
-                        image.Dispose();
-                        imgPhoto.Dispose();
+                            }, token);
 
-                        imgPhoto = Image.FromFile(ServerSavePath);
-                        image = new ImageResizer().ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
-                        image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_large" + Extension));
-                        image.Dispose();
-                        imgPhoto.Dispose();
+                            Task mediumTask = Task.Factory.StartNew(() =>
+                            {
+                                if (token.IsCancellationRequested)
+                                {
+                                    token.ThrowIfCancellationRequested();
+                                }
+                                Image imgPhoto = Image.FromFile(ServerSavePath);
+                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
+                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_medium" + Extension));
+                                image.Dispose();
+                                imgPhoto.Dispose();
+                            }, token);
 
-                        if (InputFileName.Length>50)
-                        {
-                            InputFileName = InputFileName.Substring(0, 50);
+                            Task largeTask = Task.Factory.StartNew(() =>
+                            {
+                                if (token.IsCancellationRequested)
+                                {
+                                    token.ThrowIfCancellationRequested();
+                                }
+                                Image imgPhoto = Image.FromFile(ServerSavePath);
+                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
+                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_large" + Extension));
+                                image.Dispose();
+                                imgPhoto.Dispose();
+                            }, token);
+
+                            tasksList.Add(thumbTask);
+                            tasksList.Add(mediumTask);
+                            tasksList.Add(largeTask);
                         }
-                        images.Add(new ImageLibrary(web.webID, InputFileName, "", serverPath+fileName+Extension, date , date));
-                        ViewBag.Message = "Images Uploaded Successfully!";
-                        ViewBag.Display = "Block";
-                        filesList.Add(InputFileName);
+                    });
+                    return imagesList;
+                }, token);
 
-                        
-                    }
-                    else
+                try
+                {
+                    List<ImageLibrary> result = mainTask.Result;
+                    Task.WaitAll(tasksList.ToArray());
+                    if (result.Count > 0)
                     {
-                        ViewBag.Display = "none";
+                        List<string> filesList = new List<string>();
+
+                        Parallel.ForEach(result, (image) =>
+                        {
+                            db = new DBConnect();
+                            db.uploadImage(image);
+                            filesList.Add(image.title);
+                        });
+                        ViewBag.UploadFiles = filesList;
+                        ViewBag.Message = "Images Uploaded Successfully!";
                     }
                 }
-                if (filesList.Count>0) {
-                    foreach (ImageLibrary img in images)
+                catch (AggregateException ae)
+                {
+                    source.Cancel();
+                    List<ImageLibrary> result = mainTask.Result;
+                    Parallel.ForEach(result, (image) =>
                     {
-                        db.uploadImage(img);
-                    }
-                    //db.uploadImages(images);
-                    ViewBag.UploadFiles = filesList;
+                        deleteImageByLoc(image.imgLoc);
+                    });
+                    ViewBag.Message = "Images Uploaded Un-Successful!";
                 }
+                ViewBag.Display = "Block";
+
             }
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.Elapsed);
             return View();
         }
 
@@ -173,10 +211,15 @@ namespace FinalProj.Controllers
 
         public void deletAllImages(List<int> imageList, string layout)
         {
-            foreach (int imageIndex in imageList)
+            
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Parallel.ForEach(imageList, imageIndex =>
             {
                 deleteSingleImage(imageIndex);
-            }
+            });
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.Elapsed);
             changeLayout(layout);
         }
 
@@ -185,42 +228,54 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             string imageLoc = db.getImageLoc(new ImageLibrary(imageID));
             db.deleteImage(new ImageLibrary(imageID));
+            deleteImageByLoc(imageLoc);
+        }
 
+        public void deleteImageByLoc(string imageLoc)
+        {
             if (System.IO.File.Exists(Server.MapPath(imageLoc)))
             {
-                System.IO.File.Delete(Request.MapPath(imageLoc));
+                System.IO.File.Delete(Server.MapPath(imageLoc));
 
-                string filename = imageLoc.Split('/')[3];
+                string filename = imageLoc.Split('/').Last();
                 int index = filename.LastIndexOf(".");
                 string extension = filename.Substring(filename.LastIndexOf("."));
                 string path = imageLoc.Substring(0, imageLoc.IndexOf(filename));
                 filename = filename.Replace(extension, "");
 
-                string newFilePath = path + filename + "_thumb" + extension;
-                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                {
-                    System.IO.File.Delete(Server.MapPath(newFilePath));
-                }
+                Task.Factory.StartNew(() => {
+                    string newFilePath = path + filename + "_thumb" + extension;
+                    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                    {
+                        System.IO.File.Delete(Server.MapPath(newFilePath));
+                    }
+                });
 
-                newFilePath = path + filename + "_medium" + extension;
-                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                {
-                    System.IO.File.Delete(Server.MapPath(newFilePath));
-                }
+                Task.Factory.StartNew(() => {
+                    string newFilePath = path + filename + "_medium" + extension;
+                    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                    {
+                        System.IO.File.Delete(Server.MapPath(newFilePath));
+                    }
+                });
 
-                newFilePath = path + filename + "_large" + extension;
-                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                {
-                    System.IO.File.Delete(Server.MapPath(newFilePath));
-                }
+                Task.Factory.StartNew(() => {
+                    string newFilePath = path + filename + "_large" + extension;
+                    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
+                    {
+                        System.IO.File.Delete(Server.MapPath(newFilePath));
+                    }
+                });
             }
         }
 
         public FileResult downloadImages(List<int> imageList)
         {
-            if (System.IO.File.Exists(Server.MapPath("~/downloadImages.zip")))
+            Login login = (Login)Session["user"];
+            string webPath = "~/Website_" + login.webID.ToString();
+            if (System.IO.File.Exists(Server.MapPath(webPath + "/downloadImages.zip")))
             {
-                System.IO.File.Delete(Server.MapPath("~/downloadImages.zip"));
+                System.IO.File.Delete(Server.MapPath(webPath + "/downloadImages.zip"));
             }
             foreach (int imageID in imageList)
             {
@@ -228,18 +283,18 @@ namespace FinalProj.Controllers
                 DBConnect db = new DBConnect();
                 img = db.getImage(img);
                 string filename = img.imgLoc.Split('/').Last();
-                string path = img.imgLoc.Replace(filename, "").Replace("~/Images/","");
-                string folderPath = Server.MapPath("~/Images/downloadImages/" + path);
+                string path = img.imgLoc.Replace(filename, "").Replace(webPath + "/Images/","");
+                string folderPath = Server.MapPath(webPath + "/Images/downloadImages/" + path);
                 if (!Directory.Exists(folderPath))
                 {
                     Directory.CreateDirectory(folderPath);
                 }
-                System.IO.File.Copy(Server.MapPath(img.imgLoc),Server.MapPath("~/Images/downloadImages/" + path + filename));
+                System.IO.File.Copy(Server.MapPath(img.imgLoc),Server.MapPath(webPath + "/Images/downloadImages/" + path + filename));
             }
-            ZipFile.CreateFromDirectory(Server.MapPath("~/Images/downloadImages"), Server.MapPath("~/downloadImages.zip"));
-            DeleteFolders.getInstance(Server).deleteFolders("~/Images/downloadImages");
-            byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath("~/downloadImages.zip"));
-            string fileName = "downloadImages.zip";
+            ZipFile.CreateFromDirectory(Server.MapPath(webPath+"/Images/downloadImages"), Server.MapPath(webPath+"/downloadImages.zip"));
+            DeleteFolders.getInstance(Server).deleteFolders(webPath+"/Images/downloadImages");
+            byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath+"/downloadImages.zip"));
+            string fileName = "Images.zip";
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
 
@@ -254,6 +309,9 @@ namespace FinalProj.Controllers
                 byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(img.imgLoc));
                 string extension = img.imgLoc.Split('/').Last().Split('.').Last();
                 string fileName = img.title+'.'+extension;
+
+                ViewBag.Display = "block";
+                ViewBag.Messsage = "Image Download Successfully!";
                 return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
             }
             ViewBag.Display = "none";

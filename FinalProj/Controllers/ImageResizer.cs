@@ -10,14 +10,14 @@ namespace FinalProj.Controllers
 {
     public class ImageResizer
     {
+        private static readonly object locker = new object();
         public Bitmap ResizeImage(Image image, int width, int height)
         {
-            var destRect = new Rectangle(0, 0, width, height);
-            var destImage = new Bitmap(width, height);
-            float img = image.HorizontalResolution;
-            float img2 = image.VerticalResolution;
-            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
+            Rectangle destRect = new Rectangle(0, 0, width, height);
+            Bitmap destImage = new Bitmap(width, height);
+            lock (locker) {
+                destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+            }
             using (var graphics = Graphics.FromImage(destImage))
             {
                 graphics.CompositingMode = CompositingMode.SourceCopy;
@@ -29,9 +29,16 @@ namespace FinalProj.Controllers
                 using (var wrapMode = new ImageAttributes())
                 {
                     wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                    lock (locker)
+                    {
+                        graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                    }
+                    wrapMode.Dispose();
                 }
+                graphics.Dispose();
             }
+            
+            //destImage.Save(savePath);
             return destImage;
         }
     }

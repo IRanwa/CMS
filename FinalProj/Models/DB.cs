@@ -291,12 +291,13 @@ namespace FinalProj.Models
             return images;
         }
 
-        public int getImageCount()
+        public int getImageCount(Login login)
         {
-            string query = "select count(*) from Image_Library";
+            string query = "select count(*) from Image_Library where webID=@webID";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 int count = int.Parse(cmd.ExecuteScalar().ToString());
                 this.CloseConnection();
                 return count;

@@ -9,6 +9,16 @@
         padding:2%;
     }
 </style>
+<script>
+    function validate() {
+        var files = document.getElementById("upload-files").files;
+        if (files.length > 20) {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "You can only upload a maximum of 20 files"
+            return false;
+        }
+    }
+</script>
 <div style="margin-left:160px">
     <h2>Add New</h2>
     <hr />
@@ -21,8 +31,8 @@
                     <td><label for="file">Upload Images:</label></td>
                 </tr>
                 <tr>
-                    <td>@Html.TextBoxFor(model => model.files, "", new { @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif" })</td>
-                    <td><input type="submit" value="Upload" id="UploadBtn" class="Custom-Button" style="float:right; padding: 5px 15px;" /></td>
+                    <td>@Html.TextBoxFor(model => model.files, "", new { @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif", @id="upload-files" })</td>
+                    <td><input type="submit" value="Upload" id="UploadBtn" class="Custom-Button" style="float:right; padding: 5px 15px;" onclick="return validate();"/></td>
                 </tr>
             </table>
             <br />
@@ -32,11 +42,11 @@
     {
         <hr />
         <h3>Uploaded Files list</h3>
-        <ul>
+        <ol>
             @foreach (var file in ViewBag.UploadFiles)
             {
                 <li>@file</li>
             }
-        </ul>
+        </ol>
     }
 </div>

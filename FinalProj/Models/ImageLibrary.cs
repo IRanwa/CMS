@@ -41,6 +41,7 @@ namespace FinalProj.Models
             this.imgLoc = imgLoc;
             this.uploadDate = uploadDate;
             this.modifyDate = modifyDate;
+            this.files = null;
         }
     }
 }

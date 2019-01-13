@@ -13,22 +13,34 @@ namespace FinalProj.Controllers
 {
     public class ExportDetails
     {
-        private static ExportDetails instance = new ExportDetails();
-        private static Login login;
+        //private static ExportDetails instance = new ExportDetails();
+        private static Dictionary<Login, ExportDetails> instances = new Dictionary<Login, ExportDetails>();
+        //private Login login;
+       // private static Dictionary<Login, List<string>> checkboxes = new Dictionary<Login, List<string>>();
         private static HttpServerUtilityBase server;
-        private static List<string> checkboxes;
+        //private static List<string> checkboxes;
 
         private ExportDetails() { }
 
-        public static ExportDetails getInstance(Login newLogin, HttpServerUtilityBase newServer, List<string> newCheckboxes)
+        public static ExportDetails getInstance(Login newLogin, HttpServerUtilityBase newServer)
         {
-            login = newLogin;
+            //login = newLogin;
             server = newServer;
-            checkboxes = newCheckboxes;
+            ExportDetails instance;
+            
+            if (instances.ContainsKey(newLogin))
+            {
+                instance = instances[newLogin];
+            }
+            else
+            {
+                instance = new ExportDetails();
+                instances.Add(newLogin, instance);
+            }
             return instance;
         }
 
-        public int exportStart()
+        public int exportStart(Login login,List<string> checkboxes)
         {
             if (Directory.Exists(server.MapPath("~/Export/")))
             {
@@ -66,7 +78,7 @@ namespace FinalProj.Controllers
                             }
                             break;
                         case "images":
-                            tempCount = db.getImageCount();
+                            tempCount = db.getImageCount(login);
                             if (tempCount > 0)
                             {
                                 currentTask = Task.Factory.StartNew((obj) =>
@@ -118,7 +130,6 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<Post> postsList = db.getPostList(0, count, login);
             List<string> catList = new List<string>();
-            int taskCount;
             foreach (Post post in postsList)
             {
 
@@ -252,7 +263,6 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<Category> catList = db.getCatList(0, count, login);
             catList.RemoveAt(0);
-            int taskCount;
             foreach (Category cat in catList)
             {
                 dt.Rows.Add(cat.title, cat.desc);

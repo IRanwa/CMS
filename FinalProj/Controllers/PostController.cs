@@ -90,27 +90,29 @@ namespace FinalProj.Controllers
 
         public ActionResult nextImagePage(int nextPage)
         {
-
-            DBConnect db = new DBConnect();
-            int count = db.getImageCount();
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
-            if (nextPage > img.noOfPages)
-            {
-                nextPage = img.noOfPages;
-            }
-
-            img.currentPage = nextPage;
-
             Login login = (Login)Session["user"];
-            if (nextPage != 0)
-            {
-                int startIndex = (nextPage - 1) * NO_OF_IMAGES;
-                List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
+            new DisplayImageLibrary(login, ViewBag).nextPage(nextPage, NO_OF_IMAGES);
+            //DBConnect db = new DBConnect();
+            //int count = db.getImageCount();
+            //ImageLibrary img = new ImageLibrary();
+            //img.totalImageCount = count;
+            //img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
+            //if (nextPage > img.noOfPages)
+            //{
+            //    nextPage = img.noOfPages;
+            //}
+
+            //img.currentPage = nextPage;
+
+            //Login login = (Login)Session["user"];
+            //if (nextPage != 0)
+            //{
+            //    int startIndex = (nextPage - 1) * NO_OF_IMAGES;
+            //    List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
+            //    ViewBag.DisplayImages = images;
+            //    ViewBag.LibraryProp = img;
+            //}
+            DBConnect db = new DBConnect();
             int categoryCount = db.getCategoryCount();
             ViewBag.catList = db.getCatList(0, categoryCount, login);
 

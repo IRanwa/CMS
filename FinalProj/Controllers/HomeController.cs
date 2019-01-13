@@ -19,11 +19,13 @@ namespace FinalProj.Controllers
 {
     public class HomeController : Controller
     {
+        private const int NO_OF_IMAGES = 12;
         public ActionResult Dashboard()
         {
             ViewBag.Display = "none";
             DBConnect db = new DBConnect();
-            ViewBag.noOfImages = db.getImageCount();
+            Login login = (Login)Session["user"];
+            ViewBag.noOfImages = db.getImageCount(login);
             ViewBag.noOfPublishPosts = db.getPostsCountByStatus("Publish");
             ViewBag.noOfDraftPosts = db.getPostsCountByStatus("Draft");
             @ViewBag.templateUrl = "/Template/Index";
@@ -35,65 +37,70 @@ namespace FinalProj.Controllers
         public ActionResult Settings()
         {
             ViewBag.Display = "none";
-            getTotalImageCount();
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+           // getTotalImageCount();
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
             ViewBag.website = web;
             return View();
         }
 
-        private void displayImages(ImageLibrary img)
-        {
-            if (img.currentPage != 0)
-            {
-                int startIndex = (img.currentPage - 1) * 12;
-                DBConnect db = new DBConnect();
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, 12, login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
-        }
+        //private void displayImages(ImageLibrary img)
+        //{
+        //    if (img.currentPage != 0)
+        //    {
+        //        int startIndex = (img.currentPage - 1) * 12;
+        //        DBConnect db = new DBConnect();
+        //        Login login = (Login)Session["user"];
+        //        List<ImageLibrary> images = db.getImages(startIndex, 12, login);
+        //        ViewBag.DisplayImages = images;
+        //        ViewBag.LibraryProp = img;
+        //    }
+        //}
 
-        private void getTotalImageCount()
-        {
-            DBConnect db = new DBConnect();
-            int count = db.getImageCount();
+        //private void getTotalImageCount()
+        //{
+        //    DBConnect db = new DBConnect();
+        //    int count = db.getImageCount();
 
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
-            if (count > 0)
-            {
-                img.currentPage = 1;
-            }
-            displayImages(img);
-        }
+        //    ImageLibrary img = new ImageLibrary();
+        //    img.totalImageCount = count;
+        //    img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
+        //    if (count > 0)
+        //    {
+        //        img.currentPage = 1;
+        //    }
+        //    displayImages(img);
+        //}
 
         public ActionResult nextImagePage(int nextPage)
         {
+            Login login = (Login)Session["user"];
+            new DisplayImageLibrary(login, ViewBag).nextPage(nextPage, NO_OF_IMAGES);
+            //DBConnect db = new DBConnect();
+            //int count = db.getImageCount();
+            //ImageLibrary img = new ImageLibrary();
+            //img.totalImageCount = count;
+            //img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
+            //if (nextPage > img.noOfPages)
+            //{
+            //    nextPage = img.noOfPages;
+            //}
 
+            //img.currentPage = nextPage;
+
+
+            //if (nextPage != 0)
+            //{
+            //    int startIndex = (nextPage - 1) * 12;
+            //    Login login = (Login)Session["user"];
+            //    List<ImageLibrary> images = db.getImages(startIndex, 12, login);
+            //    ViewBag.DisplayImages = images;
+            //    ViewBag.LibraryProp = img;
+            //}
             DBConnect db = new DBConnect();
-            int count = db.getImageCount();
-            ImageLibrary img = new ImageLibrary();
-            img.totalImageCount = count;
-            img.noOfPages = Convert.ToInt32(Math.Ceiling(count / 12.0));
-            if (nextPage > img.noOfPages)
-            {
-                nextPage = img.noOfPages;
-            }
-
-            img.currentPage = nextPage;
-
-
-            if (nextPage != 0)
-            {
-                int startIndex = (nextPage - 1) * 12;
-                Login login = (Login)Session["user"];
-                List<ImageLibrary> images = db.getImages(startIndex, 12, login);
-                ViewBag.DisplayImages = images;
-                ViewBag.LibraryProp = img;
-            }
+            Website web = db.getWebsite(login);
+            ViewBag.website = web;
             ViewBag.Display = "none";
             ViewBag.popup = "block";
             return View("Settings");
@@ -122,7 +129,7 @@ namespace FinalProj.Controllers
             Login login = (Login)Session["user"];
             Website previousWeb = db.getWebsite(login);
             db.updateImgLibSettings(web);
-            int imgCount = db.getImageCount();
+            int imgCount = db.getImageCount(login);
             List<ImageLibrary> imgList = db.getImages(0, imgCount, login);
 
             Stopwatch stopWatch = new Stopwatch();
@@ -257,8 +264,8 @@ namespace FinalProj.Controllers
         public ActionResult Export(List<string> checkboxes)
         {
             Login login = (Login)Session["user"];
-            ExportDetails export = ExportDetails.getInstance(login, Server, checkboxes);
-            int totalCount = export.exportStart();
+            ExportDetails export = ExportDetails.getInstance(login, Server);
+            int totalCount = export.exportStart(login,checkboxes);
             return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
         }
 
