@@ -18,6 +18,12 @@ namespace FinalProj
                 url: "{controller}/{action}/{id}",
                 defaults: new { controller = "User", action = "Index", id = UrlParameter.Optional }
             );
+
+            routes.MapRoute(
+               name: "Resouce_Cannot_Found",
+               url: "{controller}/{action}/{id}",
+               defaults: new { controller = "Template", action = "Index", id = UrlParameter.Optional }
+           );
         }
     }
 }

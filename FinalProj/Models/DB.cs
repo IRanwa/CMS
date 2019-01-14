@@ -127,7 +127,6 @@ namespace FinalProj.Models
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@webID", login.webID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
-
                 Website web = new Website();
 
                 while (dataReader.Read())
@@ -151,6 +150,36 @@ namespace FinalProj.Models
             return null;
         }
 
+        public Website getWebsiteByTitle(string webTitle)
+        {
+            String query = "select * from Website where webTitle = @webTitle";// + login.webID;
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webTitle", webTitle);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+                Website web = new Website();
+
+                while (dataReader.Read())
+                {
+                    web.webID = Int32.Parse(dataReader["webID"].ToString());
+                    web.webTitle = dataReader["webTitle"].ToString();
+                    web.noOfPosts = Int32.Parse(dataReader["noOfPosts"].ToString());
+                    web.thumbWidth = Int32.Parse(dataReader["thumbWidth"].ToString());
+                    web.thumbHeight = Int32.Parse(dataReader["thumbHeight"].ToString());
+                    web.mediumWidth = Int32.Parse(dataReader["mediumWidth"].ToString());
+                    web.mediumHeight = Int32.Parse(dataReader["mediumHeight"].ToString());
+                    web.largeWidth = Int32.Parse(dataReader["largeWidth"].ToString());
+                    web.largeHeight = Int32.Parse(dataReader["largeHeight"].ToString());
+                    web.featuredImage = dataReader["featuredImg"].ToString();
+
+                }
+                this.CloseConnection();
+                return web;
+
+            }
+            return null;
+        }
         public void updateWebsite(Website website)
         {
             string query = "update website set webTitle=@webTitle, noOfPosts=@noOfPosts, " +
@@ -565,6 +594,31 @@ namespace FinalProj.Models
                 this.CloseConnection();
             }
             return posts;
+        }
+
+        public Post getPostsById(Login login, Post post)
+        {
+            string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
+                " and pc.webID=@webID and p.postID=@postID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
+                cmd.Parameters.AddWithValue("@postID", post.postId);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    post.catId = Int32.Parse(dataReader["catID"].ToString());
+                    post.postTitle = dataReader["postTitle"].ToString();
+                    post.postLoc = dataReader["postLoc"].ToString();
+                    post.postStatus = dataReader["postStatus"].ToString();
+                    post.createdDate = Convert.ToDateTime(dataReader["createdDate"].ToString());
+                    post.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
+                }
+                this.CloseConnection();
+            }
+            return post;
         }
 
         public string getPostLoc(Post post)

@@ -1,6 +1,7 @@
 ﻿
 @{
     ViewBag.Title = "Add New (Posts)";
+    ViewBag.alertSize = "160px";
 }
 
 <style>
@@ -51,123 +52,96 @@
     var underlineStatus = false;
     var unOrderedListStatus = false;
     var orderedListStatus = false;
+    var editor;
+    var uploadId = '@ViewBag.post.postId';
+
+    window.onload = function () {
+        setEditable();
+    };
+
+    function setEditable() {
+        editor = document.getElementById("editor");
+        editor.contentWindow.document.designMode = "on";
+        editor.focus();
+    }
 
     function bold() {
         var bold = document.getElementById("bold");
-        var bool;
-        if (boldStatus) {
-            bool = document.execCommand("bold", false, "");
-            if (bool) {
-                bold.style.backgroundColor = "";
-                boldStatus = false;
-            }
+        editor.contentWindow.document.execCommand("bold", false, "");
+        if (!boldStatus) {
+            bold.style.backgroundColor = "lightgray";
+            boldStatus = true;
         } else {
-            bool = document.execCommand("bold", false, "");
-            if (bool) {
-                bold.style.backgroundColor = "lightgray";
-                boldStatus = true;
-            }
+            bold.style.backgroundColor = "";
+            boldStatus = false;
         }
     }
     function italic() {
         var italic = document.getElementById("italic");
-        var bool;
-        if (italicStatus) {
-            bool = document.execCommand("italic", false, "");
-            if (bool) {
-                italic.style.backgroundColor = "";
-                italicStatus = false;
-            }
+        editor.contentWindow.document.execCommand("italic", false, "");
+        if (!italicStatus) {
+            italic.style.backgroundColor = "lightgray";
+            italicStatus = true;
         } else {
-            bool = document.execCommand("italic", false, "");
-            if (bool) {
-                italic.style.backgroundColor = "lightgray";
-                italicStatus = true;
-            }
+            italic.style.backgroundColor = "";
+            italicStatus = false;
         }
     }
     function underline() {
         var underline = document.getElementById("underline");
-        var bool;
-        if (underlineStatus) {
-            bool = document.execCommand("underline", false, "");
-            if (bool) {
-                underline.style.backgroundColor = "";
-                underlineStatus = false;
-            }
+        editor.contentWindow.document.execCommand("underline", false, "");
+        if (!underlineStatus) {
+            underline.style.backgroundColor = "lightgray";
+            underlineStatus = true;
         } else {
-            bool = document.execCommand("underline", false, "");
-            if (bool) {
-                underline.style.backgroundColor = "lightgray";
-                underlineStatus = true;
-            }
+            underline.style.backgroundColor = "";
+            underlineStatus = false;
         }
     }
     function unOrderedList() {
         var unOrderedList = document.getElementById("unOrderedList");
-        var bool;
-        if (unOrderedListStatus) {
-            bool = document.execCommand("insertUnorderedList", false, "");
-            if (bool) {
-                unOrderedList.style.backgroundColor = "";
-                unOrderedListStatus = false;
-            }
+        editor.contentWindow.document.execCommand("insertUnorderedList", false, "");
+        if (!unOrderedListStatus) {
+            unOrderedList.style.backgroundColor = "lightgray";
+            unOrderedListStatus = true;
         } else {
-            bool = document.execCommand("insertUnorderedList", false, "");
-            if (bool) {
-                unOrderedList.style.backgroundColor = "lightgray";
-                unOrderedListStatus = true;
-            }
+            unOrderedList.style.backgroundColor = "";
+            unOrderedListStatus = false;
         }
-        //document.execCommand("insertUnorderedList", false, "");
     }
     function orderedList() {
         var orderedList = document.getElementById("orderedList");
-        var bool;
-        if (orderedListStatus) {
-            bool = document.execCommand("insertorderedList", false, "");
-            if (bool) {
-                orderedList.style.backgroundColor = "";
-                orderedListStatus = false;
-            }
+        editor.contentWindow.document.execCommand("insertorderedList", false, "");
+        if (!orderedListStatus) {
+            orderedList.style.backgroundColor = "lightgray";
+            orderedListStatus = true;
         } else {
-            bool = document.execCommand("insertorderedList", false, "");
-            if (bool) {
-                orderedList.style.backgroundColor = "lightgray";
-                orderedListStatus = true;
-            }
+            orderedList.style.backgroundColor = "";
+            orderedListStatus = false;
         }
-        //document.execCommand("insertorderedList", false, "");
     }
     function leftAlign() {
-        document.execCommand("justifyLeft", false, "");
+        editor.contentWindow.document.execCommand("justifyLeft", false, "");
     }
     function centerAlign() {
-        document.execCommand("justifyCenter", false, "");
+        editor.contentWindow.document.execCommand("justifyCenter", false, "");
     }
     function indent() {
-        document.execCommand("indent", false, "");
+        editor.contentWindow.document.execCommand("indent", false, "");
     }
     function fontColor(color) {
-        document.execCommand("foreColor", false, color);
+        editor.contentWindow.document.execCommand("foreColor", false, color);
     }
-    var prevSelection=0;
-    function fontSize(size) {
-        var bool;
-        if (size != 0) {
-            bool = document.execCommand("fontSize", false, size);
-        } else {
-            bool = document.execCommand("fontSize", false, "2");
-        }
 
-        if (bool) {
-            prevSelection = size;
+    function fontSize(size) {
+        //var bool;
+        if (size != 0) {
+            editor.contentWindow.document.execCommand("fontSize", false, size);
         } else {
-            document.getElementById("font-size-selection").value = prevSelection;
+            editor.contentWindow.document.execCommand("fontSize", false, "3");
         }
-        
     }
-    var uploadId = 0;
+    
     function uploadPost(val) {
         var title = document.getElementById("title").value;
         if (title != "") {
@@ -178,12 +152,11 @@
             }
             var data = JSON.stringify({
                 'status': val,
-                'content': document.getElementById("editor").innerHTML.toString(),
+                'content': editor.contentWindow.document.body.innerHTML.toString(),
                 'title': title,
                 'category': category,
                 'uploadId': uploadId
             });
-            alert(uploadId);
             $.ajax({
                 type: "POST",
                 url: "/Post/uploadPost", // the URL of the controller action method
@@ -191,21 +164,41 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (result) {
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (uploadId != 0) {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Post Updated Successfully!";
+                    } else {
+                        if (val == "Draft") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Save As Draft Successfully!";
+                        } else {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Published Successfully!";
+                        }
+                    }
                     uploadId = result.postID;
-                    alert(uploadId);
                 },
                 error: function () {
-                    alert("error");
+                    //alert("error");
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (uploadId != 0) {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Post Updat Un-Successful!";
+                    } else {
+                        if (val == "Draft") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Save As Draft Un-Successful!";
+                        } else {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Publish Un-Successful!";
+                        }
+                    }
                 }
             });
         } else {
             document.getElementsByClassName("alert")[0].style.display = "block";
-            document.getElementsByClassName("alert")[0].innerHTML += "Please enter title!";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Please enter title!";
         }
     }
+    
 </script>
 
-<div style="margin-left:160px">
+<div style="margin-left:160px" onload="setEditable()">
     <h2>Add New</h2>
     <hr />
     <div>
@@ -225,7 +218,15 @@
                         <select id="post-category" class="Custom-Button img-selection" style="background-color:white; color:black;">
                             @foreach (var cat in ViewBag.catList)
                             {
-                                <option value="@cat.catID">@cat.title</option>
+                                if (ViewBag.post.catId == @cat.catID)
+                                {
+                                    <option value="@cat.catID" selected>@cat.title</option>
+                                }
+                                else
+                                {
+                                    <option value="@cat.catID">@cat.title</option>
+                                }
+
                             }
                         </select>
                     </td>
@@ -235,7 +236,7 @@
         </div>
         <div>
             <span>
-                <input type="text" id="title" placeholder="Title" maxlength="150" />
+                <input type="text" id="title" placeholder="Title" maxlength="150" value="@ViewBag.post.postTitle" />
             </span>
         </div>
         <div>
@@ -272,8 +273,8 @@
                 </tr>
             </table>
         </div>
-        <div contenteditable="true" id="editor" style="font-size:13px">
-        </div>
+        <iframe id="editor" style="font-size:13px" srcdoc="@ViewBag.post.postData">
+        </iframe>
     </div>
 </div>
 <div class="popup" style="display:@ViewBag.popup">
@@ -396,8 +397,8 @@
         var file = filename + '_' + size + extension;
         var path = imageUrl.replace(filename + extension, "");
         //alert(path + file);
-        
-        document.getElementById("editor").innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
+
+        editor.contentWindow.document.body.innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
         popup.style.display = "none";
     }
 </script>

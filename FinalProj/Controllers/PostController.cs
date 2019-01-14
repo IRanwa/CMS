@@ -85,6 +85,8 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             int categoryCount = db.getCategoryCount(login);
             ViewBag.catList = db.getCatList(0, categoryCount,login);
+            Post post = new Post(0);
+            ViewBag.post = post;
             return View();
         }
 
@@ -260,6 +262,21 @@ namespace FinalProj.Controllers
 
             Posts();
             return View("Posts");
+        }
+
+        public ActionResult editPost(int postId)
+        {
+            PostsAddNew();
+            DBConnect db = new DBConnect();
+            Post post = new Post(postId);
+            post = db.getPostsById((Login)Session["user"],post);
+            string path = Server.MapPath(post.postLoc);
+            if (System.IO.File.Exists(path))
+            {
+                post.postData = System.IO.File.ReadAllText(path);
+            }
+            ViewBag.post = post;
+            return View("PostsAddNew");
         }
     }
 }
