@@ -37,7 +37,7 @@ namespace FinalProj.Controllers
         public ActionResult Settings()
         {
             ViewBag.Display = "none";
-            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalCount(NO_OF_IMAGES);
            // getTotalImageCount();
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
@@ -76,7 +76,7 @@ namespace FinalProj.Controllers
         public ActionResult nextImagePage(int nextPage)
         {
             Login login = (Login)Session["user"];
-            new DisplayImageLibrary(login, ViewBag).nextPage(nextPage, NO_OF_IMAGES);
+            new DisplayImageLibrary(login, ViewBag).reqNextPage(nextPage, NO_OF_IMAGES);
             //DBConnect db = new DBConnect();
             //int count = db.getImageCount();
             //ImageLibrary img = new ImageLibrary();

@@ -189,31 +189,6 @@ namespace FinalProj.Models
         //Website Query End
 
         //Image Library Query Start
-        //public void uploadImages(List<ImageLibrary> images)
-        //{
-        //    string query = "Insert into image_library " +
-        //        "(webID,title,imgDesc,imgLoc,uploadDate,modifyDate) " +
-        //        "values (@webID,@title,@imgDesc,@imgLoc,@uploadDate,@modifyDate)";
-
-        //    foreach (ImageLibrary img in images) {
-        //        uploadImage(img);
-        //        //if (this.OpenConnection() == true)
-        //        //{
-        //        //    MySqlCommand cmd = new MySqlCommand();
-        //        //    cmd.Parameters.AddWithValue("@webID", img.webID);
-        //        //    cmd.Parameters.AddWithValue("@title", img.title);
-        //        //    cmd.Parameters.AddWithValue("@imgDesc", img.imgDesc);
-        //        //    cmd.Parameters.AddWithValue("@imgLoc", img.imgLoc);
-        //        //    cmd.Parameters.AddWithValue("@uploadDate", img.uploadDate);
-        //        //    cmd.Parameters.AddWithValue("@modifyDate", img.modifyDate);
-
-        //        //    cmd.CommandText = query;
-        //        //    cmd.Connection = connection;
-        //        //    cmd.ExecuteNonQuery();
-        //        //    this.CloseConnection();
-        //        //}
-        //    }
-        //}
 
         public void uploadImage(ImageLibrary img)
         {
@@ -337,12 +312,13 @@ namespace FinalProj.Models
         }
 
         public void updateImage(ImageLibrary image) {
-            string query = "update image_library set title=@title, imgDesc=@imgDesc where ImageID=@ImageID";
+            string query = "update image_library set title=@title, imgDesc=@imgDesc, modifyDate=@modifyDate where ImageID=@ImageID";
             if (this.OpenConnection()==true)
             {
                 MySqlCommand cmd = new MySqlCommand(query,connection);
                 cmd.Parameters.AddWithValue("@title", image.title);
                 cmd.Parameters.AddWithValue("@imgDesc", image.imgDesc);
+                cmd.Parameters.AddWithValue("@modifyDate", image.modifyDate);
                 cmd.Parameters.AddWithValue("@ImageID", image.imageID);
                 cmd.ExecuteNonQuery();
                 
@@ -417,12 +393,13 @@ namespace FinalProj.Models
             return null;
         }
 
-        public int getCategoryCount()
+        public int getCategoryCount(Login login)
         {
-            string query = "select count(*) from Categories";
+            string query = "select count(*) from Categories where webID=@webID";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 int count = int.Parse(cmd.ExecuteScalar().ToString());
                 this.CloseConnection();
                 return count;
@@ -461,13 +438,14 @@ namespace FinalProj.Models
             }
         }
 
-        public Category checkCategoryAvailable(Category category)
+        public Category checkCategoryAvailable(Category category, Login login)
         {
-            string query = "select * from Categories where catTitle=@catTitle";
+            string query = "select * from Categories where catTitle=@catTitle and webID=@webID";
             if (this.OpenConnection()==true)
             {
                 MySqlCommand cmd = new MySqlCommand(query,connection);
                 cmd.Parameters.AddWithValue("@catTitle", category.title);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
                 while (dataReader.Read())
                 {

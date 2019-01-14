@@ -144,7 +144,7 @@ namespace FinalProj.Controllers
                                     break;
                                 case "Post Category":
                                     DBConnect db = new DBConnect();
-                                    Category category = db.checkCategoryAvailable(new Category(cell));
+                                    Category category = db.checkCategoryAvailable(new Category(cell),login);
                                     if (category.catID == 0)
                                     {
                                         if (cell.Length > 50)
@@ -154,7 +154,7 @@ namespace FinalProj.Controllers
                                         category.webID = login.webID;
                                         category.desc = cell;
                                         db.addCategory(category);
-                                        category = db.checkCategoryAvailable(category);
+                                        category = db.checkCategoryAvailable(category,login);
                                     }
                                     post.catId = category.catID;
                                     break;
@@ -439,7 +439,7 @@ namespace FinalProj.Controllers
             foreach (Category category in rows)
             {
                 DBConnect db = new DBConnect();
-                Category available = db.checkCategoryAvailable(category);
+                Category available = db.checkCategoryAvailable(category,login);
                 if (available.catID == 0)
                 {
                     category.webID = login.webID;

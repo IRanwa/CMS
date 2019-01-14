@@ -132,7 +132,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\DeleteFolders.cs" />
-    <Compile Include="Controllers\DisplayImagePager.cs" />
+    <Compile Include="Controllers\PaginationClass.cs" />
     <Compile Include="Controllers\ExportDetails.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ImageLibraryController.cs" />

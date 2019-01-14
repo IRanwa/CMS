@@ -24,7 +24,7 @@ namespace FinalProj.Controllers
         {
             ViewBag.Display = "none";
             ViewBag.layoutView = "Grid";
-            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalCount(NO_OF_IMAGES);
             return View();
         }
 
@@ -32,14 +32,14 @@ namespace FinalProj.Controllers
         {
             ViewBag.Display = "none";
             ViewBag.layoutView = layout;
-            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalCount(NO_OF_IMAGES);
             return View("ImageLibrary");
         }
 
         public ActionResult nextPage(int nextPage, string layout)
         {
             Login login = (Login)Session["user"];
-            new DisplayImageLibrary((Login)Session["user"],ViewBag).nextPage(nextPage, NO_OF_IMAGES);
+            new DisplayImageLibrary((Login)Session["user"],ViewBag).reqNextPage(nextPage, NO_OF_IMAGES);
             ViewBag.Display = "none";
             ViewBag.layoutView = layout;
             return View("ImageLibrary");
@@ -54,9 +54,6 @@ namespace FinalProj.Controllers
         [HttpPost]
         public ActionResult LibraryAddNew(HttpPostedFileBase[] files)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
 
@@ -72,7 +69,6 @@ namespace FinalProj.Controllers
             if (files != null)
             {
                 List<Task> tasksList = new List<Task>();
-                bool exists = false;
                 CancellationTokenSource source = new CancellationTokenSource();
                 var token = source.Token;
                 Task<List<ImageLibrary>> mainTask = Task.Factory.StartNew(() =>
@@ -88,6 +84,7 @@ namespace FinalProj.Controllers
                             
                             int count = 0;
                             string ServerSavePath;
+                            bool exists = false;
                             do
                             {
                                 fileName = InputFileName;
@@ -195,10 +192,7 @@ namespace FinalProj.Controllers
                     ViewBag.Message = "Images Uploaded Un-Successful!";
                 }
                 ViewBag.Display = "Block";
-
             }
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.Elapsed);
             return View();
         }
 
@@ -277,20 +271,20 @@ namespace FinalProj.Controllers
             {
                 System.IO.File.Delete(Server.MapPath(webPath + "/downloadImages.zip"));
             }
-            foreach (int imageID in imageList)
+            Parallel.ForEach(imageList, (imageID) =>
             {
                 ImageLibrary img = new ImageLibrary(imageID);
                 DBConnect db = new DBConnect();
                 img = db.getImage(img);
                 string filename = img.imgLoc.Split('/').Last();
-                string path = img.imgLoc.Replace(filename, "").Replace(webPath + "/Images/","");
+                string path = img.imgLoc.Replace(filename, "").Replace(webPath + "/Images/", "");
                 string folderPath = Server.MapPath(webPath + "/Images/downloadImages/" + path);
                 if (!Directory.Exists(folderPath))
                 {
                     Directory.CreateDirectory(folderPath);
                 }
-                System.IO.File.Copy(Server.MapPath(img.imgLoc),Server.MapPath(webPath + "/Images/downloadImages/" + path + filename));
-            }
+                System.IO.File.Copy(Server.MapPath(img.imgLoc), Server.MapPath(webPath + "/Images/downloadImages/" + path + filename));
+            });
             ZipFile.CreateFromDirectory(Server.MapPath(webPath+"/Images/downloadImages"), Server.MapPath(webPath+"/downloadImages.zip"));
             DeleteFolders.getInstance(Server).deleteFolders(webPath+"/Images/downloadImages");
             byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath+"/downloadImages.zip"));
@@ -316,7 +310,7 @@ namespace FinalProj.Controllers
             }
             ViewBag.Display = "none";
             ViewBag.layoutView = "List";
-            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
+            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalCount(NO_OF_IMAGES);
             return View("ImageLibrary");
         }
 
@@ -324,6 +318,8 @@ namespace FinalProj.Controllers
         public ActionResult imagePropChange(ImageLibrary img, string layout)
         {
             DBConnect db = new DBConnect();
+            DateTime date = DateTime.Now;
+            img.modifyDate = date;
             db.updateImage(img);
             changeLayout(layout);
             return View("ImageLibrary");

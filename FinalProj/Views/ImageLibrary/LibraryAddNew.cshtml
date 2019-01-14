@@ -31,7 +31,9 @@
                     <td><label for="file">Upload Images:</label></td>
                 </tr>
                 <tr>
-                    <td>@Html.TextBoxFor(model => model.files, "", new { @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif", @id="upload-files" })</td>
+                    <td>@Html.TextBoxFor(model => model.files, "",
+                       new { @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif",
+                           @id ="upload-files", @required="true" })</td>
                     <td><input type="submit" value="Upload" id="UploadBtn" class="Custom-Button" style="float:right; padding: 5px 15px;" onclick="return validate();"/></td>
                 </tr>
             </table>

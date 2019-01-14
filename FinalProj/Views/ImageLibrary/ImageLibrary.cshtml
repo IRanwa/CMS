@@ -1,6 +1,7 @@
 ﻿@model FinalProj.Models.ImageLibrary
 @{
     ViewBag.Title = "Image Library";
+    ViewBag.alertSize = "160px";
 }
 <style>
     table{
@@ -66,10 +67,20 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ imageList: images, layout: layout }),
                 success: function () {
-                    alert("success");
-                    window.location.href = window.location.href;
+                    //alert("success");
+                    var timeleft = 10;
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    var downloadTimer = setInterval(function () {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Images Deleted Successfully!<br>Page Refresh in "+ --timeleft + " Seconds";
+                        if (timeleft <= 0) {
+                            clearInterval(downloadTimer);
+                            location.reload();
+                        }
+                    }, 1000);
                 }, error: function () {
-                    alert("Error occured!")
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Images Deleting Un-Successful!";
+                   // alert("Error occured!")
                 }
             });
         } else {
@@ -79,17 +90,25 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ imageList: images}),
                 success: function () {
-                    alert("success");
-                    window.location.href = window.location.href;
+                    //alert("success");
+                    var timeleft = 10;
+                    window.document.getElementsByClassName("alert")[0].style.display = "block";
+                    var downloadTimer = setInterval(function () {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Images Download Successfully!<br>Page Refresh in " + --timeleft +" Seconds";
+                        if (timeleft <= 0) {
+                            clearInterval(downloadTimer);
+                            location.reload();
+                        }
+                    }, 1000);
                 }, error: function () {
-                    alert("Error occured!")
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Images Downloading Un-Successful!";
+                   // alert("Error occured!")
                 }
             });
         }
         
     }
-
-    
 </script>
 
 <div style="margin-left:160px">

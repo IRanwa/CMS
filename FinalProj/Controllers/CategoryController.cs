@@ -7,25 +7,25 @@ using System.Web.Mvc;
 
 namespace FinalProj.Controllers
 {
-    public class CategoryController : Controller
+    public class CategoryController : Controller, PagerInterface<Category>
     {
+        private const int NO_OF_CATEGORY = 20;
         public ActionResult Category()
         {
             ViewBag.Display = "none";
-            Category cat = getTotalCategoryCount();
-            displayCategories(cat);
+            getTotalCount(NO_OF_CATEGORY);
             return View();
         }
-
-        private void displayCategories(Category cat)
+        public void getContent(Category cat, int noOfImage)
         {
             if (cat.currentPage != 0)
             {
-                int startIndex = (cat.currentPage - 1) * 20;
+                int startIndex = (cat.currentPage - 1) * noOfImage;
                 DBConnect db = new DBConnect();
                 Login login = (Login)Session["user"];
-                List<Category> categories = db.getCatList(startIndex, startIndex + 20,login);
-                if (categories.Count>1) {
+                List<Category> categories = db.getCatList(startIndex, noOfImage, login);
+                if (categories.Count > 1)
+                {
                     categories.RemoveAt(0);
                     ViewBag.DisplayCategories = categories;
                 }
@@ -33,53 +33,51 @@ namespace FinalProj.Controllers
             }
         }
 
-        private Category getTotalCategoryCount()
+        public void getTotalCount(int noOfImage)
         {
+            Login login = (Login)Session["user"];
             DBConnect db = new DBConnect();
-            int count = db.getCategoryCount();
+            int count = db.getCategoryCount(login);
 
             Category cat = new Category();
             cat.totalCategoryCount = count;
-            cat.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
+            cat.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(noOfImage.ToString())));
             if (count > 0)
             {
                 cat.currentPage = 1;
             }
-            return cat;
+            getContent(cat, noOfImage);
         }
 
-        public ActionResult nextPage(int nextPage, int currentPage)
+        public void reqNextPage(int nextPage, int noOfImage)
         {
-            if (nextPage > currentPage)
-            {
-                currentPage++;
-            }
-            else
-            {
-                currentPage--;
-            }
+            Login login = (Login)Session["user"];
             DBConnect db = new DBConnect();
-            int count = db.getCategoryCount();
+            int count = db.getCategoryCount(login);
             Category cat = new Category();
             cat.totalCategoryCount = count;
-            cat.noOfPages = Convert.ToInt32(Math.Ceiling(count / 20.0));
-            if (currentPage > cat.noOfPages)
+            cat.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_CATEGORY.ToString())));
+            if (nextPage > cat.noOfPages)
             {
-                currentPage = cat.noOfPages;
+                nextPage = cat.noOfPages;
             }
 
-            cat.currentPage = currentPage;
+            cat.currentPage = nextPage;
 
 
-            if (currentPage != 0)
+            if (nextPage != 0)
             {
-                int startIndex = (currentPage - 1) * 20;
-                Login login = (Login)Session["user"];
-                List<Category> categories = db.getCatList(startIndex, startIndex + 20,login);
+                int startIndex = (nextPage - 1) * NO_OF_CATEGORY;
+                List<Category> categories = db.getCatList(startIndex, NO_OF_CATEGORY, login);
                 ViewBag.DisplayCategories = categories;
                 ViewBag.CategoryProp = cat;
             }
             ViewBag.Display = "none";
+        }
+
+        public ActionResult nextPage(int nextPage)
+        {
+            reqNextPage(nextPage,NO_OF_CATEGORY);
             return View("Category");
         }
 
@@ -93,13 +91,20 @@ namespace FinalProj.Controllers
         public ActionResult CategoryAddNew(Category category )
         {
             DBConnect db = new DBConnect();
-
-            Website web = db.getWebsite((Login)Session["user"]);
+            Login login = (Login)Session["user"];
+            Website web = db.getWebsite(login);
             category.webID = web.webID;
-
-            db.addCategory(category);
-            ViewBag.Display = "Block";
-            ViewBag.Message = "Category Added Successfully!";
+            category = db.checkCategoryAvailable(category, login);
+            if (category.catID==0) {
+                db.addCategory(category);
+                ViewBag.Display = "Block";
+                ViewBag.Message = "Category Added Successfully!";
+            }
+            else
+            {
+                ViewBag.Display = "Block";
+                ViewBag.Message = "Category already exists!";
+            }
             ModelState.Clear();
             return View();
         }

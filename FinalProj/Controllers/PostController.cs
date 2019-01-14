@@ -79,11 +79,11 @@ namespace FinalProj.Controllers
 
         public ActionResult PostsAddNew()
         {
-            ViewBag.Display = "none";
-            new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalImageCount(NO_OF_IMAGES);
-            DBConnect db = new DBConnect();
-            int categoryCount = db.getCategoryCount();
             Login login = (Login)Session["user"];
+            ViewBag.Display = "none";
+            new DisplayImageLibrary(login, ViewBag).getTotalCount(NO_OF_IMAGES);
+            DBConnect db = new DBConnect();
+            int categoryCount = db.getCategoryCount(login);
             ViewBag.catList = db.getCatList(0, categoryCount,login);
             return View();
         }
@@ -91,7 +91,7 @@ namespace FinalProj.Controllers
         public ActionResult nextImagePage(int nextPage)
         {
             Login login = (Login)Session["user"];
-            new DisplayImageLibrary(login, ViewBag).nextPage(nextPage, NO_OF_IMAGES);
+            new DisplayImageLibrary(login, ViewBag).reqNextPage(nextPage, NO_OF_IMAGES);
             //DBConnect db = new DBConnect();
             //int count = db.getImageCount();
             //ImageLibrary img = new ImageLibrary();
@@ -113,7 +113,7 @@ namespace FinalProj.Controllers
             //    ViewBag.LibraryProp = img;
             //}
             DBConnect db = new DBConnect();
-            int categoryCount = db.getCategoryCount();
+            int categoryCount = db.getCategoryCount(login);
             ViewBag.catList = db.getCatList(0, categoryCount, login);
 
             ViewBag.Display = "none";

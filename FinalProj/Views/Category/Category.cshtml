@@ -1,6 +1,7 @@
 ﻿
 @{
     ViewBag.Title = "Category";
+    ViewBag.alertSize = "160px";
 }
 <style>
     .Custom-Button {
@@ -59,10 +60,20 @@
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ catList: categories }),
             success: function () {
-                alert("success");
-                window.location.reload(); 
+                //alert("success");
+                var timeleft = 5;
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                var downloadTimer = setInterval(function () {
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Categories Deleted Successfully!<br>Page Refresh in " + --timeleft + " Seconds";
+                    if (timeleft <= 0) {
+                        clearInterval(downloadTimer);
+                        location.reload();
+                    }
+                }, 1000);
             }, error: function () {
-                alert("Error occured!")
+                //alert("Error occured!")
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                document.getElementsByClassName("alert-message")[0].innerHTML = "Categories Deleting Un-Successful!";
             }
         });
     }

@@ -23,7 +23,7 @@ namespace FinalProj.Controllers
                 post.postData = System.IO.File.ReadAllText(Server.MapPath(post.postLoc));
             }
             ViewBag.PostsList = postList;
-            List<Category> catList = db.getCatList(0, db.getCategoryCount(), login);
+            List<Category> catList = db.getCatList(0, db.getCategoryCount(login), login);
             catList.RemoveAt(0);
             catList.Insert(0, new Category(0,"All Categories","All Categories"));
             ViewBag.catList = catList;

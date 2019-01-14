@@ -99,7 +99,7 @@ namespace FinalProj.Controllers
                             tempCount++;
                             break;
                         case "categories":
-                            tempCount = db.getCategoryCount();
+                            tempCount = db.getCategoryCount(login);
                             if (tempCount > 0)
                             {
                                 currentTask = Task.Factory.StartNew((obj) =>
