@@ -36,8 +36,16 @@ namespace FinalProj.Controllers
         {
             Parallel.ForEach(Directory.GetFiles(path), file =>
             {
-                System.IO.File.Delete(file);
+                deleteFile(file);
             });
+        }
+
+        public void deleteFile(string file)
+        {
+            if (System.IO.File.Exists(file))
+            {
+                System.IO.File.Delete(file);
+            }
         }
     }
 }

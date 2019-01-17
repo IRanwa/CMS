@@ -4,53 +4,54 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
 namespace FinalProj.Controllers
 {
-    public class PostController : Controller
+    public class PostController : Controller,PagerInterface<Post>
     {
         private const int NO_OF_IMAGES = 12;
-        private const int NO_OF_POSTS = 12;
+        private const int NO_OF_POSTS = 20;
 
         public ActionResult Posts()
         {
             ViewBag.Display = "none";
-            Post post = getTotalPostsCount();
-            displayPosts(post);
+            getTotalCount(NO_OF_POSTS);
+            contentEditor();
             return View();
         }
 
-        private void displayPosts(Post post)
+        public void getContent(Post post, int noOfPosts)
         {
             if (post.currentPage != 0)
             {
-                int startIndex = (post.currentPage - 1) * NO_OF_POSTS;
+                int startIndex = (post.currentPage - 1) * noOfPosts;
                 DBConnect db = new DBConnect();
                 Login login = (Login)Session["user"];
-                List<Post> posts = db.getPostList(startIndex, startIndex + NO_OF_POSTS, login);
+                List<Post> posts = db.getPostList(startIndex, startIndex + noOfPosts, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
         }
 
-        private Post getTotalPostsCount()
+        public void getTotalCount(int noOfPosts)
         {
             DBConnect db = new DBConnect();
             int count = db.getPostsCount();
 
             Post post = new Post();
             post.totalCategoryCount = count;
-            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_POSTS.ToString())));
+            post.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(noOfPosts.ToString())));
             if (count > 0)
             {
                 post.currentPage = 1;
             }
-            return post;
+            getContent(post, noOfPosts);
         }
 
-        public ActionResult nextPostsPage(int nextPage)
+        public void reqNextPage(int nextPage, int noOfImage)
         {
             DBConnect db = new DBConnect();
             int count = db.getPostsCount();
@@ -73,57 +74,51 @@ namespace FinalProj.Controllers
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
             }
+        }
+
+        public ActionResult nextPostsPage(int nextPage)
+        {
+            reqNextPage(nextPage, NO_OF_POSTS);
             ViewBag.Display = "none";
+            contentEditor();
             return View("Posts");
         }
 
         public ActionResult PostsAddNew()
         {
-            Login login = (Login)Session["user"];
             ViewBag.Display = "none";
-            new DisplayImageLibrary(login, ViewBag).getTotalCount(NO_OF_IMAGES);
-            DBConnect db = new DBConnect();
-            int categoryCount = db.getCategoryCount(login);
-            ViewBag.catList = db.getCatList(0, categoryCount,login);
-            Post post = new Post(0);
-            ViewBag.post = post;
+            contentEditor();
             return View();
         }
 
-        public ActionResult nextImagePage(int nextPage)
+        private void contentEditor()
         {
             Login login = (Login)Session["user"];
-            new DisplayImageLibrary(login, ViewBag).reqNextPage(nextPage, NO_OF_IMAGES);
-            //DBConnect db = new DBConnect();
-            //int count = db.getImageCount();
-            //ImageLibrary img = new ImageLibrary();
-            //img.totalImageCount = count;
-            //img.noOfPages = Convert.ToInt32(Math.Ceiling(count / Double.Parse(NO_OF_IMAGES.ToString())));
-            //if (nextPage > img.noOfPages)
-            //{
-            //    nextPage = img.noOfPages;
-            //}
+            new DisplayImageLibrary(login, ViewBag).getTotalCount(NO_OF_IMAGES);
+            getCategoryList(login);
+        }
 
-            //img.currentPage = nextPage;
-
-            //Login login = (Login)Session["user"];
-            //if (nextPage != 0)
-            //{
-            //    int startIndex = (nextPage - 1) * NO_OF_IMAGES;
-            //    List<ImageLibrary> images = db.getImages(startIndex, NO_OF_IMAGES, login);
-            //    ViewBag.DisplayImages = images;
-            //    ViewBag.LibraryProp = img;
-            //}
+        private void getCategoryList(Login login)
+        {
             DBConnect db = new DBConnect();
             int categoryCount = db.getCategoryCount(login);
             ViewBag.catList = db.getCatList(0, categoryCount, login);
-
-            ViewBag.Display = "none";
-            ViewBag.popup = "block";
-            return View("PostsAddNew");
+            Post post = new Post(0);
+            ViewBag.post = post;
         }
 
-        public ActionResult uploadPost(string status, string content, string title, int category, int uploadId)
+        public PartialViewResult nextImagePage(int nextPage, string pageName)
+        {
+            Login login = (Login)Session["user"];
+            new DisplayImageLibrary(login, ViewBag).reqNextPage(nextPage, NO_OF_IMAGES);
+            ViewBag.Display = "none";
+            ViewBag.popup = "block";
+            Post post = new Post(0);
+            ViewBag.post = post;
+            return PartialView("ImagesContainer");
+        }
+
+        public ActionResult uploadPost(string status, string content, string title, int category, long uploadId)
         {
             DateTime date = DateTime.Now;
             DBConnect db = new DBConnect();
@@ -153,114 +148,179 @@ namespace FinalProj.Controllers
                     count++;
                 } while (exists);
 
-                System.IO.File.WriteAllText(Server.MapPath(path), content);
-                
-                Website web = db.getWebsite((Login)Session["user"]);
-                long id = db.uploadPost(new Post(category, web.webID, title, path, status, date, date));
-                return Json(new { postID = id }, JsonRequestBehavior.AllowGet);
+                Task.Factory.StartNew(() =>
+                {
+                    System.IO.File.WriteAllText(Server.MapPath(path), content);
+                });
+                Task<long> dbSaveTask = Task.Factory.StartNew(() =>
+                {
+                    Website web = db.getWebsite((Login)Session["user"]);
+                    return  db.uploadPost(new Post(category, web.webID, title, path, status, date, date));
+                });
+
+                uploadId = dbSaveTask.Result;
+                return Json(new { postID = uploadId }, JsonRequestBehavior.AllowGet);
             }
             else
             {
-                db.updatePost(new Post(uploadId,category,title,status,date));
-                string postLoc = db.getPostLoc(new Post(uploadId));
-                if (System.IO.File.Exists(Server.MapPath(postLoc)))
+               Task dbSaveTask = Task.Factory.StartNew(() =>
                 {
-                    System.IO.File.WriteAllText(Server.MapPath(postLoc), content);
+                    db.updatePost(new Post(uploadId, category, title, date));
+                    changeStatus(uploadId, status,"single");
+                });
 
-                }
-                changeStatus(uploadId, status);
+                Task.Factory.StartNew(() =>
+                {
+                    string postLoc = db.getPostLoc(new Post(uploadId));
+                    if (System.IO.File.Exists(Server.MapPath(postLoc)))
+                    {
+                        System.IO.File.WriteAllText(Server.MapPath(postLoc), content);
+
+                    }
+                });
+                dbSaveTask.Wait();
             }
             return Json(new { postID = uploadId }, JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult deletePost(int postId)
+        public ActionResult deletePost(int postId, string action)
         {
             DBConnect db = new DBConnect();
             Post post = new Post(postId);
-            string postLoc = db.getPostLoc(post);
             db.deletePosts(post);
+            string postLoc = db.getPostLoc(post);
 
-            postLoc = Server.MapPath(postLoc);
-
-            if (System.IO.File.Exists(postLoc))
+            Task.Factory.StartNew(() =>
             {
-                System.IO.File.Delete(postLoc);
+                DeleteFolders.getInstance(Server).deleteFile(Server.MapPath(postLoc));
+            });
+            if (!action.Equals("bulk")) {
+                Posts();
             }
-
-            Posts();
             return View("Posts");
         }
 
         public ActionResult bulkPostAction(List<int> postsList, string action)
         {
-            DBConnect db = new DBConnect();
-            switch (action) {
-                case "deleteAll":
-                    db.deletePosts(postsList);
-                    break;
-                case "publishAll":
-                    db.changePostStatus(postsList,"Publish");
-                    break;
-                case "draftAll":
-                    db.changePostStatus(postsList, "Draft");
-                    break;
-            }
+            Task bulkActionTask = Task.Factory.StartNew(() =>
+            {
+                switch (action)
+                {
+                    case "deleteAll":
+                        Parallel.ForEach(postsList, (index) =>
+                        {
+                            deletePost(index,"bulk");
+                        });
+                        //foreach (int index in postsList)
+                        //{
+
+                        //}
+                        //db.deletePosts(postsList);
+                        break;
+                    case "publishAll":
+                        Parallel.ForEach(postsList, (index) =>
+                        {
+                            changeStatus(index, "Publish", "bulk");
+                        });
+                        //foreach (int index in postsList)
+                        //{
+                        //    changeStatus(index, "Publish");
+                        //}
+                        break;
+                    case "draftAll":
+                        Parallel.ForEach(postsList, (index) =>
+                        {
+                            changeStatus(index, "Draft","bulk");
+                        });
+                        //foreach (int index in postsList)
+                        //{
+                        //    changeStatus(index, "Draft");
+                        //}
+                        //db.changePostStatus(postsList, "Draft");
+                        break;
+                }
+            });
+            Task contentEditTask = Task.Factory.StartNew(() =>
+            {
+                contentEditor();
+            });
+            Task.WaitAll(new Task[] {bulkActionTask,contentEditTask });
+            //ViewBag.Display = "none";
             return View("Posts");
         }
 
-        public ActionResult changeStatus(int postId, string status)
+        public ActionResult changeStatus(long postId, string status, string action)
         {
+            DateTime date = DateTime.Now;
             DBConnect db = new DBConnect();
-            Post post = new Post(postId, status);
-            string postLoc = db.getPostLoc(post);
-            db.changePostStatus(new Post(postId,status));
-
-            string[] split = postLoc.Split('/');
-            string filename = split[split.Length-1].Replace(".txt","");
-            if (filename.Contains('_'))
-            {
-                filename = filename.Substring(0, filename.IndexOf('_'));
-            }
-
-            int index = postLoc.IndexOf(filename);
-            string path;
-            if (status.Equals("Publish"))
-            {
-                path = postLoc.Substring(0, index).Replace("Draft",status);
-            }
-            else
-            {
-                path = postLoc.Substring(0, index).Replace("Publish", status);
-            }
-
-            if (!Directory.Exists(Server.MapPath(path)))
-            {
-                Directory.CreateDirectory(Server.MapPath(path));
-            }
-
-            string newFilePath = path + filename;
-
-            int count = 0;
-            bool exists = false;
-            do
-            {
-                if (count==0)
+            Post post = new Post(postId, status,date);
+            db.changePostStatus(post);
+            //Task.Factory.StartNew((arg) =>
+            //{
+                string postLoc = db.getPostLoc(post);
+                string[] split = postLoc.Split('/');
+                string filename = split[split.Length - 1].Replace(".txt", "");
+                if (filename.Contains('_'))
                 {
-                    newFilePath = path + filename+".txt";
+                    filename = filename.Substring(0, filename.IndexOf('_'));
+                }
+
+                int index = postLoc.IndexOf(filename);
+                string path;
+                if (status.Equals("Publish"))
+                {
+                    path = postLoc.Substring(0, index).Replace("Draft", status);
                 }
                 else
                 {
-                    newFilePath = path + filename+'_'+count + ".txt";
+                    path = postLoc.Substring(0, index).Replace("Publish", status);
                 }
-                exists = System.IO.File.Exists(Server.MapPath(newFilePath));
-                count++;
-            } while (exists);
 
-            post.postLoc = newFilePath;
-            db.changePostLoc(post);
-            System.IO.File.Move(Server.MapPath(postLoc), Server.MapPath(newFilePath));
+                if (!Directory.Exists(Server.MapPath(path)))
+                {
+                    Directory.CreateDirectory(Server.MapPath(path));
+                }
 
-            Posts();
+                string newFilePath = path + filename;
+
+                int count = 0;
+                bool exists = false;
+                do
+                {
+                    if (count == 0)
+                    {
+                        newFilePath = path + filename + ".txt";
+                    }
+                    else
+                    {
+                        newFilePath = path + filename + '_' + count + ".txt";
+                    }
+                    exists = System.IO.File.Exists(Server.MapPath(newFilePath));
+                    if (!exists)
+                    {
+                        try
+                        {
+                            System.IO.File.Move(Server.MapPath(postLoc), Server.MapPath(newFilePath));
+                            break;
+                        }
+                        catch (IOException ex)
+                        {
+                            exists = true;
+                        }
+                    }
+                    count++;
+                } while (exists);
+                post.postLoc = newFilePath;
+                db.changePostLoc(post);
+
+            //},post);
+            if (!action.Equals("bulk")) {
+                Task postsTask = Task.Factory.StartNew(() =>
+                {
+                    Posts();
+                });
+                postsTask.Wait();
+            }
             return View("Posts");
         }
 
@@ -277,6 +337,44 @@ namespace FinalProj.Controllers
             }
             ViewBag.post = post;
             return View("PostsAddNew");
+        }
+
+        public ActionResult addCommonText(List<int> postsList, string content, string position)
+        {
+            Login login = (Login)Session["user"];
+            DateTime date = DateTime.Now;
+            Parallel.ForEach(postsList, (index) =>
+            {
+                DBConnect db = new DBConnect();
+                Post post = new Post(index);
+                post = db.getPostsById(login, post);
+                if (post.postLoc!=null)
+                {
+                    string path = Server.MapPath(post.postLoc);
+                    if (System.IO.File.Exists(path))
+                    {
+                        string pastContent = System.IO.File.ReadAllText(path);
+                        if (position.Equals("top"))
+                        {
+                            pastContent = content + "<br><br>" + pastContent;
+                        }
+                        else
+                        {
+                            pastContent += "<br><br>"+content;
+                        }
+                        System.IO.File.WriteAllText(path, pastContent);
+                        post.modifyDate = date;
+                        db.updatePost(post);
+                    }
+                }
+            });
+            
+            Task contentTask = Task.Factory.StartNew(() =>
+            {
+                contentEditor();
+            });
+            contentTask.Wait();
+            return View("Posts");
         }
     }
 }

@@ -5,31 +5,8 @@
 }
 
 <style>
-    .custom-img {
-        width: 20px;
-        height: 20px;
-    }
-    .top-container {
-        margin: 2%;
-        margin-top: 0;
-        width:100%;
-    }
-    .editor-options {
-        margin: 2%;
-        margin-top:0;
-    }
-    .editor-options td {
-        padding: 3px 10px;
-        border-radius: 5px;
-    }
-    .editor-options td:hover {
-        background-color: lightgray;
-    }
-    #editor{
-        border: 1px solid gray;
-        margin:2%;
-        width:96%;
-        min-height:500px;
+    .Custom-Button {
+        padding: 5px 10px;
     }
     #title {
         border: 0px;
@@ -37,111 +14,10 @@
         margin: 2%;
         font-size: 40px;
         min-width: 96%;
-        
-    }
-    .Custom-Button {
-        padding: 5px 10px;
-    }
-    table {
-        text-align: center;
     }
 </style>
 <script>
-    var boldStatus = false;
-    var italicStatus = false;
-    var underlineStatus = false;
-    var unOrderedListStatus = false;
-    var orderedListStatus = false;
-    var editor;
-    var uploadId = '@ViewBag.post.postId';
-
-    window.onload = function () {
-        setEditable();
-    };
-
-    function setEditable() {
-        editor = document.getElementById("editor");
-        editor.contentWindow.document.designMode = "on";
-        editor.focus();
-    }
-
-    function bold() {
-        var bold = document.getElementById("bold");
-        editor.contentWindow.document.execCommand("bold", false, "");
-        if (!boldStatus) {
-            bold.style.backgroundColor = "lightgray";
-            boldStatus = true;
-        } else {
-            bold.style.backgroundColor = "";
-            boldStatus = false;
-        }
-    }
-    function italic() {
-        var italic = document.getElementById("italic");
-        editor.contentWindow.document.execCommand("italic", false, "");
-        if (!italicStatus) {
-            italic.style.backgroundColor = "lightgray";
-            italicStatus = true;
-        } else {
-            italic.style.backgroundColor = "";
-            italicStatus = false;
-        }
-    }
-    function underline() {
-        var underline = document.getElementById("underline");
-        editor.contentWindow.document.execCommand("underline", false, "");
-        if (!underlineStatus) {
-            underline.style.backgroundColor = "lightgray";
-            underlineStatus = true;
-        } else {
-            underline.style.backgroundColor = "";
-            underlineStatus = false;
-        }
-    }
-    function unOrderedList() {
-        var unOrderedList = document.getElementById("unOrderedList");
-        editor.contentWindow.document.execCommand("insertUnorderedList", false, "");
-        if (!unOrderedListStatus) {
-            unOrderedList.style.backgroundColor = "lightgray";
-            unOrderedListStatus = true;
-        } else {
-            unOrderedList.style.backgroundColor = "";
-            unOrderedListStatus = false;
-        }
-    }
-    function orderedList() {
-        var orderedList = document.getElementById("orderedList");
-        editor.contentWindow.document.execCommand("insertorderedList", false, "");
-        if (!orderedListStatus) {
-            orderedList.style.backgroundColor = "lightgray";
-            orderedListStatus = true;
-        } else {
-            orderedList.style.backgroundColor = "";
-            orderedListStatus = false;
-        }
-    }
-    function leftAlign() {
-        editor.contentWindow.document.execCommand("justifyLeft", false, "");
-    }
-    function centerAlign() {
-        editor.contentWindow.document.execCommand("justifyCenter", false, "");
-    }
-    function indent() {
-        editor.contentWindow.document.execCommand("indent", false, "");
-    }
-    function fontColor(color) {
-        editor.contentWindow.document.execCommand("foreColor", false, color);
-    }
-
-    function fontSize(size) {
-        //var bool;
-        if (size != 0) {
-            editor.contentWindow.document.execCommand("fontSize", false, size);
-        } else {
-            editor.contentWindow.document.execCommand("fontSize", false, "3");
-        }
-    }
-    
+    var editor = document.getElementById("editor");
     function uploadPost(val) {
         var title = document.getElementById("title").value;
         if (title != "") {
@@ -234,7 +110,7 @@
             </table>
 
         </div>
-        <div>
+        @*<div>
             <span>
                 <input type="text" id="title" placeholder="Title" maxlength="150" value="@ViewBag.post.postTitle" />
             </span>
@@ -254,7 +130,7 @@
                         Font Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
                     </td>
                     <td class="editor_icon" id="fontSize">
-                        Font Size: 
+                        Font Size:
                         <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;"
                                 onclick="fontSize(this.value)" id="font-size-selection">
                             <option value="0">Default</option>
@@ -274,87 +150,17 @@
             </table>
         </div>
         <iframe id="editor" style="font-size:13px" srcdoc="@ViewBag.post.postData">
-        </iframe>
-    </div>
-</div>
-<div class="popup" style="display:@ViewBag.popup">
-    <!-- Modal content -->
-    <div class="popup-content">
-        <span class="close">&times;</span>
+        </iframe>*@
         <div>
-            <h3>Insert Image</h3>
-            <hr />
-            @if (ViewBag.DisplayImages != null)
-            {
-                <table style="width:100%">
-                    @{
-                        int totalCount = ViewBag.DisplayImages.Count;
-                    }
-                    @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
-                    {
-                        if (row % 3 == 0)
-                        {
-                            int maxIndex = row + 3;
-                            if (maxIndex > totalCount)
-                            {
-                                maxIndex = totalCount;
-                            }
-
-                            <tr>
-                                @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
-                                {
-                                    <td class="image-container" onclick="imageClick(this)">
-                                        @*<input type="text" name="id" hidden value="@ViewBag.DisplayImages[imageIndex].imageID" />*@
-                                        <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
-                                        <br />
-                                        <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
-                                        <table class="image-selection" style="visibility:hidden; width:100%">
-                                            <tr>
-                                                <td>
-                                                    <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;">
-                                                        <option value="thumb">Small</option>
-                                                        <option value="medium">Medium</option>
-                                                        <option value="large">Large</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="button" value="Submit" class="Custom-Button" style="padding:2px 8px;
-                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)',this)"/>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    }
-                </table>
-                <div class="pagination">
-                    @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
-                    {
-                        if (ViewBag.LibraryProp.currentPage == page)
-                        {
-                            @Html.ActionLink(page.ToString(), "nextImagePage"
-                           , new { nextPage = page}, new { @class = "active" })
-                        }
-                        else
-                        {
-                            @Html.ActionLink(page.ToString(), "nextImagePage"
-                           , new { nextPage = page})
-                        }
-
-                    }
-                </div>
-            }
-            else
-            {
-                <div>
-                    No Images found!
-                </div>
-            }
+            <span>
+                <input type="text" id="title" placeholder="Title" maxlength="150" value="@ViewBag.post.postTitle" />
+            </span>
         </div>
+        @Html.Partial("~/Views/Post/ContentEditor.cshtml")
     </div>
 </div>
+
+
 
 <script>
     // Get the modal
@@ -381,7 +187,7 @@
 
     function imageClick(image) {
         var current = document.getElementsByClassName("image-container");
-        for (var x = 0; x < current.length;x++) {
+        for (var x = 0; x < current.length; x++) {
             current[x].style.backgroundColor = "";
             current[x].getElementsByClassName("image-selection")[0].style.visibility = "hidden";
         }
@@ -389,7 +195,7 @@
         image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
     }
 
-    function addImage(imageUrl,image) {
+    function addImage(imageUrl, image) {
         var url = imageUrl.split('/');
         var filename = (url[url.length - 1]).split('.').slice(0, -1).join('.');
         var extension = (url[url.length - 1]).replace(filename, "");
@@ -402,4 +208,3 @@
         popup.style.display = "none";
     }
 </script>
-

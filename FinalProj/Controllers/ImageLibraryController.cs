@@ -2,6 +2,7 @@
 using Microsoft.Web.Administration;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -56,6 +57,8 @@ namespace FinalProj.Controllers
         {
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
+            int[] resizeHeights = new int[] {web.thumbHeight,web.mediumHeight,web.largeHeight };
+            int[] resizeWidths = new int[] { web.thumbWidth, web.mediumWidth, web.largeWidth };
 
             DateTime date = DateTime.Now;
             string serverPath = "~/Website_"+web.webID.ToString()+"/Images/"+ date.ToString("yyyy-MM-dd")+"/";
@@ -68,20 +71,25 @@ namespace FinalProj.Controllers
             
             if (files != null)
             {
-                List<Task> tasksList = new List<Task>();
-                CancellationTokenSource source = new CancellationTokenSource();
-                var token = source.Token;
-                Task<List<ImageLibrary>> mainTask = Task.Factory.StartNew(() =>
+                ConcurrentBag<Task> tasksList = new ConcurrentBag<Task>();
+
+                CancellationTokenSource cts = new CancellationTokenSource();
+                ParallelOptions op = new ParallelOptions();
+                op.CancellationToken = cts.Token;
+
+                object locker = new object();
+                ConcurrentBag<ImageLibrary> imagesList = new ConcurrentBag<ImageLibrary>();
+
+                try
                 {
-                    List<ImageLibrary> imagesList = new List<ImageLibrary>();
-                    Parallel.ForEach(files, (file) =>
+                    Parallel.ForEach(files, op, file =>
                     {
                         if (file != null)
                         {
                             string InputFileName = Path.GetFileNameWithoutExtension(file.FileName);
                             string Extension = Path.GetExtension(file.FileName);
-                            string fileName="";
-                            
+                            string fileName = "";
+
                             int count = 0;
                             string ServerSavePath;
                             bool exists = false;
@@ -101,77 +109,31 @@ namespace FinalProj.Controllers
                                 count++;
                             } while (exists);
 
-                            if (token.IsCancellationRequested)
-                            {
-                                token.ThrowIfCancellationRequested();
-                            }
-                            ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
-                            file.SaveAs(ServerSavePath);
-
                             if (InputFileName.Length > 50)
                             {
                                 InputFileName = InputFileName.Substring(0, 50);
                             }
+                            ServerSavePath = Path.Combine(Server.MapPath(ServerSavePath));
+                            lock (locker)
+                            {
+                                file.SaveAs(ServerSavePath);
+                            }
                             ImageLibrary tempImage = new ImageLibrary(web.webID, InputFileName, "", serverPath + fileName + Extension, date, date);
                             imagesList.Add(tempImage);
 
-                            Task thumbTask = Task.Factory.StartNew(() =>
+                            
+                            string[] resizes = new string[] { "_thumb", "_medium", "_large" };
+                            Parallel.For(0, resizes.Length, (range) =>
                             {
-                                if (token.IsCancellationRequested)
-                                {
-                                    token.ThrowIfCancellationRequested();
-                                }
-                                Image imgPhoto = Image.FromFile(ServerSavePath);
-                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
-                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_thumb" + Extension));
-                                image.Dispose();
-                                imgPhoto.Dispose();
-
-                            }, token);
-
-                            Task mediumTask = Task.Factory.StartNew(() =>
-                            {
-                                if (token.IsCancellationRequested)
-                                {
-                                    token.ThrowIfCancellationRequested();
-                                }
-                                Image imgPhoto = Image.FromFile(ServerSavePath);
-                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
-                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_medium" + Extension));
-                                image.Dispose();
-                                imgPhoto.Dispose();
-                            }, token);
-
-                            Task largeTask = Task.Factory.StartNew(() =>
-                            {
-                                if (token.IsCancellationRequested)
-                                {
-                                    token.ThrowIfCancellationRequested();
-                                }
-                                Image imgPhoto = Image.FromFile(ServerSavePath);
-                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
-                                image.Save(Path.Combine(Server.MapPath(serverPath) + fileName + "_large" + Extension));
-                                image.Dispose();
-                                imgPhoto.Dispose();
-                            }, token);
-
-                            tasksList.Add(thumbTask);
-                            tasksList.Add(mediumTask);
-                            tasksList.Add(largeTask);
+                                    string SaveFilePath = Path.Combine(Server.MapPath(serverPath) + fileName + resizes[range] + Extension);
+                                    new ImageResizer().ResizeImage(ServerSavePath, resizeWidths[range], resizeHeights[range], SaveFilePath);
+                            });
                         }
                     });
-                    return imagesList;
-                }, token);
-
-                try
-                {
-                    List<ImageLibrary> result = mainTask.Result;
-                    Task.WaitAll(tasksList.ToArray());
-                    if (result.Count > 0)
+                    if (imagesList.Count > 0)
                     {
-                        List<string> filesList = new List<string>();
-
-                        Parallel.ForEach(result, (image) =>
+                        ConcurrentBag<string> filesList = new ConcurrentBag<string>();
+                        Parallel.ForEach(imagesList, (image) =>
                         {
                             db = new DBConnect();
                             db.uploadImage(image);
@@ -183,9 +145,8 @@ namespace FinalProj.Controllers
                 }
                 catch (AggregateException ae)
                 {
-                    source.Cancel();
-                    List<ImageLibrary> result = mainTask.Result;
-                    Parallel.ForEach(result, (image) =>
+                    cts.Cancel();
+                    Parallel.ForEach(imagesList, (image) =>
                     {
                         deleteImageByLoc(image.imgLoc);
                     });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -10,14 +11,14 @@ namespace FinalProj.Controllers
 {
     public class ImageResizer
     {
-        private static readonly object locker = new object();
-        public Bitmap ResizeImage(Image image, int width, int height)
+        public void ResizeImage(string ServerSavePath, int width, int height, string saveFilePath)
         {
             Rectangle destRect = new Rectangle(0, 0, width, height);
             Bitmap destImage = new Bitmap(width, height);
-            lock (locker) {
-                destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-            }
+
+            Image img = Image.FromFile(ServerSavePath);
+            destImage.SetResolution(img.HorizontalResolution, img.VerticalResolution);
+
             using (var graphics = Graphics.FromImage(destImage))
             {
                 graphics.CompositingMode = CompositingMode.SourceCopy;
@@ -29,17 +30,19 @@ namespace FinalProj.Controllers
                 using (var wrapMode = new ImageAttributes())
                 {
                     wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    lock (locker)
-                    {
-                        graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
-                    }
+                    graphics.DrawImage(img, destRect, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, wrapMode);
                     wrapMode.Dispose();
                 }
                 graphics.Dispose();
             }
-            
-            //destImage.Save(savePath);
-            return destImage;
+            img.Dispose();
+            destImage.Save(saveFilePath);
+            destImage.Dispose();
+        }
+
+        internal Bitmap ResizeImage(Image imgPhoto, int thumbWidth, int thumbHeight)
+        {
+            throw new NotImplementedException();
         }
     }
 }

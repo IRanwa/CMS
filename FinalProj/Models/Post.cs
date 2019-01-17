@@ -29,9 +29,10 @@ namespace FinalProj.Models
             this.postId = postId;
         }
 
-        public Post(long postId, string postStatus) : this(postId)
+        public Post(long postId, string postStatus, DateTime modifyDate) : this(postId)
         {
             this.postStatus = postStatus;
+            this.modifyDate = modifyDate;
         }
 
         public Post(int catId, int webId, string postTitle, string postLoc, string postStatus, DateTime createdDate, DateTime modifyDate)
@@ -45,11 +46,10 @@ namespace FinalProj.Models
             this.modifyDate = modifyDate;
         }
 
-        public Post(long postId, int catId, string postTitle, string postStatus, DateTime modifyDate) : this(postId)
+        public Post(long postId, int catId, string postTitle, DateTime modifyDate) : this(postId)
         {
             this.catId = catId;
             this.postTitle = postTitle;
-            this.postStatus = postStatus;
             this.modifyDate = modifyDate;
         }
     }
