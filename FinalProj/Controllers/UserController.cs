@@ -9,13 +9,14 @@ namespace FinalProj.Controllers
 {
     public class UserController : Controller
     {
-        // GET: User
+        [SessionListener]
         public ActionResult Index()
         {
             ViewBag.Display = "none";
             return View();
         }
 
+        [SessionListener]
         public ActionResult Registration()
         {
             ViewBag.Display = "none";
@@ -23,17 +24,17 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult Index(Login login)
         {
             DBConnect db = new DBConnect();
             login = db.checkUserReg(login);
             if (login.role != null)
             {
-                //Session["user"] = login;
-                //ViewBag.Display = "none";
                 Session.Add("user", login);
+                Session.Timeout = 1;
+                ModelState.Clear();
                 Response.Redirect("~/Home/Dashboard",false);
-                //return View("../Home/Dashboard");
             }
             else
             {
@@ -41,11 +42,12 @@ namespace FinalProj.Controllers
                 ViewBag.Message = "User not registered!";
             }
 
-
+            ModelState.Clear();
             return View();
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult Registration(Registration reg)
         {
             string pass = reg.user.pass;
@@ -68,6 +70,7 @@ namespace FinalProj.Controllers
 
                     Session.Add("user", login);
                     ViewBag.Display = "none";
+                    ModelState.Clear();
                     Response.Redirect("~/Home/Dashboard",false);
                 }
                 else
@@ -81,9 +84,11 @@ namespace FinalProj.Controllers
                 ViewBag.Display = "block";
                 ViewBag.Message = "Password not matched!";
             }
+            ModelState.Clear();
             return View();
         }
 
+        [SessionListener]
         public ActionResult LogOut()
         {
             ViewBag.Display = "none";

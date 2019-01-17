@@ -20,6 +20,8 @@ namespace FinalProj.Controllers
     public class HomeController : Controller
     {
         private const int NO_OF_IMAGES = 12;
+
+        [SessionListener]
         public ActionResult Dashboard()
         {
             ViewBag.Display = "none";
@@ -29,16 +31,14 @@ namespace FinalProj.Controllers
             ViewBag.noOfPublishPosts = db.getPostsCountByStatus("Publish");
             ViewBag.noOfDraftPosts = db.getPostsCountByStatus("Draft");
             @ViewBag.templateUrl = "/Template/Index";
-            //TemplateController temp = new TemplateController();
-            //temp.Index();
             return View();
         }
 
+        [SessionListener]
         public ActionResult Settings()
         {
             ViewBag.Display = "none";
             new DisplayImageLibrary((Login)Session["user"], ViewBag).getTotalCount(NO_OF_IMAGES);
-           // getTotalImageCount();
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
             ViewBag.website = web;
@@ -73,6 +73,7 @@ namespace FinalProj.Controllers
         //    displayImages(img);
         //}
 
+        [SessionListener]
         public ActionResult nextImagePage(int nextPage)
         {
             Login login = (Login)Session["user"];
@@ -106,6 +107,7 @@ namespace FinalProj.Controllers
             return View("Settings");
         }
 
+        [SessionListener]
         public ActionResult changeSettings(Website website)
         {
             DBConnect db = new DBConnect();
@@ -114,6 +116,7 @@ namespace FinalProj.Controllers
             return View("Settings");
         }
 
+        [SessionListener]
         public ActionResult LibrarySettings()
         {
             ViewBag.Display = "none";
@@ -123,137 +126,66 @@ namespace FinalProj.Controllers
             return View();
         }
 
-        public void changeImgLibSettings(Website web)
+        [SessionListener]
+        public ActionResult changeImgLibSettings(Website web)
         {
-            DBConnect db = new DBConnect();
             Login login = (Login)Session["user"];
+            DBConnect db = new DBConnect();
             Website previousWeb = db.getWebsite(login);
-            db.updateImgLibSettings(web);
             int imgCount = db.getImageCount(login);
             List<ImageLibrary> imgList = db.getImages(0, imgCount, login);
 
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            Task mainTask = Task.Factory.StartNew((obj) =>
-             {
-                 Parallel.ForEach(imgList, img =>
-                 {
-                     string filename = img.imgLoc.Split('/')[3];
-                     int index = filename.LastIndexOf(".");
-                     string extension = filename.Substring(filename.LastIndexOf("."));
-                     string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
-                     filename = filename.Replace(extension, "");
+            string[] resizes = new string[] { "_thumb", "_medium", "_large" };
+            int[,] newResize = new int[,] { { web.thumbWidth, web.thumbHeight }, { web.mediumWidth, web.mediumHeight }, { web.largeWidth, web.largeHeight } };
+            int[,] prevResize = new int[,] { { previousWeb.thumbWidth, previousWeb.thumbHeight }, { previousWeb.mediumWidth, previousWeb.mediumHeight },
+                { previousWeb.largeWidth, previousWeb.largeHeight } };
 
-                     List<Task> tasksList = new List<Task>();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            ParallelOptions po = new ParallelOptions();
+            po.CancellationToken = cts.Token;
 
-                     if (previousWeb.thumbWidth != web.thumbWidth || previousWeb.thumbHeight != web.thumbHeight) {
-                         Task thumbTask = Task.Factory.StartNew(() =>
+            try
+            {
+                Parallel.ForEach(imgList, po, img =>
+                {
+                    string filename = img.imgLoc.Split('/').Last();
+                    int index = filename.LastIndexOf(".");
+                    string extension = filename.Substring(filename.LastIndexOf("."));
+                    string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
+                    filename = filename.Replace(extension, "");
+
+                    Parallel.For(0, resizes.Length, po, (range) =>
+                    {
+                        po.CancellationToken.ThrowIfCancellationRequested();
+                        if (prevResize[range, 0] != newResize[range, 0] || prevResize[range, 1] != newResize[range, 1])
+                        {
+                            string newFilePath = Server.MapPath(path + filename + resizes[range] + extension);
+                            if (System.IO.File.Exists(newFilePath))
                             {
-                                string newFilePath = path + filename + "_thumb" + extension;
-                                if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                                {
-                                    System.IO.File.Delete(Server.MapPath(newFilePath));
-                                }
-                                Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
-                                Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
-                                image.Save(Path.Combine(Server.MapPath(path) + filename + "_thumb" + extension));
-                                image.Dispose();
-                                imgPhoto.Dispose();
-                            });
-                         tasksList.Add(thumbTask);
-                     }
-
-                     if (previousWeb.mediumWidth != web.mediumWidth || previousWeb.mediumHeight != web.mediumHeight)
-                     {
-                         Task mediumTask = Task.Factory.StartNew(() =>
-                         {
-                             string newFilePath = path + filename + "_medium" + extension;
-                             if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                             {
-                                 System.IO.File.Delete(Server.MapPath(newFilePath));
-                             }
-                             Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
-                             Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
-                             image.Save(Path.Combine(Server.MapPath(path) + filename + "_medium" + extension));
-                             image.Dispose();
-                             imgPhoto.Dispose();
-                         });
-                         tasksList.Add(mediumTask);
-                     }
-
-                     if (previousWeb.largeWidth != web.largeWidth || previousWeb.largeHeight != web.largeHeight)
-                     {
-                         Task largeTask = Task.Factory.StartNew(() =>
-                         {
-                             string newFilePath = path + filename + "_large" + extension;
-                             if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-                             {
-                                 System.IO.File.Delete(Server.MapPath(newFilePath));
-                             }
-                             Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
-                             Bitmap image = new ImageResizer().ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
-                             image.Save(Path.Combine(Server.MapPath(path) + filename + "_large" + extension));
-                             image.Dispose();
-                             imgPhoto.Dispose();
-                         });
-                         tasksList.Add(largeTask);
-                     }
-
-                     Task.WaitAll(tasksList.ToArray());
-
-                 });
-             }, imgList);
-            mainTask.Wait();
-
-
-            //foreach (ImageLibrary img in imgList)
-            //{
-            //    string filename = img.imgLoc.Split('/')[3];
-            //    int index = filename.LastIndexOf(".");
-            //    string extension = filename.Substring(filename.LastIndexOf("."));
-            //    string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
-            //    filename = filename.Replace(extension, "");
-
-            //    Image imgPhoto = Image.FromFile(Server.MapPath(img.imgLoc));
-
-
-            //    string newFilePath = path + filename + "_thumb" + extension;
-            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-            //    {
-            //        System.IO.File.Delete(Server.MapPath(newFilePath));
-            //        Bitmap image = ResizeImage(imgPhoto, web.thumbWidth, web.thumbHeight);
-            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_thumb" + extension));
-            //        image.Dispose();
-            //        //imgPhoto.Dispose();
-            //    }
-
-            //    newFilePath = path + filename + "_medium" + extension;
-            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-            //    {
-            //        System.IO.File.Delete(Server.MapPath(newFilePath));
-            //        Bitmap image = ResizeImage(imgPhoto, web.mediumWidth, web.mediumHeight);
-            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_medium" + extension));
-            //        image.Dispose();
-            //        //imgPhoto.Dispose();
-            //    }
-
-            //    newFilePath = path + filename + "_large" + extension;
-            //    if (System.IO.File.Exists(Server.MapPath(newFilePath)))
-            //    {
-            //        System.IO.File.Delete(Server.MapPath(newFilePath));
-            //        Bitmap image = ResizeImage(imgPhoto, web.largeWidth, web.largeHeight);
-            //        image.Save(Path.Combine(Server.MapPath(path) + filename + "_large" + extension));
-            //        image.Dispose();
-
-            //    }
-            //    imgPhoto.Dispose();
-            //}
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-            Console.Write(ts);
-            Response.Redirect("~/Home/LibrarySettings");
+                                System.IO.File.Delete(newFilePath);
+                            }
+                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), newResize[range, 0], newResize[range, 1], newFilePath);
+                        }
+                    });
+                });
+                ViewBag.Display = "Block";
+                ViewBag.Message = "Updated Image Library Successfully!";
+                db.updateImgLibSettings(web);
+                ViewBag.website = web;
+            }
+            catch (AggregateException ae)
+            {
+                cts.Cancel();
+                ViewBag.Display = "Block";
+                ViewBag.Message = "Updated Image Library Un-Successful!";
+                ViewBag.website = previousWeb;
+            }
+            
+            //Response.Redirect("~/Home/LibrarySettings",false);
+            return View("LibrarySettings");
         }
 
+        [SessionListener]
         public ActionResult Export()
         {
             ViewBag.Display = "none";
@@ -261,6 +193,7 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult Export(List<string> checkboxes)
         {
             Login login = (Login)Session["user"];
@@ -269,6 +202,7 @@ namespace FinalProj.Controllers
             return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
         }
 
+        [SessionListener]
         public ActionResult ExportTaskProgress()
         {
             int count = WebSettings.exportProgress;
@@ -278,6 +212,7 @@ namespace FinalProj.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        [SessionListener]
         public FileResult downloadExortFile()
         {
             if (System.IO.File.Exists(Server.MapPath("~/Export.zip")))
@@ -290,6 +225,7 @@ namespace FinalProj.Controllers
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
 
+        [SessionListener]
         public ActionResult Import()
         {
             ViewBag.Display = "none";
@@ -297,6 +233,7 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult Import(HttpPostedFileBase[] files)
         {
             

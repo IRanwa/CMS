@@ -17,5 +17,14 @@ namespace FinalProj
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
+
+        protected void Application_Error(object sender, EventArgs e)
+        {
+            Exception exc = Server.GetLastError();
+            Server.ClearError();
+            Uri url = HttpContext.Current.Request.Url;
+            //string message = url.AbsolutePath.Replace(url.Scheme + "://" + url.Authority, "");
+            Response.Redirect("~/Template/RedirectPage?Website="+ url.AbsolutePath.Substring(1));
+        }
     }
 }

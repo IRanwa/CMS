@@ -566,16 +566,18 @@ namespace FinalProj.Models
             return posts;
         }
 
-        public List<Post> getPostsByStatus(Login login, string status)
+        public List<Post> getPostsByStatus(Login login, string status,int startIndex, int endIndex)
         {
             List<Post> posts = new List<Post>();
             string query = "select * from Posts as p inner join posts_categories as pc where p.postID=pc.postID" +
-                " and pc.webID=@webID and p.postStatus=@postStatus";
+                " and pc.webID=@webID and p.postStatus=@postStatus limit @startIndex, @endIndex";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@webID", login.webID);
                 cmd.Parameters.AddWithValue("@postStatus", status);
+                cmd.Parameters.AddWithValue("@startIndex", startIndex);
+                cmd.Parameters.AddWithValue("@endIndex", endIndex);
                 MySqlDataReader dataReader = cmd.ExecuteReader();
 
                 while (dataReader.Read())

@@ -21,6 +21,8 @@ namespace FinalProj.Controllers
     public class ImageLibraryController : Controller
     {
         private const int NO_OF_IMAGES = 100;
+
+        [SessionListener]
         public ActionResult ImageLibrary()
         {
             ViewBag.Display = "none";
@@ -29,6 +31,7 @@ namespace FinalProj.Controllers
             return View();
         }
 
+        [SessionListener]
         public ActionResult changeLayout(string layout)
         {
             ViewBag.Display = "none";
@@ -37,6 +40,7 @@ namespace FinalProj.Controllers
             return View("ImageLibrary");
         }
 
+        [SessionListener]
         public ActionResult nextPage(int nextPage, string layout)
         {
             Login login = (Login)Session["user"];
@@ -46,6 +50,7 @@ namespace FinalProj.Controllers
             return View("ImageLibrary");
         }
 
+        [SessionListener]
         public ActionResult LibraryAddNew()
         {
             ViewBag.Display = "none";
@@ -53,13 +58,12 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult LibraryAddNew(HttpPostedFileBase[] files)
         {
             DBConnect db = new DBConnect();
             Website web = db.getWebsite((Login)Session["user"]);
-            int[] resizeHeights = new int[] {web.thumbHeight,web.mediumHeight,web.largeHeight };
-            int[] resizeWidths = new int[] { web.thumbWidth, web.mediumWidth, web.largeWidth };
-
+            
             DateTime date = DateTime.Now;
             string serverPath = "~/Website_"+web.webID.ToString()+"/Images/"+ date.ToString("yyyy-MM-dd")+"/";
             string path = Server.MapPath(serverPath);
@@ -71,17 +75,17 @@ namespace FinalProj.Controllers
             
             if (files != null)
             {
-                ConcurrentBag<Task> tasksList = new ConcurrentBag<Task>();
-
                 CancellationTokenSource cts = new CancellationTokenSource();
                 ParallelOptions op = new ParallelOptions();
                 op.CancellationToken = cts.Token;
-
-                object locker = new object();
+                
                 ConcurrentBag<ImageLibrary> imagesList = new ConcurrentBag<ImageLibrary>();
-
                 try
                 {
+                    int[] resizeHeights = new int[] { web.thumbHeight, web.mediumHeight, web.largeHeight };
+                    int[] resizeWidths = new int[] { web.thumbWidth, web.mediumWidth, web.largeWidth };
+                    string[] resizes = new string[] { "_thumb", "_medium", "_large" };
+                    object locker = new object();
                     Parallel.ForEach(files, op, file =>
                     {
                         if (file != null)
@@ -122,7 +126,7 @@ namespace FinalProj.Controllers
                             imagesList.Add(tempImage);
 
                             
-                            string[] resizes = new string[] { "_thumb", "_medium", "_large" };
+                            
                             Parallel.For(0, resizes.Length, (range) =>
                             {
                                     string SaveFilePath = Path.Combine(Server.MapPath(serverPath) + fileName + resizes[range] + Extension);
@@ -154,9 +158,11 @@ namespace FinalProj.Controllers
                 }
                 ViewBag.Display = "Block";
             }
+            ModelState.Clear();
             return View();
         }
 
+        [SessionListener]
         public ActionResult deleteImage(int imageID, string layout)
         {
             deleteSingleImage(imageID);
@@ -164,6 +170,7 @@ namespace FinalProj.Controllers
             return View("ImageLibrary");
         }
 
+        [SessionListener]
         public void deletAllImages(List<int> imageList, string layout)
         {
             
@@ -178,6 +185,7 @@ namespace FinalProj.Controllers
             changeLayout(layout);
         }
 
+        [SessionListener]
         public void deleteSingleImage(int imageID)
         {
             DBConnect db = new DBConnect();
@@ -186,6 +194,7 @@ namespace FinalProj.Controllers
             deleteImageByLoc(imageLoc);
         }
 
+        [SessionListener]
         public void deleteImageByLoc(string imageLoc)
         {
             if (System.IO.File.Exists(Server.MapPath(imageLoc)))
@@ -224,6 +233,7 @@ namespace FinalProj.Controllers
             }
         }
 
+        [SessionListener]
         public FileResult downloadImages(List<int> imageList)
         {
             Login login = (Login)Session["user"];
@@ -253,6 +263,7 @@ namespace FinalProj.Controllers
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
 
+        [SessionListener]
         public ActionResult downloadImage(int imageID)
         {
             ImageLibrary img = new ImageLibrary(imageID);
@@ -276,6 +287,7 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult imagePropChange(ImageLibrary img, string layout)
         {
             DBConnect db = new DBConnect();

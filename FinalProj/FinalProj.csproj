@@ -139,6 +139,7 @@
     <Compile Include="Controllers\ImageResizer.cs" />
     <Compile Include="Controllers\ImportDeatils.cs" />
     <Compile Include="Controllers\PostController.cs" />
+    <Compile Include="Controllers\SessionListener.cs" />
     <Compile Include="Controllers\TemplateController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Global.asax.cs">
@@ -158,6 +159,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.css" />
@@ -171,6 +177,10 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="ClassDiagram1.cd" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -193,7 +203,6 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\User\Index.cshtml" />
     <Content Include="Views\User\Registration.cshtml" />
@@ -211,6 +220,7 @@
     <Content Include="Views\Home\Import.cshtml" />
     <Content Include="Views\Post\ContentEditor.cshtml" />
     <Content Include="Views\Post\ImagesContainer.cshtml" />
+    <Content Include="Views\Template\Error.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

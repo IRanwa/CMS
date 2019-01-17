@@ -10,12 +10,15 @@ namespace FinalProj.Controllers
     public class CategoryController : Controller, PagerInterface<Category>
     {
         private const int NO_OF_CATEGORY = 20;
+        [SessionListener]
         public ActionResult Category()
         {
             ViewBag.Display = "none";
             getTotalCount(NO_OF_CATEGORY);
             return View();
         }
+
+        [SessionListener]
         public void getContent(Category cat, int noOfImage)
         {
             if (cat.currentPage != 0)
@@ -33,6 +36,7 @@ namespace FinalProj.Controllers
             }
         }
 
+        [SessionListener]
         public void getTotalCount(int noOfImage)
         {
             Login login = (Login)Session["user"];
@@ -49,6 +53,7 @@ namespace FinalProj.Controllers
             getContent(cat, noOfImage);
         }
 
+        [SessionListener]
         public void reqNextPage(int nextPage, int noOfImage)
         {
             Login login = (Login)Session["user"];
@@ -75,12 +80,14 @@ namespace FinalProj.Controllers
             ViewBag.Display = "none";
         }
 
+        [SessionListener]
         public ActionResult nextPage(int nextPage)
         {
             reqNextPage(nextPage,NO_OF_CATEGORY);
             return View("Category");
         }
 
+        [SessionListener]
         public ActionResult CategoryAddNew()
         {
             ViewBag.Display = "none";
@@ -88,6 +95,7 @@ namespace FinalProj.Controllers
         }
 
         [HttpPost]
+        [SessionListener]
         public ActionResult CategoryAddNew(Category category )
         {
             DBConnect db = new DBConnect();
@@ -109,6 +117,7 @@ namespace FinalProj.Controllers
             return View();
         }
 
+        [SessionListener]
         public ActionResult deleteCategory(int catID)
         {
             DBConnect db = new DBConnect();
@@ -117,6 +126,7 @@ namespace FinalProj.Controllers
             return View("Category");
         }
 
+        [SessionListener]
         public ActionResult deleteAllCategories(List<int> catList )
         {
             DBConnect db = new DBConnect();

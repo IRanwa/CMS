@@ -15,6 +15,7 @@ namespace FinalProj.Controllers
         private const int NO_OF_IMAGES = 12;
         private const int NO_OF_POSTS = 20;
 
+        [SessionListener]
         public ActionResult Posts()
         {
             ViewBag.Display = "none";
@@ -23,6 +24,7 @@ namespace FinalProj.Controllers
             return View();
         }
 
+        [SessionListener]
         public void getContent(Post post, int noOfPosts)
         {
             if (post.currentPage != 0)
@@ -36,6 +38,7 @@ namespace FinalProj.Controllers
             }
         }
 
+        [SessionListener]
         public void getTotalCount(int noOfPosts)
         {
             DBConnect db = new DBConnect();
@@ -51,6 +54,7 @@ namespace FinalProj.Controllers
             getContent(post, noOfPosts);
         }
 
+        [SessionListener]
         public void reqNextPage(int nextPage, int noOfImage)
         {
             DBConnect db = new DBConnect();
@@ -76,6 +80,7 @@ namespace FinalProj.Controllers
             }
         }
 
+        [SessionListener]
         public ActionResult nextPostsPage(int nextPage)
         {
             reqNextPage(nextPage, NO_OF_POSTS);
@@ -84,6 +89,7 @@ namespace FinalProj.Controllers
             return View("Posts");
         }
 
+        [SessionListener]
         public ActionResult PostsAddNew()
         {
             ViewBag.Display = "none";
@@ -91,6 +97,7 @@ namespace FinalProj.Controllers
             return View();
         }
 
+        [SessionListener]
         private void contentEditor()
         {
             Login login = (Login)Session["user"];
@@ -98,6 +105,7 @@ namespace FinalProj.Controllers
             getCategoryList(login);
         }
 
+        [SessionListener]
         private void getCategoryList(Login login)
         {
             DBConnect db = new DBConnect();
@@ -107,6 +115,7 @@ namespace FinalProj.Controllers
             ViewBag.post = post;
         }
 
+        [SessionListener]
         public PartialViewResult nextImagePage(int nextPage, string pageName)
         {
             Login login = (Login)Session["user"];
@@ -118,6 +127,7 @@ namespace FinalProj.Controllers
             return PartialView("ImagesContainer");
         }
 
+        [SessionListener]
         public ActionResult uploadPost(string status, string content, string title, int category, long uploadId)
         {
             DateTime date = DateTime.Now;
@@ -183,6 +193,7 @@ namespace FinalProj.Controllers
             return Json(new { postID = uploadId }, JsonRequestBehavior.AllowGet);
         }
 
+        [SessionListener]
         public ActionResult deletePost(int postId, string action)
         {
             DBConnect db = new DBConnect();
@@ -200,6 +211,7 @@ namespace FinalProj.Controllers
             return View("Posts");
         }
 
+        [SessionListener]
         public ActionResult bulkPostAction(List<int> postsList, string action)
         {
             Task bulkActionTask = Task.Factory.StartNew(() =>
@@ -249,6 +261,7 @@ namespace FinalProj.Controllers
             return View("Posts");
         }
 
+        [SessionListener]
         public ActionResult changeStatus(long postId, string status, string action)
         {
             DateTime date = DateTime.Now;
@@ -324,6 +337,7 @@ namespace FinalProj.Controllers
             return View("Posts");
         }
 
+        [SessionListener]
         public ActionResult editPost(int postId)
         {
             PostsAddNew();
@@ -339,6 +353,7 @@ namespace FinalProj.Controllers
             return View("PostsAddNew");
         }
 
+        [SessionListener]
         public ActionResult addCommonText(List<int> postsList, string content, string position)
         {
             Login login = (Login)Session["user"];
