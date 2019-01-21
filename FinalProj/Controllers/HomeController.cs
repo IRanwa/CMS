@@ -271,14 +271,45 @@ namespace FinalProj.Controllers
             ImportDeatils import = (ImportDeatils)Session["ImportProgress"];
             if (import != null)
             {
-                return Json(new
+                bool stat = import.getImportStatus();
+                if (stat) {
+                    return Json(new
+                    {
+                        Progress = -1
+                    }, JsonRequestBehavior.AllowGet);
+                }
+                else
                 {
-                    Progress = import.getWebsettings().importProgress
-                }, JsonRequestBehavior.AllowGet);
+                    return Json(new
+                    {
+                        Progress = import.getWebsettings().importProgress
+                    }, JsonRequestBehavior.AllowGet);
+                    
+                }
             }
             return Json(new
             {
                 Progress = -1
+            }, JsonRequestBehavior.AllowGet);
+        }
+
+        [SessionListener]
+        public ActionResult CancelImport()
+        {
+            Login login = (Login)Session["user"];
+            ImportDeatils import = (ImportDeatils)Session["ImportProgress"];
+            if (import != null)
+            {
+                string message = import.stopImporting();
+                Session["ImportProgress"] = null;
+                return Json(new
+                {
+                    message = "Import Cancelled Successfully!<br>"+message
+                }, JsonRequestBehavior.AllowGet);
+            }
+            return Json(new
+            {
+                message = "Import Cancellation Un-Successful!"
             }, JsonRequestBehavior.AllowGet);
         }
     }

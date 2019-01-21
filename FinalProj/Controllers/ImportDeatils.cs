@@ -28,17 +28,17 @@ namespace FinalProj.Controllers
 
         public int importStart(Login newLogin, HttpPostedFileBase[] files, HttpServerUtilityBase server)
         {
-            CancellationToken token = cts.Token;
             websettings = new WebSettings();
             this.server = server;
             login = newLogin;
 
             webPath = "~/Website_" + newLogin.webID;
             string path = server.MapPath(webPath + "/Import/");
-            FolderHandler.getInstance().deleteFiles(path);
+            FolderHandler.getInstance().deleteFolders(server.MapPath(webPath + "/Import/TempImages"));
             FolderHandler.getInstance().createDirectory(path);
             
             int count = 0;
+            CancellationToken token = cts.Token;
             Parallel.For(0, files.Length, ()=>0, (range,loop,total) =>
             {
                 if (files[range]!=null)
@@ -83,6 +83,7 @@ namespace FinalProj.Controllers
                 }
                 return total;
             }, (x)=>Interlocked.Add(ref count,x));
+            Console.WriteLine(count);
             return count;
         }
         
@@ -138,7 +139,7 @@ namespace FinalProj.Controllers
             string[] rowsList = csvData.Split('\n');
             foreach (string cell in rowsList[0].Split(','))
             {
-                columns.Add(cell);
+                columns.Add(cell.Replace("\r",""));
             }
             websettings.setImportProgress(1);
 
@@ -170,9 +171,9 @@ namespace FinalProj.Controllers
                                 {
                                     if (cell.Length > 50)
                                     {
-                                        if (!cts.IsCancellationRequested)
+                                        if (!token.IsCancellationRequested)
                                         {
-                                            message += "Posts File is Corrupted!";
+                                            message = "Posts Files is Corrupted!";
                                             cts.Cancel();
                                         }
                                     }
@@ -199,15 +200,30 @@ namespace FinalProj.Controllers
 
                                 break;
                             case "Post Created Date":
-                                post.createdDate = DateTime.Now;
+                                DateTime createdDate;
+                                if (DateTime.TryParse(cell, out createdDate))
+                                {
+                                    post.createdDate = createdDate;
+                                }
+                                else
+                                {
+                                    post.createdDate = DateTime.Now;
+                                }
                                 break;
                             case "Post Modify Date":
-                                post.modifyDate = DateTime.Now;
+                                DateTime modifyDate;
+                                if (DateTime.TryParse(cell, out modifyDate))
+                                {
+                                    post.modifyDate = modifyDate;
+                                }
+                                else
+                                {
+                                    post.modifyDate = DateTime.Now;
+                                }
                                 break;
                             default:
-                                if (!cts.IsCancellationRequested)
-                                {
-                                    message += "Posts File is Corrupted!";
+                                if (!token.IsCancellationRequested) {
+                                    message = "Posts Files is Corrupted!";
                                     cts.Cancel();
                                 }
                                 break;
@@ -219,7 +235,6 @@ namespace FinalProj.Controllers
                 websettings.setImportProgress(1);
             });
             
-            object locker = new object();
             Parallel.ForEach(rows, post =>
             {
                 string serverPath = webPath + "/Posts/" + post.createdDate.ToString("yyyy-MM-dd") + "/" + post.postStatus + "/";
@@ -232,9 +247,9 @@ namespace FinalProj.Controllers
                 {
                     token.ThrowIfCancellationRequested();
                 }
-
                 folder.writeToNewFile(server.MapPath(path), post.postData);
                 DBConnect db = new DBConnect();
+                
                 post.postLoc = path;
                 post.webId = login.webID;
                 if (post.createdDate==null)
@@ -244,6 +259,10 @@ namespace FinalProj.Controllers
                 if (post.modifyDate==null)
                 {
                     post.modifyDate = DateTime.Now;
+                }
+                if (DateTime.Compare(post.modifyDate,post.createdDate)<0)
+                {
+                    post.modifyDate = post.createdDate;
                 }
                 db.uploadPost(post);
             });
@@ -305,15 +324,31 @@ namespace FinalProj.Controllers
                                 }
                                 break;
                             case "Image Upload Date":
-                                img.uploadDate = DateTime.Now;
+                                DateTime uploadDate;
+                                if (DateTime.TryParse(cell, out uploadDate))
+                                {
+                                    img.uploadDate = uploadDate;
+                                }
+                                else
+                                {
+                                    img.uploadDate = DateTime.Now;
+                                }
                                 break;
                             case "Image Modify Date":
-                                img.modifyDate = DateTime.Now;
+                                DateTime modifyDate;
+                                if (DateTime.TryParse(cell, out modifyDate))
+                                {
+                                    img.modifyDate = modifyDate;
+                                }
+                                else
+                                {
+                                    img.modifyDate = DateTime.Now;
+                                }
                                 break;
                             default:
-                                if (!cts.IsCancellationRequested)
+                                if (!token.IsCancellationRequested)
                                 {
-                                    message += "Images CSV File is Corrupted!";
+                                    message = "Images Files is Corrupted!";
                                     cts.Cancel();
                                 }
                                 break;
@@ -324,7 +359,7 @@ namespace FinalProj.Controllers
                 }
                 websettings.setImportProgress(1);
             });
-            
+
             csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageZip.FileName);
             FolderHandler.getInstance().deleteFolders(server.MapPath(webPath + "/Import/TempImages/"));
             ZipFile.ExtractToDirectory(csvPath, server.MapPath(webPath + "/Import/TempImages/"));
@@ -332,16 +367,12 @@ namespace FinalProj.Controllers
             {
                 string serverPath = webPath + "/Images/" + tempImg.uploadDate.ToString("yyyy-MM-dd") + "/";
                 string path = server.MapPath(serverPath);
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-
-                }
+                FolderHandler.getInstance().createDirectory(path);
 
                 string filename = tempImg.imgLoc.Split('/').Last();
                 string extension = '.' + filename.Split('.').Last();
                 filename = filename.Replace(extension, "");
-                path = FolderHandler.getInstance().generateNewFileName(serverPath, filename, extension,server);
+                path = FolderHandler.getInstance().generateNewFileName(serverPath, filename,extension, server);
                 string tempPath = server.MapPath(webPath + "/Import/TempImages/" + tempImg.imgLoc.Replace(webPath + "/Images/", ""));
 
                 if (token.IsCancellationRequested)
@@ -372,6 +403,10 @@ namespace FinalProj.Controllers
                     {
                         tempImg.modifyDate = DateTime.Now;
                     }
+                    if (DateTime.Compare(tempImg.modifyDate, tempImg.uploadDate) < 0)
+                    {
+                        tempImg.modifyDate = tempImg.uploadDate;
+                    }
                     db.uploadImage(tempImg);
                 }
                 websettings.setImportProgress(1);
@@ -398,43 +433,42 @@ namespace FinalProj.Controllers
                 if (!string.IsNullOrEmpty(row))
                 {
                     Category category = new Category();
-                        int i = 0;
-                        foreach (string cell in row.Split(','))
+                    int i = 0;
+                    foreach (string cell in row.Split(','))
+                    {
+                        switch (columns[i])
                         {
-                            switch (columns[i])
+                            case "Category Title":
+                                if (cell.Length > 50)
+                                {
+                                    category.title = cell.Substring(0, 50);
+                                }
+                                else
+                                {
+                                    category.title = cell;
+                                }
+                                break;
+                            case "Category Description":
+                                if (cell.Length > 150)
+                                {
+                                    category.desc = cell.Substring(0, 150);
+                                }
+                                else
+                                {
+                                    category.desc = cell;
+                                }
+                                break;
+                            default:
+                            if (!token.IsCancellationRequested)
                             {
-                                case "Category Title":
-                                    if (cell.Length > 50)
-                                    {
-                                        category.title = cell.Substring(0, 50);
-                                    }
-                                    else
-                                    {
-                                        category.title = cell;
-                                    }
-                                    break;
-                                case "Category Description":
-                                    if (cell.Length > 150)
-                                    {
-                                        category.desc = cell.Substring(0, 150);
-                                    }
-                                    else
-                                    {
-                                        category.desc = cell;
-                                    }
-                                    break;
-                                default:
-                                    if (!cts.IsCancellationRequested)
-                                    {
-                                        message += "Category File is Corrupted!";
-                                        cts.Cancel();
-                                    }
-                                    break;
+                                message = "Category Files is Corrupted!";
+                                cts.Cancel();
                             }
-                            i++;
+                            break;
                         }
-                        rows.Add(category);
-                    
+                        i++;
+                    }
+                    rows.Add(category);
                 }
                 websettings.setImportProgress(1);
             });
@@ -562,8 +596,9 @@ namespace FinalProj.Controllers
                                 }
                                 break;
                             default:
-                                if (!cts.IsCancellationRequested) {
-                                    message += "Website Details File is Corrupted!";
+                                if (!token.IsCancellationRequested)
+                                {
+                                    message = "Website Files is Corrupted!";
                                     cts.Cancel();
                                 }
                                 break;
@@ -582,6 +617,19 @@ namespace FinalProj.Controllers
             db.updateWebsite(website);
             db.updateImgLibSettings(website);
             websettings.setImportProgress(1);
+        }
+
+        public string stopImporting()
+        {
+            if (!cts.IsCancellationRequested) {
+                cts.Cancel();
+            }
+            return message;
+        }
+
+        public bool getImportStatus()
+        {
+            return cts.IsCancellationRequested;
         }
     }
 }

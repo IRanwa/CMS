@@ -4,6 +4,7 @@
     ViewBag.alertSize = "160px";
 }
 <script>
+    var importing;
     function importData() {
         var files = [];
         var posts_upload = document.getElementById("posts-upload").files;
@@ -48,6 +49,9 @@
                 contentType: false,
                 cache: false,
                 success: function (result) {
+                    importing = true;
+                    document.getElementById("btnCancel").disabled = false;
+                    document.getElementById("btnImport").disabled = true;
                     taskCount = result.totalCount;
                     progress(taskCount);
                     document.getElementsByClassName("alert")[0].style.display = "block";
@@ -64,6 +68,8 @@
         } else {
             document.getElementsByClassName("alert")[0].style.display = "block";
             document.getElementsByClassName("alert-message")[0].innerHTML = "Please fill the details!";
+            document.getElementById("progress-bar").className = "bg-danger";
+            document.getElementById("progress-bar-text").innerHTML = "Import Ended";
         }
     }
 
@@ -74,15 +80,37 @@
             proc = ((json.Progress / taskCount) * 100.0).toFixed(2);
             document.getElementById("progress-bar").style.width = proc + '%';
             document.getElementById("progress-bar-text").innerHTML = proc + '%';
-            if (proc >= 100) {
-                document.getElementById("progress-bar").className = "bg-success";
-                document.getElementsByClassName("alert")[0].style.display = "block";
-                document.getElementsByClassName("alert-message")[0].innerHTML = "Import files Sucessfully!";
-            } else {
-                progress(taskCount);
+            if (importing) {
+                if (json.Progress == -1) {
+                    cancelImport();
+                }else if (proc >= 100) {
+                    document.getElementById("progress-bar").className = "bg-success";
+                    document.getElementById("progress-bar-text").innerHTML = "Import Completed!";
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Import files Sucessfully!";
+                    document.getElementById("btnCancel").disabled = true;
+                    document.getElementById("btnImport").disabled = false;
+                } else {
+                    progress(taskCount);
+                }
             }
         });
        
+    }
+
+    function cancelImport() {
+        importing = false;
+        $.post('/Home/CancelImport', function (result) {
+            //alert(result.message);
+
+            document.getElementById("progress-bar").className = "bg-danger";
+            document.getElementById("progress-bar-text").innerHTML = "Import Ended";
+            document.getElementById("progress-bar").style.width = "100%";
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = result.message;
+            document.getElementById("btnCancel").disabled = true;
+            document.getElementById("btnImport").disabled = false;
+        });
     }
 </script>
 <div style="margin-left:160px;">
@@ -140,7 +168,8 @@
                     <label id="progress-bar-text">Waiting...</label>
                 </div>
             </div>
-            <input class="btn btn-outline-success" style="float:right" type="button" value="Import" onclick="importData();" />
+            <input type="button" style="float:right; margin:0px 10px; " class="btn btn-outline-danger" value="Cancel" onclick="cancelImport();" id="btnCancel" disabled />
+            <input class="btn btn-outline-success" style="float:right" type="button" value="Import" onclick="importData();" id="btnImport" />
 
         }
     </div>
