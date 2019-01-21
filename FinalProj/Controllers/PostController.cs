@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 
 namespace FinalProj.Controllers
@@ -13,7 +11,7 @@ namespace FinalProj.Controllers
     public class PostController : Controller,PagerInterface<Post>
     {
         private const int NO_OF_IMAGES = 12;
-        private const int NO_OF_POSTS = 20;
+        private const int NO_OF_POSTS = 50;
 
         [SessionListener]
         public ActionResult Posts()
@@ -75,7 +73,6 @@ namespace FinalProj.Controllers
             if (nextPage != 0)
             {
                 int startIndex = (nextPage - 1) * NO_OF_POSTS;
-                //Login login = (Login)Session["user"];
                 List<Post> posts = db.getPostList(startIndex, startIndex + NO_OF_POSTS, login);
                 ViewBag.DisplayPosts = posts;
                 ViewBag.PostsProp = post;
@@ -137,28 +134,29 @@ namespace FinalProj.Controllers
             if (uploadId==0) {
                 string serverPath = "~/Website_"+login.webID+"/Posts/" + date.ToString("yyyy-MM-dd") + "/" + status + "/";
                 string path = Server.MapPath(serverPath);
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
+                FolderHandler.getInstance().createDirectory(path);
+                //if (!Directory.Exists(path))
+                //{
+                //    Directory.CreateDirectory(path);
 
-                }
-
-                path = serverPath + title + ".txt";
-                bool exists = false;
-                int count = 0;
-                do
-                {
-                    if (count == 0)
-                    {
-                        path = serverPath + title + ".txt";
-                    }
-                    else
-                    {
-                        path = serverPath + title + '_' + count + ".txt";
-                    }
-                    exists = System.IO.File.Exists(Server.MapPath(path));
-                    count++;
-                } while (exists);
+                //}
+                path = FolderHandler.getInstance().generateNewFileName(serverPath, title, ".txt",Server);
+                //path = serverPath + title + ".txt";
+                //bool exists = false;
+                //int count = 0;
+                //do
+                //{
+                //    if (count == 0)
+                //    {
+                //        path = serverPath + title + ".txt";
+                //    }
+                //    else
+                //    {
+                //        path = serverPath + title + '_' + count + ".txt";
+                //    }
+                //    exists = System.IO.File.Exists(Server.MapPath(path));
+                //    count++;
+                //} while (exists);
 
                 FolderHandler.getInstance().writeToNewFile(Server.MapPath(path), content);
                 DBConnect db = new DBConnect();
@@ -179,11 +177,12 @@ namespace FinalProj.Controllers
                 {
                     DBConnect db = new DBConnect();
                     string postLoc = db.getPostLoc(new Post(uploadId));
-                    if (System.IO.File.Exists(Server.MapPath(postLoc)))
-                    {
-                        System.IO.File.WriteAllText(Server.MapPath(postLoc), content);
+                    FolderHandler.getInstance().writeToFile(Server.MapPath(postLoc), content);
+                    //if (System.IO.File.Exists(Server.MapPath(postLoc)))
+                    //{
+                    //    System.IO.File.WriteAllText(Server.MapPath(postLoc), content);
 
-                    }
+                    //}
                 });
                 dbSaveTask.Wait();
             }
@@ -297,6 +296,11 @@ namespace FinalProj.Controllers
         {
             Login login = (Login)Session["user"];
             DateTime date = DateTime.Now;
+            Task contentTask = Task.Factory.StartNew(() =>
+            {
+                contentEditor();
+            });
+
             Parallel.ForEach(postsList, (index) =>
             {
                 DBConnect db = new DBConnect();
@@ -320,10 +324,7 @@ namespace FinalProj.Controllers
                 }
             });
             
-            Task contentTask = Task.Factory.StartNew(() =>
-            {
-                contentEditor();
-            });
+            
             contentTask.Wait();
             return View("Posts");
         }

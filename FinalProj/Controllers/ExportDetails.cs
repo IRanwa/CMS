@@ -17,7 +17,7 @@ namespace FinalProj.Controllers
         private HttpServerUtilityBase mServer;
         private string webPath;
         private WebSettings webSettings;
-        private readonly object locker = new object();
+        private CancellationTokenSource cts = new CancellationTokenSource();
 
         public WebSettings getWebsettings()
         {
@@ -33,7 +33,7 @@ namespace FinalProj.Controllers
             FolderHandler.getInstance().createDirectory(path);
             
             int count = 0;
-                
+            CancellationToken token = cts.Token;
             Parallel.ForEach<string,int>(checkboxes, () => 0, (chkbox, loop, subtotal) =>
             {
                 int tempCount = 0;
@@ -45,8 +45,8 @@ namespace FinalProj.Controllers
                     {
                         Task.Factory.StartNew(() =>
                         {
-                            exportPosts(tempCount, login);
-                        });
+                            exportPosts(tempCount, login, token);
+                        }, token);
                         tempCount++;
                     }
                 } else if (chkbox.Equals("images"))
@@ -56,8 +56,8 @@ namespace FinalProj.Controllers
                     {
                         Task.Factory.StartNew(() =>
                         {
-                            exportImages(tempCount, login);
-                        });
+                            exportImages(tempCount, login, token);
+                        }, token);
                         tempCount++;
                     }
                 }
@@ -68,16 +68,16 @@ namespace FinalProj.Controllers
                     {
                         Task.Factory.StartNew(() =>
                         {
-                            exportCategories(tempCount, login);
-                        });
+                            exportCategories(tempCount, login, token);
+                        }, token);
                     }
                 } else if (chkbox.Equals("website"))
                 {
                     tempCount = 1;
                     Task.Factory.StartNew(() =>
                     {
-                        exportWebsite(login);
-                    });
+                        exportWebsite(login, token);
+                    }, token);
                     tempCount++;
                 }
                 subtotal += tempCount;
@@ -86,7 +86,7 @@ namespace FinalProj.Controllers
             return count;
         }
 
-        public void exportPosts(int count, Login login)
+        public void exportPosts(int count, Login login, CancellationToken token)
         {
             System.Data.DataTable dt = new System.Data.DataTable("Posts Table");
             dt.Columns.Add("Post Title");
@@ -114,12 +114,15 @@ namespace FinalProj.Controllers
                     , post.createdDate, post.modifyDate);
                 webSettings.setExportProgress(1);
             }
-
+            if (token.IsCancellationRequested)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportPosts.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
         }
 
-        public void exportImages(int count, Login login)
+        public void exportImages(int count, Login login, CancellationToken token)
         {
             DataTable dt = new DataTable("Images Table");
             dt.Columns.Add("Image Title");
@@ -144,19 +147,27 @@ namespace FinalProj.Controllers
                 }
                 webSettings.setExportProgress(1);
             }
-            
+
+            if (token.IsCancellationRequested)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportImages.csv"), generateCsv(dt));
             FolderHandler.getInstance().deleteFile(mServer.MapPath(webPath + "/Export/ImagesLibrary.zip"));
             
             if (Directory.Exists(mServer.MapPath(webPath+"/TempImages/")))
             {
+                if (token.IsCancellationRequested)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
                 ZipFile.CreateFromDirectory(mServer.MapPath(webPath+"/TempImages/"), mServer.MapPath(webPath+"/Export/ImagesLibrary.zip"));
                 FolderHandler.getInstance().deleteFolders(mServer.MapPath(webPath + "/TempImages/"));
             }
             webSettings.setExportProgress(1);
         }
 
-        public void exportCategories(int count, Login login)
+        public void exportCategories(int count, Login login, CancellationToken token)
         {
             System.Data.DataTable dt = new System.Data.DataTable("Categories Table");
             dt.Columns.Add("Category Title");
@@ -170,11 +181,15 @@ namespace FinalProj.Controllers
                 dt.Rows.Add(escSequence(cat.title), escSequence(cat.desc));
                 webSettings.setExportProgress(1);
             }
+            if (token.IsCancellationRequested)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportCategories.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
         }
 
-        public void exportWebsite(Login login)
+        public void exportWebsite(Login login, CancellationToken token)
         {
             System.Data.DataTable dt = new System.Data.DataTable("Website Table");
             dt.Columns.Add("Website Title");
@@ -192,6 +207,10 @@ namespace FinalProj.Controllers
                 , web.mediumHeight, web.largeWidth, web.largeHeight);
 
             webSettings.setExportProgress(1);
+            if (token.IsCancellationRequested)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportWebsite.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
         }
@@ -233,6 +252,11 @@ namespace FinalProj.Controllers
                 return "\"" + text + "\"";
             }
             return text;
+        }
+
+        public void stopExporting()
+        {
+            cts.Cancel();
         }
     }
 }

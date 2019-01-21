@@ -17,8 +17,9 @@ namespace FinalProj.Controllers
         private Login login;
         private HttpServerUtilityBase server;
         private string webPath;
-        private Boolean status = true;
         private WebSettings websettings;
+        private CancellationTokenSource cts = new CancellationTokenSource();
+        private string message = "";
 
         public WebSettings getWebsettings()
         {
@@ -27,6 +28,7 @@ namespace FinalProj.Controllers
 
         public int importStart(Login newLogin, HttpPostedFileBase[] files, HttpServerUtilityBase server)
         {
+            CancellationToken token = cts.Token;
             websettings = new WebSettings();
             this.server = server;
             login = newLogin;
@@ -47,8 +49,8 @@ namespace FinalProj.Controllers
                             total += postsCount(files[range]);
                             Task.Factory.StartNew(() =>
                             {
-                                ImportPosts(files[range]);
-                            });
+                                ImportPosts(files[range], token);
+                            }, token);
                             total++;
                             break;
                         case 1:
@@ -58,30 +60,29 @@ namespace FinalProj.Controllers
                             total += imagesCount(imageCSV,imageZip);
                             Task.Factory.StartNew(() =>
                             {
-                                ImportImages(imageCSV, imageZip);
-                            });
+                                ImportImages(imageCSV, imageZip, token);
+                            }, token);
                             total++;
                             break;
                         case 3:
                             total += categoriesCount(files[range]);
                             Task.Factory.StartNew(() =>
                             {
-                                ImportCategories(files[range]);
-                            });
+                                ImportCategories(files[range], token);
+                            }, token);
                             total++;
                             break;
                         case 4:
                             total += websiteCount(files[range]);
                             Task.Factory.StartNew(() =>
                             {
-                                ImportWebsite(files[range]);
-                            });
+                                ImportWebsite(files[range], token);
+                            }, token);
                             break;
                     }
                 }
                 return total;
             }, (x)=>Interlocked.Add(ref count,x));
-            Console.WriteLine(count);
             return count;
         }
         
@@ -128,7 +129,7 @@ namespace FinalProj.Controllers
         }
 
 
-        public void ImportPosts(HttpPostedFileBase file)
+        public void ImportPosts(HttpPostedFileBase file, CancellationToken token)
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
             string csvData = System.IO.File.ReadAllText(csvPath);
@@ -169,7 +170,11 @@ namespace FinalProj.Controllers
                                 {
                                     if (cell.Length > 50)
                                     {
-                                        status = false;
+                                        if (!cts.IsCancellationRequested)
+                                        {
+                                            message += "Posts File is Corrupted!";
+                                            cts.Cancel();
+                                        }
                                     }
                                     category.webID = login.webID;
                                     category.desc = cell;
@@ -194,29 +199,17 @@ namespace FinalProj.Controllers
 
                                 break;
                             case "Post Created Date":
-                                DateTime createdDate;
-                                if (DateTime.TryParse(cell, out createdDate))
-                                {
-                                    post.createdDate = createdDate;
-                                }
-                                else
-                                {
-                                    post.createdDate = DateTime.Now;
-                                }
+                                post.createdDate = DateTime.Now;
                                 break;
                             case "Post Modify Date":
-                                DateTime modifyDate;
-                                if (DateTime.TryParse(cell, out modifyDate))
-                                {
-                                    post.modifyDate = modifyDate;
-                                }
-                                else
-                                {
-                                    post.modifyDate = DateTime.Now;
-                                }
+                                post.modifyDate = DateTime.Now;
                                 break;
                             default:
-                                status = false;
+                                if (!cts.IsCancellationRequested)
+                                {
+                                    message += "Posts File is Corrupted!";
+                                    cts.Cancel();
+                                }
                                 break;
                         }
                         i++;
@@ -234,15 +227,29 @@ namespace FinalProj.Controllers
                 FolderHandler folder = FolderHandler.getInstance();
                 folder.createDirectory(path);
                 path = folder.generateNewFileName(serverPath, post.postTitle, ".txt",server);
+
+                if (token.IsCancellationRequested)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+
                 folder.writeToNewFile(server.MapPath(path), post.postData);
                 DBConnect db = new DBConnect();
                 post.postLoc = path;
                 post.webId = login.webID;
+                if (post.createdDate==null)
+                {
+                    post.createdDate = DateTime.Now;
+                }
+                if (post.modifyDate==null)
+                {
+                    post.modifyDate = DateTime.Now;
+                }
                 db.uploadPost(post);
             });
             websettings.setImportProgress(1);
         }
-        private void ImportImages(HttpPostedFileBase imageCSV, HttpPostedFileBase imageZip)
+        private void ImportImages(HttpPostedFileBase imageCSV, HttpPostedFileBase imageZip, CancellationToken token)
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageCSV.FileName);
             string csvData = System.IO.File.ReadAllText(csvPath);
@@ -298,29 +305,17 @@ namespace FinalProj.Controllers
                                 }
                                 break;
                             case "Image Upload Date":
-                                DateTime uploadDate;
-                                if (DateTime.TryParse(cell, out uploadDate))
-                                {
-                                    img.uploadDate = uploadDate;
-                                }
-                                else
-                                {
-                                    img.uploadDate = DateTime.Now;
-                                }
+                                img.uploadDate = DateTime.Now;
                                 break;
                             case "Image Modify Date":
-                                DateTime modifyDate;
-                                if (DateTime.TryParse(cell, out modifyDate))
-                                {
-                                    img.modifyDate = modifyDate;
-                                }
-                                else
-                                {
-                                    img.modifyDate = DateTime.Now;
-                                }
+                                img.modifyDate = DateTime.Now;
                                 break;
                             default:
-                                status = false;
+                                if (!cts.IsCancellationRequested)
+                                {
+                                    message += "Images CSV File is Corrupted!";
+                                    cts.Cancel();
+                                }
                                 break;
                         }
                         i++;
@@ -329,9 +324,7 @@ namespace FinalProj.Controllers
                 }
                 websettings.setImportProgress(1);
             });
-
-            Console.WriteLine(rows.Count);
-
+            
             csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageZip.FileName);
             FolderHandler.getInstance().deleteFolders(server.MapPath(webPath + "/Import/TempImages/"));
             ZipFile.ExtractToDirectory(csvPath, server.MapPath(webPath + "/Import/TempImages/"));
@@ -348,23 +341,13 @@ namespace FinalProj.Controllers
                 string filename = tempImg.imgLoc.Split('/').Last();
                 string extension = '.' + filename.Split('.').Last();
                 filename = filename.Replace(extension, "");
-                
-                bool exists = false;
-                int count = 0;
-                do
-                {
-                    if (count == 0)
-                    {
-                        path = serverPath + filename + extension;
-                    }
-                    else
-                    {
-                        path = serverPath + filename + '_' + count + extension;
-                    }
-                    exists = System.IO.File.Exists(server.MapPath(path));
-                    count++;
-                } while (exists);
+                path = FolderHandler.getInstance().generateNewFileName(serverPath, filename, extension,server);
                 string tempPath = server.MapPath(webPath + "/Import/TempImages/" + tempImg.imgLoc.Replace(webPath + "/Images/", ""));
+
+                if (token.IsCancellationRequested)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
                 if (System.IO.File.Exists(tempPath)) {
                     System.IO.File.Copy(tempPath,server.MapPath(path));
                     
@@ -381,6 +364,14 @@ namespace FinalProj.Controllers
 
                     tempImg.imgLoc = path;
                     tempImg.webID = login.webID;
+                    if (tempImg.uploadDate==null)
+                    {
+                        tempImg.uploadDate = DateTime.Now;
+                    }
+                    if (tempImg.modifyDate==null)
+                    {
+                        tempImg.modifyDate = DateTime.Now;
+                    }
                     db.uploadImage(tempImg);
                 }
                 websettings.setImportProgress(1);
@@ -389,7 +380,7 @@ namespace FinalProj.Controllers
             websettings.setImportProgress(1);
         }
 
-        private void ImportCategories(HttpPostedFileBase file)
+        private void ImportCategories(HttpPostedFileBase file, CancellationToken token)
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
             string csvData = System.IO.File.ReadAllText(csvPath);
@@ -433,7 +424,11 @@ namespace FinalProj.Controllers
                                     }
                                     break;
                                 default:
-                                    status = false;
+                                    if (!cts.IsCancellationRequested)
+                                    {
+                                        message += "Category File is Corrupted!";
+                                        cts.Cancel();
+                                    }
                                     break;
                             }
                             i++;
@@ -451,13 +446,17 @@ namespace FinalProj.Controllers
                 if (available.catID == 0)
                 {
                     category.webID = login.webID;
+                    if (token.IsCancellationRequested)
+                    {
+                        token.ThrowIfCancellationRequested();
+                    }
                     db.addCategory(category);
                 }
             });
             websettings.setImportProgress(1);
         }
 
-        private void ImportWebsite(HttpPostedFileBase file)
+        private void ImportWebsite(HttpPostedFileBase file, CancellationToken token)
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
             file.SaveAs(csvPath);
@@ -563,14 +562,21 @@ namespace FinalProj.Controllers
                                 }
                                 break;
                             default:
-                                status = false;
+                                if (!cts.IsCancellationRequested) {
+                                    message += "Website Details File is Corrupted!";
+                                    cts.Cancel();
+                                }
                                 break;
                         }
                         i++;
                     }
                 }
             }
-            
+
+            if (token.IsCancellationRequested)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             DBConnect db = new DBConnect();
             website.webID = login.webID;
             db.updateWebsite(website);

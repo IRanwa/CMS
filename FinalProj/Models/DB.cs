@@ -290,7 +290,32 @@ namespace FinalProj.Models
                     images.Add(img);
                 }
                 this.CloseConnection();
-                return images;
+            }
+            return images;
+        }
+
+        public List<ImageLibrary> getImagesList(Login login)
+        {
+            List<ImageLibrary> images = new List<ImageLibrary>();
+            string query = "select * from Image_Library where webID=@webID";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@webID", login.webID);
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    ImageLibrary img = new ImageLibrary();
+                    img.imageID = Int32.Parse(dataReader["imageID"].ToString());
+                    img.title = dataReader["title"].ToString();
+                    img.imgDesc = dataReader["imgDesc"].ToString();
+                    img.imgLoc = dataReader["imgLoc"].ToString();
+                    img.uploadDate = Convert.ToDateTime(dataReader["uploadDate"].ToString());
+                    img.modifyDate = Convert.ToDateTime(dataReader["modifyDate"].ToString());
+                    images.Add(img);
+                }
+                this.CloseConnection();
             }
             return images;
         }

@@ -14,6 +14,7 @@
 </style>
 <script>
     var proc;
+    var exporting;
     function exportAll(checkbox) {
         var status = checkbox.checked;
         var chkboxes = document.getElementsByClassName("sub-checkbox");
@@ -54,6 +55,9 @@
             document.getElementsByClassName("progress-bar-container")[0].hidden = false;
             $.post('/Home/Export', { checkboxes: chkboxValues }, function (result) {
                 taskCount = result.totalCount;
+                exporting = true;
+                document.getElementById("btnCancel").disabled = false;
+                document.getElementById("btnExport").disabled = true;
                 progress(taskCount);
             });
             
@@ -68,16 +72,36 @@
             proc = ((json.Progress / taskCount) * 100.0).toFixed(2);
             document.getElementById("progress-bar").style.width = proc + '%';
             document.getElementById("progress-bar-text").innerHTML = proc + '%';
-            if (proc >= 100) {
-                document.getElementById("progress-bar").className = "bg-success";
-                document.getElementsByClassName("alert")[0].style.display = "block";
-                document.getElementsByClassName("alert-message")[0].innerHTML = "Export file downloading on progress!";
-                window.location.href = '@Url.Action("downloadExportFile", "Home")';
-            } else {
-                progress(taskCount);
+            if (exporting) {
+                if (proc >= 100) {
+                    document.getElementById("progress-bar").className = "bg-success";
+                    document.getElementById("progress-bar-text").innerHTML = "Export Completed";
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Export file downloading on progress!";
+                    window.location.href = '@Url.Action("downloadExportFile", "Home")';
+                    document.getElementById("btnCancel").disabled = true;
+                    document.getElementById("btnExport").disabled = false;
+                }
+                else {
+                    progress(taskCount);
+                }
             }
         });
        
+    }
+    function cancelExport() {
+        exporting = false;
+        $.post('/Home/CancelExport', function (result) {
+            //alert(result.message);
+            
+            document.getElementById("progress-bar").className = "bg-danger";
+            document.getElementById("progress-bar-text").innerHTML = "Export Ended";
+            document.getElementById("progress-bar").style.width = "100%";
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = result.message;
+            document.getElementById("btnCancel").disabled = true;
+            document.getElementById("btnExport").disabled = false;
+        });
     }
 </script>
 <div style="margin-left:160px">
@@ -105,7 +129,8 @@
             <tr><td><br /></td></tr>
             <tr>
                 <td>
-                    <input type="button" style="float:right" class="btn btn-outline-success" value="Export" onclick="exportData();" />
+                    <input type="button" style="float:right; margin:0px 10px; " class="btn btn-outline-danger" value="Cancel" onclick="cancelExport();" id="btnCancel" disabled />
+                    <input type="button" style="float:right" class="btn btn-outline-success" value="Export" onclick="exportData();" id="btnExport" />
                 </td>
             </tr>
         </table>

@@ -84,12 +84,13 @@ namespace FinalProj.Controllers
             Login login = (Login)Session["user"];
             DBConnect db = new DBConnect();
             Website previousWeb = db.getWebsite(login);
-            int imgCount = db.getImageCount(login);
-            List<ImageLibrary> imgList = db.getImages(0, imgCount, login);
+            List<ImageLibrary> imgList = db.getImagesList(login);
 
             string[] resizes = new string[] { "_thumb", "_medium", "_large" };
-            int[,] newResize = new int[,] { { web.thumbWidth, web.thumbHeight }, { web.mediumWidth, web.mediumHeight }, { web.largeWidth, web.largeHeight } };
-            int[,] prevResize = new int[,] { { previousWeb.thumbWidth, previousWeb.thumbHeight }, { previousWeb.mediumWidth, previousWeb.mediumHeight },
+            int[,] newResize = new int[,] { { web.thumbWidth, web.thumbHeight }, { web.mediumWidth, web.mediumHeight }, 
+                { web.largeWidth, web.largeHeight } };
+            int[,] prevResize = new int[,] { { previousWeb.thumbWidth, previousWeb.thumbHeight }, { previousWeb.mediumWidth,
+                    previousWeb.mediumHeight },
                 { previousWeb.largeWidth, previousWeb.largeHeight } };
 
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -105,33 +106,53 @@ namespace FinalProj.Controllers
                     string extension = filename.Substring(filename.LastIndexOf("."));
                     string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
                     filename = filename.Replace(extension, "");
-
+                    Response.Write("<script>alert('" + Thread.CurrentThread.ManagedThreadId + "');</script>");
                     Parallel.For(0, resizes.Length, po, (range) =>
                     {
-                        po.CancellationToken.ThrowIfCancellationRequested();
                         if (prevResize[range, 0] != newResize[range, 0] || prevResize[range, 1] != newResize[range, 1])
                         {
                             string newFilePath = Server.MapPath(path + filename + resizes[range] + extension);
-                            if (System.IO.File.Exists(newFilePath))
-                            {
-                                System.IO.File.Delete(newFilePath);
-                            }
+                            FolderHandler.getInstance().deleteFile(newFilePath);
                             new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), newResize[range, 0], newResize[range, 1], newFilePath);
                         }
                     });
+                    
                 });
-                ViewBag.Display = "Block";
                 ViewBag.Message = "Updated Image Library Successfully!";
                 db.updateImgLibSettings(web);
                 ViewBag.website = web;
             }
             catch (AggregateException ae)
             {
-                cts.Cancel();
-                ViewBag.Display = "Block";
                 ViewBag.Message = "Updated Image Library Un-Successful!";
                 ViewBag.website = previousWeb;
+
+                Parallel.ForEach(imgList, img =>
+                {
+                    string filename = img.imgLoc.Split('/').Last();
+                    int index = filename.LastIndexOf(".");
+                    string extension = filename.Substring(filename.LastIndexOf("."));
+                    string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
+                    filename = filename.Replace(extension, "");
+                    Parallel.For(0, resizes.Length, (range) =>
+                    {
+                        string newFilePath = Server.MapPath(path + filename + resizes[range] + extension);
+                        if (!System.IO.File.Exists(newFilePath))
+                        {
+                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), prevResize[range, 0], prevResize[range, 1], newFilePath);
+                        }
+                    });
+                });
+
+                ae = ae.Flatten();
+
+                foreach (Exception ex in ae.InnerExceptions)
+                {
+                    Logger.getInstance().setMessage(ex.GetBaseException() + ". Exception throw on Website ID " + web.webID
+                        , Server.MapPath("~/Log.txt"));
+                }
             }
+            ViewBag.Display = "Block";
             return View("LibrarySettings");
         }
 
@@ -148,7 +169,8 @@ namespace FinalProj.Controllers
         {
             Login login = (Login)Session["user"];
             ExportDetails export = (ExportDetails)Session["ExportProgress"];
-            if (export == null) {
+            if (export==null)
+            {
                 export = new ExportDetails();
             }
             else
@@ -176,6 +198,26 @@ namespace FinalProj.Controllers
             return Json(new
             {
                 Progress = -1
+            }, JsonRequestBehavior.AllowGet);
+        }
+
+        [SessionListener]
+        public ActionResult CancelExport()
+        {
+            Login login = (Login)Session["user"];
+            ExportDetails export = (ExportDetails)Session["ExportProgress"];
+            if (export != null)
+            {
+                export.stopExporting();
+                Session["ExportProgress"] = null;
+                return Json(new
+                {
+                    message = "Export Cancelled Successfully!"
+                }, JsonRequestBehavior.AllowGet);
+            }
+            return Json(new
+            {
+                message = "Export Cancellation Un-Successful!"
             }, JsonRequestBehavior.AllowGet);
         }
 
