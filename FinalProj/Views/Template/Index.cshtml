@@ -1,0 +1,157 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.webTitle</title>
+    <style>
+        body{
+            background-color:white;
+        }
+        
+        #backgroundimg{
+            left:0;
+            right:0;
+            top:0;
+            opacity:0.8;
+            
+        }
+        .container {
+            position: relative;
+            text-align: center;
+            color: white;
+        }
+        .container label {
+            color: black;
+            font-size: 100px;
+        }
+        .post-container {
+            margin-right: 50px;
+            background-color: lightgrey;
+            margin-top: 30px;
+            border-radius:5px;
+            padding:20px;
+        }
+        .post-title{
+            font-size:30px;
+        }
+        .post-date{
+            text-align:right;
+            margin-right:10px;
+        }
+        .sidenav {
+            height: 100%;
+            left: 0;
+            border-color: #101010;
+            overflow-x: hidden;
+            padding-top: 20px;
+            z-index: -1;
+            color: black;
+            margin-left: 20px;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 25px;
+        }
+
+        .sidenav-menu {
+            color: black;
+            padding-left: 40px;
+            word-wrap: break-word;
+        }
+
+            .sidenav-menu a {
+                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                font-size: 18px;
+                text-decoration: none;
+                color: black;
+            }
+        .sidenav-menu a:hover{
+            color:gray;
+        }
+        .centered {
+            position: absolute;
+            top: 80%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    <script>var count = 0;</script>
+</head>
+<body>
+    <div class="container">
+        @if (ViewBag.BackgroundImage != null && ViewBag.BackgroundImage != "")
+        {
+            <img src="@Url.Content(ViewBag.BackgroundImage)" style="width:100%; height:500px;" id="backgroundimg" />
+            <div class="centered"><label style="color:white; font-family:'Stencil'; font-size:80px;">@ViewBag.webTitle</label></div>
+        }
+        else
+        {
+            <div ><label style="color:white">@ViewBag.webTitle</label></div>
+        }
+
+
+    </div>
+    <table style="width:100%;">
+        <tr valign="top">
+            <td width="30%">
+                <div class="navbar navbar-fixed-top">
+                    <div class="sidenav">
+                        <div class="sidenav-item">
+                            Category
+                            <div class="sidenav-menu">
+                                @foreach (var category in ViewBag.catList)
+                                {
+                                    @Html.ActionLink((string)category.title, "changeCategory", "Template")
+                                    <br />
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>   
+            <td width="100%">
+                <div>
+                    @foreach (var post in ViewBag.PostsList)
+                    {
+                        <div class="post-container">
+                            <div>
+                                <div>
+                                    <label class="post-title">@post.postTitle</label>
+                                </div>
+                                <div class="post-date">
+                                    <label style="font-weight:bold">Upload Date : </label>
+                                    <label>@post.createdDate</label>
+                                </div>
+                                <div class="post-date">
+                                    <label style="font-weight:bold">Modify Date : </label>
+                                    <label>@post.modifyDate</label>
+                                </div>
+                                <hr />
+                                <div style="margin-top:10px;" class="post-data" con>
+
+
+                                    <iframe srcdoc="@post.postData" class="src-doc" hidden></iframe>
+                                </div>
+                                <script>
+                                    document.getElementsByClassName("post-data")[count].innerHTML
+                                        = document.getElementsByClassName("src-doc")[0].srcdoc;
+                                    count++;
+                                </script>
+                            </div>
+                        </div>
+                    }
+
+
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    
+
+</body>
+</html>

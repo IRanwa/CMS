@@ -1,0 +1,332 @@
+﻿
+@{
+    ViewBag.Title = "Posts";
+    ViewBag.alertSize = "160px";
+}
+
+<style>
+    #Posts {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        text-align: center;
+    }
+
+        #Posts td, #Posts th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #Posts tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #Posts tr:hover {
+            background-color: #ddd;
+        }
+
+        #Posts th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: center;
+            background-color: #357EC7;
+            color: white;
+        }
+
+    .Custom-Button {
+        float: none;
+        margin: 5px;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 5px;
+        font-size: small;
+        text-decoration: none;
+    }
+
+    td {
+        width: 80px;
+    }
+
+    td + td {
+        width: auto;
+    }
+
+    .custom-img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .popup-content .Custom-Button{
+        font-size:16px;
+    }
+</style>
+<script>
+    var posts;
+    function checkBoxAllClick(checked) {
+        if (checked == false) {
+            $('.postsSelection:checked').prop('checked', false);
+            document.getElementById("bulk-options").hidden = true;
+        }
+        else {
+            $('.postsSelection:not(:checked)').prop('checked', true);
+            document.getElementById("bulk-options").hidden = false;
+        }
+    }
+    function chechBoxSingle(checked) {
+        if (checked == false) {
+            $('#chckHead:checked').prop("checked", false);
+        }
+
+        var posts = [];
+        $.each($("input[class='postsSelection']:checked"), function () {
+            posts.push($(this).val());
+        });
+        if (posts.length == 0) {
+            document.getElementById("bulk-options").hidden = true;
+        } else {
+            document.getElementById("bulk-options").hidden = false;
+        }
+
+    }
+    
+    function bulkAction() {
+        posts = [];
+        $.each($("input[class='postsSelection']:checked"), function () {
+            posts.push($(this).val());
+        });
+
+        var action = document.getElementById("bulk-selection").value;
+        if (action != "addCommonText") {
+            $.ajax({
+                type: "POST",
+                url: "/Post/bulkPostAction",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ postsList: posts, action: action }),
+                success: function () {
+                    //alert("success");
+                    var timeleft = 5;
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    var downloadTimer = setInterval(function () {
+                        if (action == "publishAll") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Publish Successful!<br>Page Refresh in " + --timeleft + " Seconds";
+                        } else if (action == "draftAll") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Save As Draft Successful!<br>Page Refresh in " + --timeleft + " Seconds";
+                        } else {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Deleting Successful!<br>Page Refresh in " + --timeleft + " Seconds";
+                        }
+
+                        if (timeleft <= 0) {
+                            clearInterval(downloadTimer);
+                            location.reload();
+                        }
+                    }, 1000);
+                }, error: function () {
+                    //alert("Error occured!")
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (action == "publishAll") {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Publish Un-Successful!";
+                    } else if (action == "draftAll") {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Save As Draft Un-Successful!";
+                    } else {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Deleting Un-Successful!";
+                    }
+                }
+            });
+        } else {
+            addCommonText();
+        }
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Posts</h2>
+    <hr />
+    @if (ViewBag.DisplayPosts != null)
+    {
+        <div id="bulk-options" hidden>
+            <label style="font-weight:bold">Bulk Actions :</label>
+            <select id="bulk-selection">
+                <option value="deleteAll">Delete</option>
+                <option value="publishAll">Publish</option>
+                <option value="draftAll">Save As Draft</option>
+                <option value="addCommonText">Add Common Text</option>
+            </select>
+            <input class="btn btn-outline-success" id="action" type="button" onclick="bulkAction()" value="Apply" />
+        </div>
+        <table id="Posts" style="margin:10px 0px;">
+            <tr>
+                <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Last Modified</th>
+                <th>Action</th>
+            </tr>
+
+            @foreach (var post in ViewBag.DisplayPosts)
+            {
+                <tr>
+                    <td>
+                        <input class="postsSelection" type="checkbox" value="@post.postId" onchange="chechBoxSingle(this.checked)" />
+                    </td>
+                    <td>@post.postTitle</td>
+                    <td>@post.postStatus</td>
+                    <td>@post.modifyDate</td>
+                    <td style="text-align:right">
+                        @if (@post.postStatus == "Publish")
+                        {
+                            @Html.ActionLink("Save as Draft", "changeStatus", new { postId = post.postId, status = "Draft" }, new { @class = "btn btn-outline-success" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink("Publish", "changeStatus", new { postId = post.postId, status = "Publish" }, new { @class = "btn btn-outline-success" })
+                        }
+                        @Html.ActionLink("Edit", "editPost", new { postId = post.postId }, new { @class = "btn btn-outline-secondary" })
+                        @Html.ActionLink("Delete", "deletePost", new { postId = post.postId }, new { @class = "btn btn-outline-danger" })
+                    </td>
+                </tr>
+            }
+        </table>
+        <div class="pagination">
+            @for (int page = 1; page <= ViewBag.PostsProp.noOfPages; page++)
+            {
+                if (ViewBag.PostsProp.currentPage == page)
+                {
+                    @Html.ActionLink(page.ToString(), "nextPostsPage"
+                   , new { nextPage = page }, new { @class = "active" })
+                }
+                else
+                {
+                    @Html.ActionLink(page.ToString(), "nextPostsPage"
+                   , new { nextPage = page })
+                }
+
+            }
+        </div>
+    }
+    else
+    {
+        <table style="width:100%">
+            <tr>
+                <td>No Posts Found!</td>
+            </tr>
+        </table>
+    }
+    
+</div>
+<div class="popup" style="display:@ViewBag.popup" >
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <div>
+            <table>
+                <tr>
+                    <td>
+                        <label style="font-size:15px">Position : </label>
+                    </td>
+                    <td>
+                        <select id="post-commontext-position" class="Custom-Button img-selection" style="background-color:white; color:black;">
+                            <option value="top">Top of the content</option>
+                            <option value="bottom">Bottom of the content</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input class="Custom-Button" type="button" value="Update Posts" onclick="updatePosts()" />
+                    </td>
+
+                </tr>
+            </table>
+        </div>
+        <div>
+            @Html.Partial("~/Views/Post/ContentEditor.cshtml")
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = switchAction;
+    var editor = document.getElementById("editor");
+    var mainPopup = document.getElementsByClassName('popup')[0];
+    var mainSpan = document.getElementsByClassName("close")[0];
+    var imagePopup = document.getElementsByClassName('popup')[1];
+    var imageSpan = document.getElementsByClassName("close")[1];
+
+    function addCommonText() {
+        mainPopup.style.display = "block";
+
+    }
+    
+    mainSpan.onclick = function () {
+        mainPopup.style.display = "none";
+    }
+
+    function insertImage() {
+        imagePopup.style.display = "block";
+        document.getElementsByClassName('popup-content')[1].style.width = "75%";
+    }
+    
+    imageSpan.onclick = function () {
+        imagePopup.style.display = "none";
+    }
+
+    window.onclick = function (event) {
+        if (event.target == imagePopup) {
+            imagePopup.style.display = "none";
+        }
+        if (event.target == mainPopup) {
+            mainPopup.style.display = "none";
+        }
+    }
+
+    function imageClick(image) {
+        var current = document.getElementsByClassName("image-container");
+        for (var x = 0; x < current.length; x++) {
+            current[x].style.backgroundColor = "";
+            current[x].getElementsByClassName("image-selection")[0].style.visibility = "hidden";
+        }
+        image.style.backgroundColor = "#C0C0C0";
+        image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
+    }
+
+    function addImage(imageUrl, image) {
+        var url = imageUrl.split('/');
+        var filename = (url[url.length - 1]).split('.').slice(0, -1).join('.');
+        var extension = (url[url.length - 1]).replace(filename, "");
+        var size = image.parentNode.parentNode.getElementsByClassName("Custom-Button")[0].value;
+        var file = filename + '_' + size + extension;
+        var path = imageUrl.replace(filename + extension, "");
+        //alert(path + file);
+
+        editor.contentWindow.document.body.innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
+        imagePopup.style.display = "none";
+    }
+
+    function updatePosts() {
+        var content = editor.contentWindow.document.body.innerHTML;
+        var position = document.getElementById("post-commontext-position").value;
+        $.ajax({
+            type: "POST",
+            url: "/Post/addCommonText",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ postsList: posts, content: content, position: position }),
+            success: function () {
+                //alert("success");
+                var timeleft = 5;
+                mainPopup.style.display = "none";
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                var downloadTimer = setInterval(function () {
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Updated Successful!<br>Page Refresh in " + --timeleft + " Seconds";
+                    
+                    if (timeleft <= 0) {
+                        clearInterval(downloadTimer);
+                        location.reload();
+                    }
+                }, 1000);
+            }, error: function () {
+                //alert("Error occured!")
+                mainPopup.style.display = "none";
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                document.getElementsByClassName("alert-message")[0].innerHTML = "Posts Updating Un-Successful!";
+                
+            }
+        });
+    }
+</script>

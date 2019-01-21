@@ -1,0 +1,373 @@
+﻿@model FinalProj.Models.ImageLibrary
+@{
+    ViewBag.Title = "Image Library";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    table{
+        text-align:center;
+    }
+    #imageProp-container {
+        background-color: lightgrey;
+        color: black;
+        margin-bottom: 0;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+    #imageProp-container td {
+        padding:10px 20px;
+    }
+    .Custom-Button {
+        float: none;
+        margin: 5px;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 5px;
+        font-size: small;
+        text-decoration: none;
+    }
+</style>
+<script>
+    var layout= '@ViewBag.layoutView';
+    function checkBoxAllClick(checked) {
+        if (checked == false) {
+            $('.selection:checked').prop('checked', false);
+            document.getElementById("bulk-options").hidden = true;
+        }
+        else {
+            $('.selection:not(:checked)').prop('checked', true);
+            document.getElementById("bulk-options").hidden = false;
+        }
+    }
+    function chechBoxSingle(checked) {
+        if (checked == false) {
+            $('#chckHead:checked').prop("checked", false);
+        }
+
+        var images = [];
+        $.each($("input[class='selection']:checked"), function () {
+            images.push($(this).val());
+        });
+        if (images.length == 0) {
+            document.getElementById("bulk-options").hidden = true;
+        } else {
+            document.getElementById("bulk-options").hidden = false;
+        }
+
+    }
+    function bulkAction() {
+        var images = [];
+        $.each($("input[class='selection']:checked"), function () {
+            images.push($(this).val());
+        });
+        var selection = document.getElementById("bulk-selection").value;
+        if (selection == "deleteAll") {
+            $.ajax({
+                type: "POST",
+                url: "/ImageLibrary/deletAllImages",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ imageList: images, layout: layout }),
+                success: function (result) {
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (result.success == true) {
+                        var timeleft = 10;
+                        var downloadTimer = setInterval(function () {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = result.responseText+"<br>Page Refresh in " + --timeleft + " Seconds";
+                            if (timeleft <= 0) {
+                                clearInterval(downloadTimer);
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = result.responseText;
+                    }
+                }, error: function () {
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Images Deleting Un-Successful!";
+                   // alert("Error occured!")
+                }
+            });
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "/ImageLibrary/downloadImages",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ imageList: images}),
+                success: function (result) {
+                    window.document.getElementsByClassName("alert")[0].style.display = "block";
+                    //alert(result.success);
+                    if (result == undefined) {
+                        var timeleft = 10;
+                        var downloadTimer = setInterval(function () {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Images Download Successfully!<br>Page Refresh in " + --timeleft + " Seconds";
+                            if (timeleft <= 0) {
+                                clearInterval(downloadTimer);
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        if (result.success == false) {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = result.responseText;//"Images Downloading Un-Successful!";
+                        } else {
+                            location.reload();
+                        }
+                        
+                    }
+                }, error: function () {
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Images Downloading Un-Successful!";
+                   alert("Error occured!")
+                }
+            });
+        }
+        
+    }
+</script>
+
+<div style="margin-left:160px">
+    <h2>Image Library</h2>
+    <hr />
+
+    @if (ViewBag.DisplayImages != null)
+    {
+        <div class="pagination">
+            @if (ViewBag.layoutView == "Grid")
+            {
+                @Html.ActionLink("Grid View", "changeLayout"
+                       , new { layout = "Grid" }, new { @class = "active" })
+                @Html.ActionLink("List View", "changeLayout"
+                       , new { layout = "List" })
+            }
+            else
+            {
+                @Html.ActionLink("Grid View", "changeLayout"
+                       , new { layout = "Grid" })
+                @Html.ActionLink("List View", "changeLayout"
+                       , new { layout = "List" }, new { @class = "active" })
+            }
+
+
+        </div>
+        if (ViewBag.layoutView == "Grid")
+        {
+            @*<table style="width:100%">*@
+            <div class="container text-center" style="margin:10px 0px;">
+                @{
+                    int totalCount = ViewBag.DisplayImages.Count;
+                }
+                @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+                {
+                    if (row % 4 == 0)
+                    {
+                        int maxIndex = row + 4;
+
+                        <div class="row ">
+                            @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                            {
+                                if (imageIndex < totalCount)
+                                {
+                                    <div class="col card col-hover " ondblclick="displayImageProp(this)">
+                                        <input type="text" value="@ViewBag.DisplayImages[imageIndex].imageID" hidden />
+                                        <input type="text" value="@ViewBag.DisplayImages[imageIndex].title" hidden />
+                                        <input type="text" value="@ViewBag.DisplayImages[imageIndex].imgDesc" hidden />
+                                        <input type="text" value="@ViewBag.DisplayImages[imageIndex].uploadDate" hidden />
+                                        <input type="text" value="@ViewBag.DisplayImages[imageIndex].modifyDate" hidden />
+                                        <input type="text" value="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" hidden />
+
+                                        <div class="card-body">
+                                            <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                            <h6>@ViewBag.DisplayImages[imageIndex].title</h6>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col">
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+
+            <div id="bulk-options" style="margin-top:20px" hidden>
+                <label style="font-weight:bold">Bulk Actions :</label>
+                <select id="bulk-selection" class="custom-select" style="max-width:150px; max-height:30px; margin-bottom:0">
+                    <option class="dropdown-item" value="deleteAll">Delete</option>
+                    <option class="dropdown-item" value="downloadAll">Download</option>
+                </select>
+                <input class="btn btn-sm btn-outline-success" id="action" type="button" onclick="bulkAction()" value="Apply" style="margin-left:20px"/>
+            </div>
+            <table id="list-view" style="margin:10px 0px;">
+                <tr>
+                    <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Last Modified</th>
+                    <th>Action</th>
+                </tr>
+
+                @foreach (var img in ViewBag.DisplayImages)
+                {
+                    <tr>
+                        <td id="@img.imageID" hidden>
+                            <input type="text" value="@img.imageID" hidden />
+                            <input type="text" value="@img.title" hidden />
+                            <input type="text" value="@img.imgDesc" hidden />
+                            <input type="text" value="@img.uploadDate" hidden />
+                            <input type="text" value="@img.modifyDate" hidden />
+                            <input type="text" value="@Url.Content(@img.imgLoc)" hidden />
+                        </td>
+                        <td>
+                            <input class="selection" type="checkbox" value="@img.imageID" onchange="chechBoxSingle(this.checked)" />
+                        </td>
+                        <td><img src="@Url.Content(@img.imgLoc)" width="50" height="50" /></td>
+                        <td>@img.title</td>
+                        <td>@img.imgDesc</td>
+                        <td>@img.modifyDate</td>
+                        <td>
+                            <a href="javascript:void(0);" onclick="displayImageProp(document.getElementById('@img.imageID'));" class="btn btn-sm btn-outline-info">Edit</a>
+                            @Html.ActionLink("Delete", "deleteImage", new { imageID = @img.imageID, layout = @ViewBag.layoutView }, new { @class = "btn btn-sm btn-outline-danger" })
+                            @Html.ActionLink("Download", "downloadImage", new { imageID = @img.imageID }, new { @class = "btn btn-sm btn-outline-success" })
+                        </td>
+                    </tr>
+                }
+            </table>
+        }
+        <div class="pagination">
+            @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
+            {
+                if (ViewBag.LibraryProp.currentPage == page)
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, layout = @ViewBag.layoutView }, new { @class = "active" })
+                }
+                else
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, layout = @ViewBag.layoutView })
+                }
+
+            }
+        </div>
+
+    }
+    else
+    {
+        <div>
+            No Images found!
+        </div>
+    }
+</div>
+<div class="popup card" style="display:@ViewBag.popup">
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <img src="" id="popup-image" style="width:400px; height:400px;" />
+                </div>
+                <div class="col card bg-light" >
+                    @using (Html.BeginForm("imagePropChange", "ImageLibrary", new { img = Model, layout = ViewBag.layoutView }, FormMethod.Post))
+                    {
+                        <h6>Title :</h6>
+                        @Html.TextBoxFor(m => m.title, new
+                   {
+                       @class = "form-control",
+                       Placeholder = "Title",
+                       type = "text",
+                       required = "required",
+                       size = "50",
+                       maxlength = "50",
+                       id = "popup-title"
+                   })
+                        <h6>Description :</h6>
+                        @Html.TextAreaFor(m => m.imgDesc, new
+                   {
+                       @class = "form-control",
+                       Placeholder = "Description",
+                       type = "text",
+                       size = "150",
+                       maxlength = "150",
+                       id = "popup-desc"
+                   })
+                        <h6>
+                            Upload Date :
+                        </h6>
+                        <label class="popup-upload"></label>
+                        <h6>
+                            Modify Date :
+                        </h6>
+                        <label class="popup-modify"></label>
+                        <br />
+                        @Html.HiddenFor(m => m.uploadDate, new { @class = "popup-upload" })
+                        @Html.HiddenFor(m => m.modifyDate, new { @class = "popup-modify" })
+                        @Html.HiddenFor(m => m.imageID, new { id = "popup-id" })
+                        @Html.HiddenFor(m => m.modifyDate, new { id = "popup-img-modify" })
+
+                        <input type="button" class="btn btn-sm btn-outline-danger"  value="Delete" onclick="deleteImage()" />
+                        <input type="submit" class="btn btn-sm btn-outline-success" value="Update" />
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get the modal
+    var popup = document.getElementsByClassName('popup')[0];
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function displayImageProp(image) {
+        var id = image.getElementsByTagName('input')[0];
+        var title = image.getElementsByTagName('input')[1];
+        var desc = image.getElementsByTagName('input')[2];
+        var upload = image.getElementsByTagName('input')[3];
+        var modify = image.getElementsByTagName('input')[4];
+        var imgLoc = image.getElementsByTagName('input')[5];
+
+        
+        document.getElementById("popup-id").value = id.value;
+        document.getElementById("popup-image").src = imgLoc.value;
+        document.getElementById("popup-title").value = title.value;
+        if (desc.value != "") {
+            document.getElementById("popup-desc").value = desc.value;
+        }
+
+        
+        document.getElementsByClassName("popup-upload")[0].innerHTML = upload.value;
+        document.getElementsByClassName("popup-upload")[1].value = upload.value;
+
+        document.getElementsByClassName("popup-modify")[0].innerHTML = modify.value;
+        document.getElementsByClassName("popup-modify")[1].value = modify.value;
+        popup.style.display = "block";
+    }
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        popup.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == popup) {
+            popup.style.display = "none";
+        }
+    }
+
+    function deleteImage() {
+        var imageIndex = document.getElementById("popup-id").value;
+        alert(imageIndex);
+        $.post("@Url.Action("deleteImage", "ImageLibrary")", { imageID: imageIndex, layout: '@ViewBag.layoutView' }, new function (data) {
+            window.location.href = '@Url.Action("ImageLibrary","ImageLibrary")';
+        });
+    }
+</script>

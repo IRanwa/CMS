@@ -1,0 +1,297 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @*@Styles.Render("~/Content/css")
+        @Scripts.Render("~/bundles/modernizr")*@
+    <link rel="stylesheet" href="https://getbootstrap.com/docs/4.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://getbootstrap.com/docs/4.1/examples/dashboard/dashboard.css" />
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <style>
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Times New Roman';
+            font-weight: bold;
+        }
+
+        .alert {
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: medium;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .alert-message {
+            margin: 0px;
+        }
+
+        .closebtn {
+            margin-left: 15px;
+            color: white;
+            font-weight: bold;
+            float: right;
+            font-size: 22px;
+            line-height: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+            .closebtn:hover {
+                color: black;
+            }
+
+        .pagination a {
+            color: black;
+            float: left;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color .3s;
+        }
+
+            .pagination a.active {
+                background-color: dodgerblue;
+                color: white;
+            }
+
+            .pagination a:hover:not(.active) {
+                background-color: #ddd;
+            }
+
+
+        .popup {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            padding-left: 160px;
+            left: 0px;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .popup-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+        .col {
+            padding: 2%;
+            word-wrap: break-word;
+        }
+
+        .col-hover:hover {
+            background-color: #ddd;
+            cursor: pointer;
+        }
+
+        #list-view {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+        }
+
+            #list-view td, #list-view th {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+
+            #list-view tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            #list-view tr:hover {
+                background-color: #ddd;
+            }
+
+            #list-view th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #357EC7;
+                color: white;
+            }
+
+        .custom-img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .top-container {
+            margin: 2%;
+            margin-top: 0;
+            width: 100%;
+        }
+
+        .editor-options {
+            margin: 2%;
+            margin-top: 0;
+        }
+
+            .editor-options td {
+                padding: 3px 10px;
+                border-radius: 5px;
+            }
+
+                .editor-options td:hover {
+                    background-color: lightgray;
+                }
+
+        #editor {
+            border: 1px solid gray;
+            margin: 2%;
+            width: 96%;
+            min-height: 500px;
+        }
+
+        .sidenav-menu {
+            display: none;
+            margin-left: 30px;
+        }
+
+        .nav-item:hover .sidenav-menu {
+            display: block;
+        }
+
+        #progress-bar-text {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            margin: 10px 0px;
+        }
+    </style>
+    
+    <script>
+        window.onload = switchAction;
+        function switchAction() {
+            var link = window.location.href
+            var links = document.getElementsByClassName("nav-link");
+            for (var i = 0; i < links.length; i++) {
+                var templink = links[i];
+                if (templink != link) {
+                    templink.classList.remove("active");
+                } else {
+                    var values = window.location.pathname.split("/");
+                    var controller = values[1];
+                    var action = values[2];
+                    if (controller == "ImageLibrary") {
+                        document.getElementById("ImageLibraryLink").classList.add("active");
+                    } else if (controller == "Category") {
+                        document.getElementById("CategoryLink").classList.add("active");
+                    } else if (controller == "Post") {
+                        document.getElementById("PostLink").classList.add("active");
+                    } else if (controller == "Home" && action != "Dashboard") {
+                        document.getElementById("HomeLink").classList.add("active");
+                    }
+                    templink.classList.add("active");
+                }
+            }
+        }
+        //var links = document.getElementsByClassName("nav-link");
+        //for (var i = 0; i < links.length; i++) {
+        //    links[i].addEventListener("click", function () {
+        //        var current = document.getElementsByClassName("active");
+        //        current[0].className = current[0].className.replace("active", "");
+        //        this.className += "active";
+        //    });
+        //}
+    </script>
+</head>
+
+<body>
+    @if (Session["user"] != null)
+    {
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar" style="padding-top:0;">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item" style="margin-bottom:30px">
+                        @Html.ActionLink("Visit Website", "Index", new { controller = "Template" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Dashboard", "Dashboard", new { controller = "Home" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Images", "ImageLibrary", new { controller = "ImageLibrary" }, new { @class = "nav-link", id="ImageLibraryLink" })
+                        <div class="sidenav-menu">
+                            @Html.ActionLink("Library", "ImageLibrary", new { controller = "ImageLibrary" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Add New", "LibraryAddNew", new { controller = "ImageLibrary" }, new { @class = "nav-link" })
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Category", "Category", new { controller = "Category" }, new { @class = "nav-link", id = "CategoryLink" })
+                        <div class="sidenav-menu">
+                            @Html.ActionLink("All Categories", "Category", new { controller = "Category" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Add New", "CategoryAddNew", new { controller = "Category" }, new { @class = "nav-link" })
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Posts", "Posts", new { controller = "Post" }, new { @class = "nav-link", id = "PostLink" })
+                        <div class="sidenav-menu">
+                            @Html.ActionLink("All Posts", "Posts", new { controller = "Post" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Add New", "PostsAddNew", new { controller = "Post" }, new { @class = "nav-link" })
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Settings", "Settings", new { controller = "Home" }, new { @class = "nav-link", id = "HomeLink" })
+                        <div class="sidenav-menu">
+                            @Html.ActionLink("General", "Settings", new { controller = "Home" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Image Library", "LibrarySettings", new { controller = "Home" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Export", "Export", new { controller = "Home" }, new { @class = "nav-link" })
+                            @Html.ActionLink("Import", "Import", new { controller = "Home" }, new { @class = "nav-link" })
+                        </div>
+                    </li>
+                    <li class="nav-item" style="bottom:0; position:absolute;">
+                        @Html.ActionLink("Log Out", "LogOut", new { controller = "User" }, new { @class = "nav-link" })
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+    }
+    <div class="container body-content" style="margin-top:10px">
+        <div class="alert bg-secondary" style="display:@ViewBag.Display; margin-left:@ViewBag.alertSize">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            <p class="alert-message ">@ViewBag.Message</p>
+        </div>
+        @RenderBody()
+
+        <footer>
+            @*<p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>*@
+        </footer>
+    </div>
+
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    
+</body>
+</html>

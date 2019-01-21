@@ -1,0 +1,70 @@
+﻿<div id="images-popup-container">
+    <h3>Insert Image</h3>
+    <hr />
+    @if (ViewBag.DisplayImages != null)
+    {
+        <div class="container text-center" style="margin:10px 0px;">
+            @{
+                int totalCount = ViewBag.DisplayImages.Count;
+            }
+            @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+            {
+                if (row % 3 == 0)
+                {
+                    int maxIndex = row + 3;
+                    <div class="row ">
+                        @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                        {
+                            if (imageIndex < totalCount)
+                            {
+                            <div class="col card col-hover " ondblclick="displayImageProp(this)">
+                                <div class="card-body">
+                                    <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                    <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                                </div>
+                                <div>
+                                    <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;">
+                                        <option value="thumb">Small</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="large">Large</option>
+                                    </select>
+                                    <input type="button" value="Submit" class="btn btn-outline-success" style="padding:2px 8px;
+                                                            float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)',this)" />
+                                </div>
+                            </div>
+                            }
+                            else
+                            {
+                                <div class="col"></div>
+                            }
+                        }
+                     </div>
+                }
+            }
+        </div>
+            <div class="pagination">
+                @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
+                {
+                    if (ViewBag.LibraryProp.currentPage == page)
+                    {
+                        <a href="javascript:void(0);" onclick="nextPage('@page')" class="active">@page.ToString()</a>
+                        @*@Html.ActionLink(page.ToString(), "nextImagePage"
+                            , new { nextPage = page, pageName = ViewBag.pageName }, new { @class = "active" })*@
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0);" onclick="nextPage('@page')">@page.ToString()</a>
+                        @*@Html.ActionLink(page.ToString(), "nextImagePage"
+                            , new { nextPage = page, pageName  = ViewBag.pageName })*@
+                    }
+
+                }
+            </div>
+            }
+            else
+            {
+            <div>
+                No Images found!
+            </div>
+            }
+        </div>

@@ -1,0 +1,163 @@
+﻿<style>
+    table {
+        text-align: center;
+    }
+
+    .Custom-Button {
+        padding: 5px 10px;
+    }
+</style>
+<script>
+    var boldStatus = false;
+    var italicStatus = false;
+    var underlineStatus = false;
+    var unOrderedListStatus = false;
+    var orderedListStatus = false;
+    var editor;
+    var uploadId = '@ViewBag.post.postId';
+
+    window.onload = function () {
+        setEditable();
+        switchAction();
+    };
+
+    function setEditable() {
+        editor = document.getElementById("editor");
+        editor.contentWindow.document.designMode = "on";
+        editor.focus();
+    }
+
+    function bold() {
+        var bold = document.getElementById("bold");
+        editor.contentWindow.document.execCommand("bold", false, "");
+        if (!boldStatus) {
+            bold.style.backgroundColor = "lightgray";
+            boldStatus = true;
+        } else {
+            bold.style.backgroundColor = "";
+            boldStatus = false;
+        }
+    }
+    function italic() {
+        var italic = document.getElementById("italic");
+        editor.contentWindow.document.execCommand("italic", false, "");
+        if (!italicStatus) {
+            italic.style.backgroundColor = "lightgray";
+            italicStatus = true;
+        } else {
+            italic.style.backgroundColor = "";
+            italicStatus = false;
+        }
+    }
+    function underline() {
+        var underline = document.getElementById("underline");
+        editor.contentWindow.document.execCommand("underline", false, "");
+        if (!underlineStatus) {
+            underline.style.backgroundColor = "lightgray";
+            underlineStatus = true;
+        } else {
+            underline.style.backgroundColor = "";
+            underlineStatus = false;
+        }
+    }
+    function unOrderedList() {
+        var unOrderedList = document.getElementById("unOrderedList");
+        editor.contentWindow.document.execCommand("insertUnorderedList", false, "");
+        if (!unOrderedListStatus) {
+            unOrderedList.style.backgroundColor = "lightgray";
+            unOrderedListStatus = true;
+        } else {
+            unOrderedList.style.backgroundColor = "";
+            unOrderedListStatus = false;
+        }
+    }
+    function orderedList() {
+        var orderedList = document.getElementById("orderedList");
+        editor.contentWindow.document.execCommand("insertorderedList", false, "");
+        if (!orderedListStatus) {
+            orderedList.style.backgroundColor = "lightgray";
+            orderedListStatus = true;
+        } else {
+            orderedList.style.backgroundColor = "";
+            orderedListStatus = false;
+        }
+    }
+    function leftAlign() {
+        editor.contentWindow.document.execCommand("justifyLeft", false, "");
+    }
+    function centerAlign() {
+        editor.contentWindow.document.execCommand("justifyCenter", false, "");
+    }
+    function indent() {
+        editor.contentWindow.document.execCommand("indent", false, "");
+    }
+    function fontColor(color) {
+        editor.contentWindow.document.execCommand("foreColor", false, color);
+    }
+
+    function fontSize(size) {
+        //var bool;
+        if (size != 0) {
+            editor.contentWindow.document.execCommand("fontSize", false, size);
+        } else {
+            editor.contentWindow.document.execCommand("fontSize", false, "3");
+        }
+    }
+    function nextPage(nextPage, pageName) {
+        $.ajax({
+            type: "POST",
+            url: "/Post/nextImagePage",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ nextPage: nextPage}),
+            success: function (object) {
+                $('#images-popup-container').html(object); 
+            }
+        });
+    }
+</script>
+<div>
+    <div >
+        <table cellpadding="2" class="editor-options">
+            <tr>
+                <td class="editor_icon" id="bold"><img class="custom-img" src="~/TextEditor_Icon/bold.png" onclick="bold();" /></td>
+                <td class="editor_icon" id="italic"><img class="custom-img" src="~/TextEditor_Icon/italic.png" onclick="italic();" /></td>
+                <td class="editor_icon" id="underline"><img class="custom-img" src="~/TextEditor_Icon/underline.png" onclick="underline();" /></td>
+                <td class="editor_icon" id="unOrderedList"><img class="custom-img" src="~/TextEditor_Icon/unOrderedList.png" onclick="unOrderedList();" /></td>
+                <td class="editor_icon" id="orderedList"><img class="custom-img" src="~/TextEditor_Icon/orderedList.png" onclick="orderedList();" /></td>
+                <td class="editor_icon" id="leftAlign"><img class="custom-img" src="~/TextEditor_Icon/left-align.png" onclick="leftAlign();" /></td>
+                <td class="editor_icon" id="centerAlign"><img class="custom-img" src="~/TextEditor_Icon/center-alignment.png" onclick="centerAlign();" /></td>
+                <td class="editor_icon" id="indent"><img class="custom-img" src="~/TextEditor_Icon/indent.png" onclick="indent();" /></td>
+                <td class="editor_icon" id="fontColor">
+                    Font Color: <input type="color" id="color" value="#000002" onchange="fontColor(this.value);" />
+                </td>
+                <td class="editor_icon" id="fontSize">
+                    Font Size:
+                    <select class="Custom-Button img-selection" style="float:none; background-color:white; color:black;"
+                            onclick="fontSize(this.value)" id="font-size-selection">
+                        <option value="0">Default</option>
+                        <option value="7" style="font-size:3em">Header 1</option>
+                        <option value="6" style="font-size:2em">Header 2</option>
+                        <option value="5" style="font-size:1.5em">Header 3</option>
+                        <option value="4" style="font-size:1.13em">Paragraph 1</option>
+                        <option value="3" style="font-size:1.0em">Paragraph 2</option>
+                        <option value="2" style="font-size:0.82em">Paragraph 3</option>
+                        <option value="1" style="font-size:0.63em">Paragraph 4</option>
+                    </select>
+                </td>
+                <td class="editor_icon">
+                    <input class="btn btn-secondary" type="button" value="Insert Image" style="padding:2px 8px" id="insertImage" onclick="insertImage()" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <iframe id="editor" style="font-size:13px" srcdoc="@ViewBag.post.postData"></iframe>
+</div>
+
+<div class="popup" style="display:@ViewBag.popup">
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        @Html.Partial("~/Views/Post/ImagesContainer.cshtml")
+    </div>
+</div>
+

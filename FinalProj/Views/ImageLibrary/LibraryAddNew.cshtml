@@ -1,0 +1,64 @@
+﻿@model FinalProj.Models.ImageLibrary
+@{
+    ViewBag.Title = "Add New (Image Library)";
+    ViewBag.alertSize = "160px";
+}
+<style>
+</style>
+<script>
+    function validate() {
+        var files = document.getElementById("upload-files").files;
+        if (files.length > 20) {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "You can only upload a maximum of 20 files"
+            return false;
+        }
+    }
+    function changeFileUploadName(files) {
+        var length = files.length;
+        if (length > 1) {
+            document.getElementById('upload-name').innerHTML = length + " files";
+        } else {
+            document.getElementById('upload-name').innerHTML = files[0].name;
+        }
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div class="card bg-light" style="padding:10px 20px;">
+        @using (Html.BeginForm("LibraryAddNew", "ImageLibrary", FormMethod.Post,
+                                new { enctype = "multipart/form-data" }))
+        {
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Upload Images</span>
+                </div>
+                <div class="custom-file">
+                    
+                    @Html.TextBoxFor(model => model.files, "",
+                                                   new {
+                                                       @class = "custom-file-input", @type = "file", @multiple = "multiple", @accept = ".png,.jpg,.jpeg,.gif",
+                                                       @id ="upload-files", @required="true", @onchange= "changeFileUploadName(files)"
+
+                                                   })
+                    <label class="custom-file-label" for="upload-files" id="upload-name">Choose images</label>
+                </div>
+            </div>
+            <input type="submit" value="Upload" id="UploadBtn" class="btn btn-sm btn-outline-success" style="float:right; padding: 5px 15px;" onclick="return validate();" />
+        }
+    </div>
+    @if (ViewBag.UploadFiles != null)
+    {
+        <hr />
+        <h3>Uploaded Files list</h3>
+        <ol>
+            @foreach (var file in ViewBag.UploadFiles)
+            {
+                <li>@file</li>
+            }
+        </ol>
+    }
+</div>
+                
+

@@ -1,0 +1,32 @@
+﻿
+@{
+    ViewBag.Title = "Add New (Category)";
+    ViewBag.alertSize = "160px";
+}
+@model FinalProj.Models.Category
+    <style>
+        .Sub-Container {
+            margin: 0;
+            margin-top: 3%;
+            padding: 10px 30px;
+            float: left;
+            background-color: #F7F3F3;
+        }
+        td{
+            font-size:15px;
+        }
+    </style>
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div class="card bg-light" style="max-width:60%; padding:10px 30px; margin:0% 20%;">
+        @using (Html.BeginForm("CategoryAddNew", "Category", FormMethod.Post))
+        {
+            <h6>Title: </h6>
+            @Html.TextBoxFor(m => m.title, new { @class = "form-control", Placeholder = "title", type = "text", required = "required", size = "50", maxlength = "50" })
+            <h6>Description: </h6>
+            @Html.TextAreaFor(m => m.desc, new { @class = "form-control", Placeholder = "description", required = "required", rows = "6", maxlength = "150" })
+            <input type="submit" value="Submit" class="btn btn-outline-success" />
+        }
+    </div>
+</div>

@@ -1,0 +1,21 @@
+﻿
+@{
+    ViewBag.Title = "Registration";
+    ViewBag.alertSize = 0;
+}
+@model FinalProj.Models.Registration
+
+<div class="text-center" style="">
+    <div class="form-signin popover bg-light d-flex justify-content-center" style="width: 100%; max-width:30%; margin:0% 35%; margin-top:50px; padding:5%;">
+        @using (Html.BeginForm("Registration", "User", FormMethod.Post))
+        {
+            <h1 class="mb-3 font-weight-normal text-center">Registration</h1>
+            @Html.TextBoxFor(m => m.user.email, new { @class = "form-control", Placeholder = "Email Address", type = "email", required = "required", size = "50", maxlength = "50" })
+            @Html.PasswordFor(m => m.user.pass, new { @class = "form-control", Placeholder = "Password", required = "required", maxlength = "12" })
+            @Html.PasswordFor(m => m.user.cPass, new { @class = "form-control", Placeholder = "Confirm Password", required = "required", maxlength = "12" })
+            @Html.TextBoxFor(m => m.webTitle, new { @class = "form-control", Placeholder = "Website Title", type = "text", required = "required", maxlength = "30" })
+            <button type="submit" value="Registration" class="btn btn-lg btn-primary btn-block">Registration</button>
+        }
+    </div>
+</div>
+

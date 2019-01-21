@@ -1,0 +1,17 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+    ViewBag.alertSize = 0;
+}
+@model FinalProj.Models.Login
+<div class="text-center">
+    <div class="form-signin popover bg-light" style="width: 100%; max-width: 30%; margin-left:32.5%; margin-top:100px; padding:5%;">
+        @using (Html.BeginForm("Index", "User", FormMethod.Post))
+        {
+            <h1 class="mb-3 font-weight-normal text-center">Login</h1>
+            @Html.TextBoxFor(m => m.email, new { @class = "form-control", Placeholder = "Email Address", type = "email", required = "required", size = "50", maxlength = "50" })
+            @Html.PasswordFor(m => m.pass, new { @class = "form-control", Placeholder = "Password", required = "required", maxlength = "12" })
+            <button type="submit" value="Login" class="btn btn-lg btn-primary btn-block" >Submit</button>
+        }
+        Don't have an account? @Html.ActionLink("Registration", "Registration", "User")
+    </div>
+</div>

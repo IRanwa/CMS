@@ -1,0 +1,159 @@
+﻿
+@{
+    ViewBag.Title = "Add New (Posts)";
+    ViewBag.alertSize = "160px";
+}
+
+<style>
+    .Custom-Button {
+        padding: 5px 10px;
+    }
+    #title {
+        font-size: 40px;
+        padding:30px 10px;
+    }
+</style>
+<script>
+    var editor = document.getElementById("editor");
+    function uploadPost(val) {
+        var title = document.getElementById("title").value;
+        if (title != "") {
+            var category = document.getElementById("post-category").value;
+
+            if (val == "Save as Draft") {
+                val = "Draft";
+            }
+            var data = JSON.stringify({
+                'status': val,
+                'content': editor.contentWindow.document.body.innerHTML.toString(),
+                'title': title,
+                'category': category,
+                'uploadId': uploadId
+            });
+            $.ajax({
+                type: "POST",
+                url: "/Post/uploadPost", // the URL of the controller action method
+                data: data,
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (uploadId != 0) {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Post Updated Successfully!";
+                    } else {
+                        if (val == "Draft") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Save As Draft Successfully!";
+                        } else {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Published Successfully!";
+                        }
+                    }
+                    uploadId = result.postID;
+                },
+                error: function () {
+                    //alert("error");
+                    document.getElementsByClassName("alert")[0].style.display = "block";
+                    if (uploadId != 0) {
+                        document.getElementsByClassName("alert-message")[0].innerHTML = "Post Updat Un-Successful!";
+                    } else {
+                        if (val == "Draft") {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Save As Draft Un-Successful!";
+                        } else {
+                            document.getElementsByClassName("alert-message")[0].innerHTML = "Post Publish Un-Successful!";
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Please enter title!";
+        }
+    }
+    
+</script>
+
+<div style="margin-left:160px">
+    <h2>Add New</h2>
+    <hr />
+    <div>
+        <div>
+            <div class="card bg-light" style="padding:10px;">
+                <div>
+                    <h6 style="font-size:15px">Category : </h6>
+                    <select id="post-category" class="Custom-Button img-selection" style="background-color:white; color:black;">
+                        @foreach (var cat in ViewBag.catList)
+                        {
+                            if (ViewBag.post.catId == @cat.catID)
+                            {
+                                <option value="@cat.catID" selected>@cat.title</option>
+                            }
+                            else
+                            {
+                                <option value="@cat.catID">@cat.title</option>
+                            }
+
+                        }
+                    </select>
+
+
+                    <input class="form-control" type="text" id="title" placeholder="Title" maxlength="150" value="@ViewBag.post.postTitle" />
+                    <input class="btn btn-outline-success" style="float:right; margin:10px;" type="button" value="Save as Draft" onclick="uploadPost(this.value)" />
+                    <input class="btn btn-outline-success" style="float:right; margin:10px;" type="button" value="Publish" onclick="uploadPost(this.value)" />
+                </div>
+            </div>
+            <div style="margin:20px;"></div>
+            <div class="card bg-light" style="padding:10px;">
+                @Html.Partial("~/Views/Post/ContentEditor.cshtml")
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    // Get the modal
+    var popup = document.getElementsByClassName('popup')[0];
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function insertImage() {
+        popup.style.display = "block";
+
+    }
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        popup.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == popup) {
+            popup.style.display = "none";
+        }
+    }
+
+    function imageClick(image) {
+        var current = document.getElementsByClassName("image-container");
+        for (var x = 0; x < current.length; x++) {
+            current[x].style.backgroundColor = "";
+            current[x].getElementsByClassName("image-selection")[0].style.visibility = "hidden";
+        }
+        image.style.backgroundColor = "#C0C0C0";
+        image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
+    }
+
+    function addImage(imageUrl, image) {
+        var url = imageUrl.split('/');
+        var filename = (url[url.length - 1]).split('.').slice(0, -1).join('.');
+        var extension = (url[url.length - 1]).replace(filename, "");
+        var size = image.parentNode.parentNode.getElementsByClassName("Custom-Button")[0].value;
+        var file = filename + '_' + size + extension;
+        var path = imageUrl.replace(filename + extension, "");
+        //alert(path + file);
+
+        editor.contentWindow.document.body.innerHTML += "<img style='padding:5px' src=\"" + (path + file) + "\" />";
+        popup.style.display = "none";
+    }
+</script>

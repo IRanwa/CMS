@@ -1,0 +1,126 @@
+﻿
+@{
+    ViewBag.Title = "Export";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    .Sub-Container{
+        padding:10px 20px;
+    }
+    .Custom-Button{
+        padding:5px 10px;
+        float:right;
+    }
+</style>
+<script>
+    var proc;
+    var intervalId;
+    function exportAll(checkbox) {
+        var status = checkbox.checked;
+        var chkboxes = document.getElementsByClassName("sub-checkbox");
+        if (status) {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxes[count].checked = false;
+                chkboxes[count].disabled = true;
+            }
+        } else {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxes[count].disabled = false;
+            }
+        }
+    }
+    
+    function exportData() {
+        var chkBoxAll = document.getElementById("checkBoxAll");
+        var chkboxValues = [];
+        var chkboxes = document.getElementsByClassName("sub-checkbox");
+        if (chkBoxAll.checked) {
+            for (var count = 0; count < chkboxes.length; count++) {
+                chkboxValues.push(chkboxes[count].value);
+            }
+        } else {
+            for (var count = 0; count < chkboxes.length; count++) {
+                if (chkboxes[count].checked) {
+                    chkboxValues.push(chkboxes[count].value);
+                }
+            }
+        }
+
+        if (chkboxValues.length == 0) {
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Please select an option!";
+        } else {
+            var taskCount = 0;
+            var webSettings;
+            //document.getElementById("progress-bar").className = "progress-bar-info";
+            document.getElementById("progress-bar").className = "bg-info";
+            document.getElementsByClassName("progress-bar-container")[0].hidden = false;
+            $.post('/Home/Export', { checkboxes: chkboxValues }, function (result) {
+                taskCount = result.totalCount;
+                webSettings = result.webSettings;
+                progress(taskCount, webSettings);
+            });
+
+            //intervalId = window.setInterval(function () {
+            //    //alert("taskCount :" + taskCount);
+                
+            //}, 100);
+            
+        }
+                
+    }
+
+    function progress(taskCount, webSettings) {
+        $.post('/Home/ExportTaskProgress', { webSettings: webSettings},function (json) {
+            //alert(json.Progress);
+            //alert("taskCount :" + taskCount);
+            console.log(json.Progress);
+            console.log(taskCount);
+            proc = ((json.Progress / taskCount) * 100.0).toFixed(2);
+            document.getElementById("progress-bar").style.width = proc + '%';
+            document.getElementById("progress-bar-text").innerHTML = proc + '%';
+            if (proc >= 100) {
+                document.getElementById("progress-bar").className = "bg-success";
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                document.getElementsByClassName("alert-message")[0].innerHTML = "Export file downloading on progress!";
+                window.location.href = '@Url.Action("downloadExportFile", "Home")';
+            } else {
+                progress(taskCount);
+            }
+        });
+       
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Export</h2>
+    <hr />
+    <div class="card bg-light" style="padding:10px 30px; max-width:50%; margin:10px 25%;">
+        <table style="width:100%">
+            <tr><th>Export Options</th></tr>
+            <tr><td><input class="form-check-input" type="checkbox" id="checkBoxAll" onchange="exportAll(this)" />All</td></tr>
+            <tr><td><input class="form-check-input sub-checkbox"  type="checkbox" value="posts" />Posts</td></tr>
+            <tr><td><input class="form-check-input sub-checkbox" type="checkbox" value="images"/>Images</td></tr>
+            <tr><td><input class="form-check-input sub-checkbox" type="checkbox" value="categories" />Categories</td></tr>
+            <tr><td><input class="form-check-input sub-checkbox" type="checkbox" value="website"/>Website Setting</td></tr>
+            <tr><td><br /></td></tr>
+            <tr>
+                <td>
+                    <div class="progress-bar-container">
+                        Exporting
+                        <div class="progress progress-bar bg-info" id="progress-bar" style="height:25px; width:100%; text-align:center;">
+                            <label id="progress-bar-text">Waiting...</label>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr><td><br /></td></tr>
+            <tr>
+                <td>
+                    <input type="button" class="Custom-Button" value="Export" onclick="exportData();" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+

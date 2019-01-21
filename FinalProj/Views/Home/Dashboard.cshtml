@@ -1,0 +1,41 @@
+﻿
+@{
+    ViewBag.Title = "Dashboard";
+}
+<style>
+    table{
+       width:100%;
+    }
+    table td{
+        padding-right:30px;
+    }
+    .Sub-Container {
+        margin: 0;
+        margin-top: 3%;
+        padding: 10px 30px;
+        margin-right:60%;
+    }
+</style>
+<div style="margin-left:160px">
+    <h2>Dashboard</h2>
+    <hr />
+    <div class="card card-body bg-light" style="max-width: 30%; margin:10px 35%;">
+        <div>
+            <h6>No of Published Posts : @ViewBag.noOfPublishPosts </h6>
+        </div>
+        <div>
+            <h6>No of Draft Posts : @ViewBag.noOfDraftPosts</h6>
+        </div>
+        <div>
+            <h6>No of Images : @ViewBag.noOfImages</h6>
+        </div>
+    </div>
+    <hr />
+    <div>
+        <h2>Live Preview</h2>
+        <div class="embed-responsive embed-responsive-16by9" style="margin-bottom:20px">
+            <iframe src="@ViewBag.templateUrl" border="1px solid gray" width="1000" height="1000" class="embed-responsive-item"></iframe>
+        </div>
+            @*@Html.Partial("../Template/Index", new {Style="left:200px;" });*@
+    </div>
+</div>

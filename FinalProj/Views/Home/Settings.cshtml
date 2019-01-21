@@ -1,0 +1,220 @@
+﻿@model FinalProj.Models.Website
+@{
+    ViewBag.Title = "Settings (General)";
+    ViewBag.alertSize = "160px";
+}
+
+<style>
+    .Custom-Button{
+        padding:5px 15px;
+    }
+    .jumbotron {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+    [type=file] {
+        position: absolute;
+        filter: alpha(opacity=0);
+        opacity: 0;
+    }
+    [type=file] + label {
+        border: 1px solid #CCC;
+        border-radius: 3px;
+        text-align: left;
+        padding: 10px;
+        width: 150px;
+        margin: 0;
+        left: 0;
+        position: relative;
+    }
+
+    [type=file] + label {
+        text-align: center;
+        top: 0.5em;
+        background: #333;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+
+    [type=file] + label:hover {
+        color: dimgray;
+    }
+
+    #update-table {
+        width: 100%;
+        border-spacing: 10px;
+        border-collapse: separate;
+    }
+    #image-table {
+        text-align: center;
+    }
+</style>
+<div style="margin-left:160px">
+    <h2>Settings</h2>
+    <hr />
+    <div class="jumbotron">
+        @using (Html.BeginForm("changeSettings", "Home", FormMethod.Post))
+        {
+            @Html.HiddenFor(m => m.webID, new {Value= ViewBag.website.webID })
+            <table id="update-table">
+                <tr>
+                    <td>Website Title : </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.webTitle, new {Style= "width:100%;", type="text",
+                       Placeholder = "Website Title", maxlength="30", @required="true", Value= ViewBag.website.webTitle})
+                    </td>
+                </tr>
+                <tr>
+                    <td>Website No of Posts : </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.noOfPosts, new
+                   {
+                       Style = "width:100%;",
+                       maxlength="2",
+                       Placeholder = "No of Posts",
+                       @required = "true",
+                       @onkeypress = "return isNumberKey(event)",
+                       Value = ViewBag.website.noOfPosts
+                   })
+                    </td>
+                </tr>
+                <tr>
+                    <td>Featured Image : </td>
+                    <td>
+                        @Html.HiddenFor(m => m.featuredImage, new { id = "hidden-img", Value = ViewBag.website.featuredImage })
+                        @if (ViewBag.website.featuredImage != "")
+                        {
+                            <img src="@ViewBag.website.featuredImage" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+                        }
+                        else
+                        {
+                            <img src="~/TextEditor_Icon/no-image-found.png" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+                        }
+                        <br />
+                        <input class="Custom-Button" style="float:left" type="button" value="Upload Image" onclick="insertImage()" />
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="submit" value="Save" class="Custom-Button" /></td>
+                </tr>
+            </table>
+        }
+    </div>
+</div>
+<div class="popup" style="display:@ViewBag.popup">
+    <!-- Modal content -->
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <div>
+            <h3>Insert Image</h3>
+            <hr />
+            @if (ViewBag.DisplayImages != null)
+            {
+                <table style="width:100%" id="image-table">
+                    @{
+                        int totalCount = ViewBag.DisplayImages.Count;
+                    }
+                    @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
+                    {
+                        if (row % 3 == 0)
+                        {
+                            int maxIndex = row + 3;
+                            if (maxIndex > totalCount)
+                            {
+                                maxIndex = totalCount;
+                            }
+
+                            <tr>
+                                @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
+                                {
+                                    <td class="image-container" onclick="imageClick(this)">
+                                        <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
+                                        <br />
+                                        <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
+                                        <table class="image-selection" style="visibility:hidden; width:100%">
+                                            <tr>
+                                                <td>
+                                                    <input type="button" value="Select" class="Custom-Button" style="padding:2px 8px;
+                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)')" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </table>
+                <div class="pagination">
+                    @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
+                    {
+                        if (ViewBag.LibraryProp.currentPage == page)
+                        {
+                            @Html.ActionLink(page.ToString(), "nextImagePage"
+                           , new { nextPage = page}, new { @class = "active" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink(page.ToString(), "nextImagePage"
+                           , new { nextPage = page})
+                        }
+
+                    }
+                </div>
+            }
+            else
+            {
+                <div>
+                    No Images found!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<script>
+    // Get the modal
+    var popup = document.getElementsByClassName('popup')[0];
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function insertImage() {
+        popup.style.display = "block";
+
+    }
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        popup.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == popup) {
+            popup.style.display = "none";
+        }
+    }
+
+    function imageClick(image) {
+        var current = document.getElementsByClassName("image-container");
+        for (var x = 0; x < current.length; x++) {
+            current[x].style.backgroundColor = "";
+            current[x].getElementsByClassName("image-selection")[0].style.visibility = "hidden";
+        }
+        image.style.backgroundColor = "#C0C0C0";
+        image.getElementsByClassName("image-selection")[0].style.visibility = "visible";
+    }
+
+    function addImage(imageUrl) {
+        document.getElementById("featured-img").src = imageUrl;
+        document.getElementById("hidden-img").value = imageUrl;
+        popup.style.display = "none";
+    }
+
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode > 31 && (charCode < 49 || charCode > 57))
+            return false;
+        return true;
+    }
+</script>

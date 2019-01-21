@@ -1,0 +1,135 @@
+﻿
+@{
+    ViewBag.Title = "Category";
+    ViewBag.alertSize = "160px";
+}
+<style>
+    .Custom-Button {
+        float: none;
+        margin: 5px;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 5px;
+        font-size: small;
+        text-decoration:none;
+    }
+    td {
+        width: 80px;
+    }
+
+    td+td {
+        width: auto;
+    }
+</style>
+<script>
+    function checkBoxAllClick(checked) {
+        if (checked == false) {
+            $('.categorySelection:checked').prop('checked', false);
+            document.getElementById("deleteAll").hidden = true;
+        }
+        else {
+            $('.categorySelection:not(:checked)').prop('checked', true);
+            document.getElementById("deleteAll").hidden = false;
+        }
+    }
+    function chechBoxSingle(checked) {
+        if (checked == false) {
+            $('#chckHead:checked').prop("checked", false);
+        }
+
+        var categories = [];
+        $.each($("input[class='categorySelection']:checked"), function () {
+            categories.push($(this).val());
+        });
+        if (categories.length == 0) {
+            document.getElementById("deleteAll").hidden = true;
+        } else {
+            document.getElementById("deleteAll").hidden = false;
+        }
+
+    }
+    function deleteAll() {
+        var categories = [];
+        $.each($("input[class='categorySelection']:checked"), function () {
+            categories.push($(this).val());
+        });
+        
+        $.ajax({
+            type: "POST",
+            url: "/Category/deleteAllCategories",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ catList: categories }),
+            success: function () {
+                //alert("success");
+                var timeleft = 5;
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                var downloadTimer = setInterval(function () {
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Categories Deleted Successfully!<br>Page Refresh in " + --timeleft + " Seconds";
+                    if (timeleft <= 0) {
+                        clearInterval(downloadTimer);
+                        location.reload();
+                    }
+                }, 1000);
+            }, error: function () {
+                //alert("Error occured!")
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                document.getElementsByClassName("alert-message")[0].innerHTML = "Categories Deleting Un-Successful!";
+            }
+        });
+    }
+</script>
+<div style="margin-left:160px">
+    <h2>Category</h2>
+    <hr />
+    @if (ViewBag.DisplayCategories != null)
+    {
+        <input class="btn btn-outline-danger" id="deleteAll" type="button" onclick="deleteAll()" value="Delete All" hidden />
+        <table id="list-view" style="margin:10px 0px;">
+            <tr>
+                <th><input id="chckHead" type="checkbox" value="false" onchange="checkBoxAllClick(this.checked)" /></th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+
+            @foreach (var cat in ViewBag.DisplayCategories)
+            {
+                <tr>
+                    <td>
+                        <input class="categorySelection" type="checkbox" value="@cat.catID" onchange="chechBoxSingle(this.checked)" />
+                    </td>
+                    <td>@cat.title</td>
+                    <td>@cat.desc</td>
+                    <td>@Html.ActionLink("Delete", "deleteCategory", new { catID = @cat.catID }, new { @class = "btn btn-outline-danger" })</td>
+                </tr>
+            }
+        </table>
+        <div class="pagination">
+            @for (int page = 1; page <= ViewBag.CategoryProp.noOfPages; page++)
+            {
+                if (ViewBag.CategoryProp.currentPage == page)
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, currentPage = ViewBag.CategoryProp.currentPage }, new { @class = "active" })
+                }
+                else
+                {
+                    @Html.ActionLink(page.ToString(), "nextPage"
+                   , new { nextPage = page, currentPage = ViewBag.CategoryProp.currentPage })
+                }
+
+            }
+        </div>
+    }
+    else
+    {
+        <table style="width:100%">
+            <tr>
+                <td>No Category Found!</td>
+            </tr>
+        </table>
+    }
+</div>
+
+
+
