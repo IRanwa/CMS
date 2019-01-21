@@ -12,23 +12,30 @@ using FinalProj.Models;
 
 namespace FinalProj.Controllers
 {
-    public class ImportDeatils : Controller
+    public class ImportDeatils
     {
         private Login login;
         private HttpServerUtilityBase server;
         private string webPath;
         private Boolean status = true;
+        private WebSettings websettings;
 
-        public JsonResult importStart(Login newLogin, HttpPostedFileBase[] files)
+        public WebSettings getWebsettings()
         {
+            return websettings;
+        }
+
+        public int importStart(Login newLogin, HttpPostedFileBase[] files, HttpServerUtilityBase server)
+        {
+            websettings = new WebSettings();
+            this.server = server;
             login = newLogin;
+
             webPath = "~/Website_" + newLogin.webID;
             string path = server.MapPath(webPath + "/Import/");
             FolderHandler.getInstance().deleteFiles(path);
             FolderHandler.getInstance().createDirectory(path);
-
-            //WebSettings.importProgress = 0;
-            string message = "";
+            
             int count = 0;
             Parallel.For(0, files.Length, ()=>0, (range,loop,total) =>
             {
@@ -48,20 +55,12 @@ namespace FinalProj.Controllers
                             HttpPostedFileBase imageCSV = files[range];
                             range++;
                             HttpPostedFileBase imageZip = files[range];
-                            if (imageCSV != null && imageZip != null)
+                            total += imagesCount(imageCSV,imageZip);
+                            Task.Factory.StartNew(() =>
                             {
-                                total += imagesCount(imageCSV,imageZip);
-                                Task.Factory.StartNew(() =>
-                                {
-                                    ImportImages(imageCSV, imageZip);
-                                });
-                                total++;
-                            }
-                            else
-                            {
-                                status = false;
-                                message += "Import Images Select Both CSV and ZIp file!";
-                            }
+                                ImportImages(imageCSV, imageZip);
+                            });
+                            total++;
                             break;
                         case 3:
                             total += categoriesCount(files[range]);
@@ -83,8 +82,7 @@ namespace FinalProj.Controllers
                 return total;
             }, (x)=>Interlocked.Add(ref count,x));
             Console.WriteLine(count);
-            return Json(new { status = status, count = count, message = message }
-                                    , JsonRequestBehavior.AllowGet);
+            return count;
         }
         
         private int postsCount(HttpPostedFileBase file)
@@ -141,7 +139,7 @@ namespace FinalProj.Controllers
             {
                 columns.Add(cell);
             }
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
 
             rowsList = rowsList.Where(val => val != rowsList[0]).ToArray();
             Parallel.ForEach(rowsList, row =>
@@ -225,7 +223,7 @@ namespace FinalProj.Controllers
                     }
                     rows.Add(post);
                 }
-                //WebSettings.setImportProgress(1);
+                websettings.setImportProgress(1);
             });
             
             object locker = new object();
@@ -235,15 +233,14 @@ namespace FinalProj.Controllers
                 string path = server.MapPath(serverPath);
                 FolderHandler folder = FolderHandler.getInstance();
                 folder.createDirectory(path);
-                folder.setServer(server);
-                path = folder.generateNewFileName(serverPath, post.postTitle, ".txt");
+                path = folder.generateNewFileName(serverPath, post.postTitle, ".txt",server);
                 folder.writeToNewFile(server.MapPath(path), post.postData);
                 DBConnect db = new DBConnect();
                 post.postLoc = path;
                 post.webId = login.webID;
                 db.uploadPost(post);
             });
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
         }
         private void ImportImages(HttpPostedFileBase imageCSV, HttpPostedFileBase imageZip)
         {
@@ -257,7 +254,7 @@ namespace FinalProj.Controllers
             {
                 columns.Add(cell);
             }
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
 
             rowsList = rowsList.Where(val => val != rowsList[0]).ToArray();
             Parallel.ForEach(rowsList, row =>
@@ -330,7 +327,7 @@ namespace FinalProj.Controllers
                     }
                     rows.Add(img);
                 }
-                //WebSettings.setImportProgress(1);
+                websettings.setImportProgress(1);
             });
 
             Console.WriteLine(rows.Count);
@@ -386,10 +383,10 @@ namespace FinalProj.Controllers
                     tempImg.webID = login.webID;
                     db.uploadImage(tempImg);
                 }
-                //WebSettings.setImportProgress(1);
+                websettings.setImportProgress(1);
             });
             FolderHandler.getInstance().deleteFolders(server.MapPath(webPath + "/Import/TempImages"));
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
         }
 
         private void ImportCategories(HttpPostedFileBase file)
@@ -403,7 +400,7 @@ namespace FinalProj.Controllers
             {
                 columns.Add(cell);
             }
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
             rowsList = rowsList.Where(val => val != rowsList[0]).ToArray();
             Parallel.ForEach(rowsList, row =>
             {
@@ -444,7 +441,7 @@ namespace FinalProj.Controllers
                         rows.Add(category);
                     
                 }
-                //WebSettings.setImportProgress(1);
+                websettings.setImportProgress(1);
             });
 
             Parallel.ForEach(rows, category =>
@@ -457,7 +454,7 @@ namespace FinalProj.Controllers
                     db.addCategory(category);
                 }
             });
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
         }
 
         private void ImportWebsite(HttpPostedFileBase file)
@@ -472,7 +469,7 @@ namespace FinalProj.Controllers
             {
                 columns.Add(cell);
             }
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
 
             rowsList = rowsList.Where(val => val != rowsList[0]).ToArray();
             Website website = new Website();
@@ -578,7 +575,7 @@ namespace FinalProj.Controllers
             website.webID = login.webID;
             db.updateWebsite(website);
             db.updateImgLibSettings(website);
-            //WebSettings.setImportProgress(1);
+            websettings.setImportProgress(1);
         }
     }
 }

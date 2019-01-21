@@ -3,50 +3,6 @@
     ViewBag.Title = "Import";
     ViewBag.alertSize = "160px";
 }
-<style>
-    .Sub-Container {
-        padding: 10px 20px;
-        margin: 0 20%;
-    }
-
-    .Custom-Button {
-        padding: 5px 10px;
-        float: right;
-    }
-
-    table {
-        width: 100%;
-    }
-
-    input {
-        margin: 10px;
-    }
-
-    upload-btn-wrapper {
-        position: relative;
-        overflow: hidden;
-        display: inline-block;
-    }
-
-    .btn {
-        border: 2px solid gray;
-        color: gray;
-        background-color: white;
-        padding: 5px 15px;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: bold;
-        margin: 10px;
-    }
-
-    .upload-btn-wrapper input[type=file] {
-        font-size: 80px;
-        position: absolute;
-        left: 0;
-        top: 0;
-        opacity: 0;
-    }
-</style>
 <script>
     function importData() {
         var files = [];
@@ -73,10 +29,17 @@
         }
 
         if (files.length > 0) {
-            var form = $('#fileUploadForm')[0];
-            var data = new FormData(form);
-            document.getElementsByClassName("progress-bar-container")[0].hidden = false;
-            $.ajax({
+            if ((images_upload_csv.length > 0 && images_upload_zip.length == 0) || (images_upload_csv.length == 0 && images_upload_zip.length > 0)) {
+                document.getElementsByClassName("alert")[0].style.display = "block";
+                document.getElementsByClassName("alert-message")[0].innerHTML = "Insert both CSV and Zip files for Images Import!";
+            } else {
+                var form = $('#fileUploadForm')[0];
+                var data = new FormData(form);
+
+                var taskCount = 0;
+                document.getElementById("progress-bar").className = "bg-info";
+                document.getElementsByClassName("progress-bar-container")[0].hidden = false;
+                $.ajax({
                 type: "POST",
                 url: "/Home/Import",
                 data: data,
@@ -84,19 +47,12 @@
                 processData: false,
                 contentType: false,
                 cache: false,
-                success: function (json) {
+                success: function (result) {
+                    taskCount = result.totalCount;
+                    progress(taskCount);
                     document.getElementsByClassName("alert")[0].style.display = "block";
-                    if (json.status == true) {
-                        document.getElementsByClassName("alert-message")[0].innerHTML = "Uploading import details!";
-
-                        var taskCount = json.count;
-                        progress(taskCount);
-                    } else if (json.status == false) {
-                        document.getElementsByClassName("alert-message")[0].innerHTML = json.message;
-                    } else {
-                        window.location.href = '@Url.Action("Import", "Home")';
-                    }
-                   
+                    document.getElementsByClassName("alert-message")[0].innerHTML = "Uploading import details!";
+                    
                 },
                 error: function () {
                     document.getElementsByClassName("alert")[0].style.display = "block";
@@ -104,6 +60,7 @@
                     //alert("Error occured!")
                 }
             });
+            }
         } else {
             document.getElementsByClassName("alert")[0].style.display = "block";
             document.getElementsByClassName("alert-message")[0].innerHTML = "Please fill the details!";
@@ -131,60 +88,60 @@
 <div style="margin-left:160px;">
     <h2>Import</h2>
     <hr />
-    <div class="card bg-light">
+    <div class="card bg-light" style="max-width:80%; padding:10px 30px; margin:0% 10%;">
         @using (Html.BeginForm("Import", "Home", FormMethod.Post,
                             new { enctype = "multipart/form-data", id = "fileUploadForm" }))
         {
-            <h1 class="h3 mb-3 text-center" style="margin-top:10px;">Import Details</h1>
-            <div style="margin:20px 50px;">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Posts Details</span>
-                    </div>
-                    <div class="custom-file">
-                        @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "posts-upload", @accept = ".csv", @onchange = "document.getElementById('posts-name').innerHTML=files[0].name" })
-                        <label class="custom-file-label" for="posts-upload" id="posts-name">Choose CSV file</label>
-                    </div>
+            <h5 class="text-center" style="margin-top:10px;">Import Details</h5>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Posts Details</span>
                 </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Image Details</span>
-                    </div>
-                    <div class="custom-file">
-                        @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "images-upload-csv", @accept = ".csv", @onchange = "document.getElementById('image-name-csv').innerHTML=files[0].name" })
-                        <label class="custom-file-label" for="images-upload-csv" id="image-name-csv">Choose CSV file</label>
-                    </div>
-                    <div class="custom-file">
-                        @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "images-upload-zip", @accept = ".zip", @onchange = "document.getElementById('image-name-zip').innerHTML=files[0].name" })
-                        <label class="custom-file-label" for="images-upload-zip" id="image-name-zip">Choose Zip file</label>
-                    </div>
+                <div class="custom-file">
+                    @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "posts-upload", @accept = ".csv", @onchange = "document.getElementById('posts-name').innerHTML=files[0].name" })
+                    <label class="custom-file-label" for="posts-upload" id="posts-name">Choose CSV file</label>
                 </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Category Details</span>
-                    </div>
-                    <div class="custom-file">
-                        @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "categories-upload", @accept = ".csv", @onchange = "document.getElementById('categories-name').innerHTML=files[0].name" })
-                        <label class="custom-file-label" for="categories-upload" id="categories-name">Choose CSV file</label>
-                    </div>
-                </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Website Details</span>
-                    </div>
-                    <div class="custom-file">
-                        @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "website-upload", @accept = ".csv", @onchange = "document.getElementById('website-name').innerHTML=files[0].name" })
-                        <label class="custom-file-label" for="website-upload" id="website-name">Choose CSV file</label>
-                    </div>
-                </div>
-                <div style="margin:10px;" class="progress-bar-container" hidden>
-                    Importing
-                    <div class="progress progress-bar bg-info" id="progress-bar" style="height:25px; width:100%; text-align:center;">
-                        <label id="progress-bar-text">Waiting...</label>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-lg btn-primary btn-block" style="max-width:20%; margin:0% 40%" onclick="importData();">Import</button>
             </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Image Details</span>
+                </div>
+                <div class="custom-file">
+                    @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "images-upload-csv", @accept = ".csv", @onchange = "document.getElementById('image-name-csv').innerHTML=files[0].name" })
+                    <label class="custom-file-label" for="images-upload-csv" id="image-name-csv">Choose CSV file</label>
+                </div>
+                <div class="custom-file">
+                    @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "images-upload-zip", @accept = ".zip", @onchange = "document.getElementById('image-name-zip').innerHTML=files[0].name" })
+                    <label class="custom-file-label" for="images-upload-zip" id="image-name-zip">Choose Zip file</label>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Category Details</span>
+                </div>
+                <div class="custom-file">
+                    @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "categories-upload", @accept = ".csv", @onchange = "document.getElementById('categories-name').innerHTML=files[0].name" })
+                    <label class="custom-file-label" for="categories-upload" id="categories-name">Choose CSV file</label>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Website Details</span>
+                </div>
+                <div class="custom-file">
+                    @Html.TextBoxFor(model => model.files, new { @type = "file", @class = "custom-file-input", @id = "website-upload", @accept = ".csv", @onchange = "document.getElementById('website-name').innerHTML=files[0].name" })
+                    <label class="custom-file-label" for="website-upload" id="website-name">Choose CSV file</label>
+                </div>
+            </div>
+            <div style="margin:10px;" class="progress-bar-container" hidden>
+                Importing
+                <div class="progress progress-bar bg-info" id="progress-bar" style="height:25px; width:100%; text-align:center;">
+                    <label id="progress-bar-text">Waiting...</label>
+                </div>
+            </div>
+            <input class="btn btn-outline-success" style="float:right" type="button" value="Import" onclick="importData();" />
+
         }
     </div>
 </div>

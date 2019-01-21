@@ -39,97 +39,71 @@
 <div style="margin-left:160px">
     <h2>Image Library Settings</h2>
     <hr />
-    <div class="jumbotron">
+    <div class="card bg-light" style="max-width:60%; padding:10px 30px; margin:0% 20%;">
         @using (Html.BeginForm("changeImgLibSettings", "Home", FormMethod.Post))
         {
             @Html.HiddenFor(m => m.webID, new { Value = ViewBag.website.webID })
-        <table id="update-table">
-            <tr>
-                <td>Thumbnail Width : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.thumbWidth, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.thumbWidth
-               })
-                </td>
-            </tr>
-            <tr>
-                <td>Thumbnail Height : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.thumbHeight, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.thumbHeight
-               })
-                </td>
-            </tr>
-
-            <tr>
-                <td>Medium Width : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.mediumWidth, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.mediumWidth
-               })
-                </td>
-            </tr>
-            <tr>
-                <td>Medium Height : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.mediumHeight, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.mediumHeight
-               })
-                </td>
-            </tr>
-
-            <tr>
-                <td>Large Width : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.largeWidth, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.largeWidth
-               })
-                </td>
-            </tr>
-            <tr>
-                <td>Large Height : </td>
-                <td>
-                    @Html.TextBoxFor(m => m.largeHeight, new {
-                   Style = "width:100%;",
-                   maxlength = "4",
-                   @required = "true",
-                   @onkeypress = "return isNumberKey(this,event)",
-                   @onkeyup = "checkTextBox(this)",
-                   Value = ViewBag.website.largeHeight
-               })
-                </td>
-            </tr>
-
-            <tr>
-                <td></td>
-                <td><input type="submit" value="Save" class="Custom-Button" /></td>
-            </tr>
-        </table>
+            <h6>Thumbnail Width : </h6>
+            @Html.TextBoxFor(m => m.thumbWidth, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.thumbWidth
+            })
+            <h6>Thumbnail Height : </h6>
+            @Html.TextBoxFor(m => m.thumbHeight, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.thumbHeight
+            })
+            <h6>Medium Width : </h6>
+            @Html.TextBoxFor(m => m.mediumWidth, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.mediumWidth
+            })
+            <h6>Medium Height : </h6>
+            @Html.TextBoxFor(m => m.mediumHeight, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.mediumHeight
+            })
+            <h6>Large Width : </h6>
+            @Html.TextBoxFor(m => m.largeWidth, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.largeWidth
+            })
+            <h6>Large Height : </h6>
+            @Html.TextBoxFor(m => m.largeHeight, new {
+                @class = "form-control",
+                Style = "width:100%;",
+                maxlength = "4",
+                @required = "true",
+                @onkeypress = "return isNumberKey(this,event)",
+                @onkeyup = "checkTextBox(this)",
+                Value = ViewBag.website.largeHeight
+            })
+            <input class="btn btn-outline-success" style="float:right" type="submit" value="Save" id="saveBtn" />
         }
     </div>
 </div>

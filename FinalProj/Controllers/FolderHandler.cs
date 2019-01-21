@@ -10,7 +10,6 @@ namespace FinalProj.Controllers
 {
     public class FolderHandler
     {
-        private static HttpServerUtilityBase mServer;
         private static FolderHandler instance = new FolderHandler();
         private readonly object locker = new object();
         private FolderHandler() { }
@@ -20,23 +19,18 @@ namespace FinalProj.Controllers
             return instance;
         }
 
-        public void setServer(HttpServerUtilityBase server)
-        {
-            mServer = server;
-        }
-
         public void deleteFolders(string mainPath)
         {
             if (Directory.Exists(mainPath)) {
                 ParallelLoopResult p = Parallel.ForEach(Directory.GetDirectories(mainPath), path =>
                 {
                     deleteFiles(path);
-                    if (Directory.Exists(path) && Directory.GetFiles(path) == null)
+                    if (Directory.Exists(path) && Directory.GetFiles(path).Length == 0)
                     {
                         Directory.Delete(path);
                     }
                 });
-                if (p.IsCompleted && Directory.Exists(mainPath) && Directory.GetFiles(mainPath)==null) {
+                if (p.IsCompleted && Directory.Exists(mainPath) && Directory.GetDirectories(mainPath).Length == 0) {
                     Directory.Delete(mainPath);
                 }
             }
@@ -49,7 +43,7 @@ namespace FinalProj.Controllers
                 {
                     deleteFile(file);
                 });
-                if (p.IsCompleted && Directory.GetFiles(path)==null)
+                if (p.IsCompleted && Directory.GetFiles(path).Length==0)
                 {
                     Directory.Delete(path);
                 }
@@ -74,7 +68,7 @@ namespace FinalProj.Controllers
             }
         }
 
-        public string generateNewFileName(string path, string filename, string extension)
+        public string generateNewFileName(string path, string filename, string extension, HttpServerUtilityBase server)
         {
             string newFilePath;
             int count = 0;
@@ -89,10 +83,15 @@ namespace FinalProj.Controllers
                 {
                     newFilePath = path + filename + '_' + count + extension;
                 }
-                exists = System.IO.File.Exists(mServer.MapPath(newFilePath));
+                exists = System.IO.File.Exists(server.MapPath(newFilePath));
                 count++;
             } while (exists);
             return newFilePath;
+        }
+
+        public string getFileName(string path,string extension)
+        {
+            return path.Split('/').Last().Replace(extension, "");
         }
 
         public void moveFile(string prevPath, string newPath)
@@ -104,7 +103,7 @@ namespace FinalProj.Controllers
 
         public void copyFile(string prevPath, string newPath)
         {
-            System.IO.File.Copy(prevPath, newPath);
+            File.Copy(prevPath, newPath);
         }
 
         public string readFileText(string path)

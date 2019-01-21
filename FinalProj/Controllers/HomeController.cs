@@ -153,24 +153,11 @@ namespace FinalProj.Controllers
             }
             else
             {
-                //export.setExportProgress(0);
+                export.getWebsettings().exportProgress = 0;
             }
             Session["ExportProgress"] = export;
             int totalCount = export.exportStart(login, checkboxes, Server);
             return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
-            //if (!loginUserWebSettings .ContainsKey(login.webID)) {
-            //    WebSettings webSettings = new WebSettings();
-            //    loginUserWebSettings.Add(login.webID, webSettings);
-            //    int totalCount = export.exportStart(login, checkboxes, webSettings);
-            //    return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
-            //}
-            //else
-            //{
-            //    WebSettings webSettings = loginUserWebSettings[login.webID];
-            //    webSettings.exportProgress = 0;
-            //    int totalCount = export.exportStart(login, checkboxes, webSettings);
-            //    return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
-            //}
 
         }
         
@@ -183,7 +170,7 @@ namespace FinalProj.Controllers
             {
                 return Json(new
                 {
-                    Progress = export.getWebsettings()
+                    Progress = export.getWebsettings().exportProgress
                 }, JsonRequestBehavior.AllowGet);
             }
             return Json(new
@@ -193,27 +180,20 @@ namespace FinalProj.Controllers
         }
 
         [SessionListener]
-        public FileResult downloadExportFile()
+        public ActionResult downloadExportFile()
         {
             Login login = (Login)Session["user"];
             string webPath = "~/Website_" + login.webID+"/";
-            FolderHandler.getInstance().deleteFile(Server.MapPath(webPath+"Export.zip"));
-            // lock (locker) {
-            using (var fs = new FileStream(Server.MapPath(webPath + "Export.zip"), FileMode.Create))
+            if (Directory.Exists(Server.MapPath(webPath + "Export/")))
             {
-                using (ZipArchive zipFile = new ZipArchive(fs, ZipArchiveMode.Create))
-                {
-                    zipFile.CreateEntry(Server.MapPath(webPath + "Export/"));
-                    zipFile.Dispose();
-                }
-                fs.Dispose();
+                FolderHandler.getInstance().deleteFile(Server.MapPath(webPath+"Export.zip"));
+                ZipFile.CreateFromDirectory(Server.MapPath(webPath + "Export/"), Server.MapPath(webPath + "Export.zip"));
+                FolderHandler.getInstance().deleteFiles(Server.MapPath(webPath + "Export/"));
+                byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath + "Export.zip"));
+                string fileName = "Export.zip";
+                return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
             }
-            //}
-            FolderHandler.getInstance().deleteFolders(Server.MapPath(webPath + "Export/"));
-            byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath+"Export.zip"));
-            string fileName = "Export.zip";
-            //Session["ExportProgress"] = null;
-            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+            return View("Export");
         }
 
         [SessionListener]
@@ -228,19 +208,35 @@ namespace FinalProj.Controllers
         public ActionResult Import(HttpPostedFileBase[] files)
         {
             Login login = (Login)Session["user"];
+            ImportDeatils import = (ImportDeatils)Session["ImportProgress"];
+            if (import == null)
+            {
+                import = new ImportDeatils();
+            }
+            else
+            {
+                import.getWebsettings().importProgress = 0;
+            }
+            Session["ImportProgress"] = import;
             string webPath = "~/Website_" + login.webID + "/";
-            FolderHandler.getInstance().createDirectory(Server.MapPath(webPath + "Import/"));
-            // ImportDeatils import = ImportDeatils.getInstance();
-            // import.setServer(Server);
-            //return import.importStart(login, files);
-            return View();
+            int totalCount = import.importStart(login, files, Server);
+            return Json(new { totalCount = totalCount }, JsonRequestBehavior.AllowGet);
         }
         
         public ActionResult ImportTaskProgress()
         {
+            Login login = (Login)Session["user"];
+            ImportDeatils import = (ImportDeatils)Session["ImportProgress"];
+            if (import != null)
+            {
+                return Json(new
+                {
+                    Progress = import.getWebsettings().importProgress
+                }, JsonRequestBehavior.AllowGet);
+            }
             return Json(new
             {
-               // Progress = WebSettings.importProgress
+                Progress = -1
             }, JsonRequestBehavior.AllowGet);
         }
     }

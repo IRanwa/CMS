@@ -281,6 +281,13 @@
             <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
             <p class="alert-message ">@ViewBag.Message</p>
         </div>
+        @if (Session["user"] != null)
+        {
+            <div  style="float:right">
+                <label style="font-weight:bold">Logged in as : </label>
+                <label>@Session["email"]</label>
+            </div>
+        }
         @RenderBody()
 
         <footer>

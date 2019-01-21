@@ -19,13 +19,9 @@ namespace FinalProj.Controllers
         private WebSettings webSettings;
         private readonly object locker = new object();
 
-        public int getWebsettings()
+        public WebSettings getWebsettings()
         {
-            if (webSettings != null)
-            {
-                return webSettings.exportProgress;
-            }
-            return 0;
+            return webSettings;
         }
         public int exportStart(Login login,List<string> checkboxes, HttpServerUtilityBase server)
         {
@@ -37,7 +33,7 @@ namespace FinalProj.Controllers
             FolderHandler.getInstance().createDirectory(path);
             
             int count = 0;
-
+                
             Parallel.ForEach<string,int>(checkboxes, () => 0, (chkbox, loop, subtotal) =>
             {
                 int tempCount = 0;
@@ -103,21 +99,21 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<Post> postsList = db.getPostList(0, count, login);
             List<string> catList = new List<string>();
-            Parallel.ForEach(postsList, post =>
+            foreach(Post post in postsList)
             {
                 DBConnect innerDB = new DBConnect();
-                string catTitle = innerDB.getCategoryByPost(post, login).title;
+                string catTitle = escSequence(innerDB.getCategoryByPost(post, login).title);
                 string postContent = FolderHandler.getInstance().readFileText(mServer.MapPath(post.postLoc));
                 if (postContent!=null && postContent.Contains("\n"))
                 {
                     int index = postContent.LastIndexOf("\n");
-                    postContent = postContent.Substring(0, index);
+                    postContent = escSequence(postContent.Substring(0, index));
                 }
 
-                dt.Rows.Add(post.postTitle, catTitle, postContent, post.postStatus
+                dt.Rows.Add(escSequence(post.postTitle), catTitle, postContent, post.postStatus
                     , post.createdDate, post.modifyDate);
                 webSettings.setExportProgress(1);
-            });
+            }
 
             System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportPosts.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
@@ -125,7 +121,7 @@ namespace FinalProj.Controllers
 
         public void exportImages(int count, Login login)
         {
-            System.Data.DataTable dt = new System.Data.DataTable("Images Table");
+            DataTable dt = new DataTable("Images Table");
             dt.Columns.Add("Image Title");
             dt.Columns.Add("Image Description");
             dt.Columns.Add("Image Path");
@@ -135,22 +131,19 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<ImageLibrary> imageslist = db.getImages(0, count, login);
             FolderHandler.getInstance().deleteFolders(mServer.MapPath(webPath + "/TempImages/"));
-            Parallel.ForEach(imageslist, Img =>
+            foreach(ImageLibrary Img in imageslist)
             {
-            //foreach (ImageLibrary Img in imageslist)
-            //{
-                if (System.IO.File.Exists(mServer.MapPath(Img.imgLoc)))
+                if (File.Exists(mServer.MapPath(Img.imgLoc)))
                 {
                     string filename = Img.imgLoc.Split('/').Last();
                     string path = Img.imgLoc.Substring(0, Img.imgLoc.IndexOf(filename)).Replace(webPath + "/Images/", "");
                     FolderHandler.getInstance().createDirectory(mServer.MapPath(webPath + "/TempImages/" + path));
                     string newPath = mServer.MapPath(webPath + "/TempImages/" + path + "/" + filename);
                     FolderHandler.getInstance().copyFile(mServer.MapPath(Img.imgLoc), newPath);
-                    dt.Rows.Add(Img.title, Img.imgDesc, Img.imgLoc, Img.uploadDate, Img.modifyDate);
+                    dt.Rows.Add(escSequence(Img.title), escSequence(Img.imgDesc), escSequence(Img.imgLoc), Img.uploadDate, Img.modifyDate);
                 }
                 webSettings.setExportProgress(1);
-            });
-            //}
+            }
             
             System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportImages.csv"), generateCsv(dt));
             FolderHandler.getInstance().deleteFile(mServer.MapPath(webPath + "/Export/ImagesLibrary.zip"));
@@ -158,19 +151,7 @@ namespace FinalProj.Controllers
             if (Directory.Exists(mServer.MapPath(webPath+"/TempImages/")))
             {
                 ZipFile.CreateFromDirectory(mServer.MapPath(webPath+"/TempImages/"), mServer.MapPath(webPath+"/Export/ImagesLibrary.zip"));
-
-                //FolderHandler.getInstance().deleteFolders(mServer.MapPath(webPath + "/TempImages/"));
-               
-                Parallel.ForEach(Directory.GetDirectories(mServer.MapPath(webPath + "/TempImages/")), path =>
-                {
-                    Parallel.ForEach(Directory.GetFiles(path), file =>
-                    {
-                       // lock (locker) {
-                            System.IO.File.Delete(file);
-                        //}
-                    });
-                    Directory.Delete(path);
-                });
+                FolderHandler.getInstance().deleteFolders(mServer.MapPath(webPath + "/TempImages/"));
             }
             webSettings.setExportProgress(1);
         }
@@ -184,45 +165,12 @@ namespace FinalProj.Controllers
             DBConnect db = new DBConnect();
             List<Category> catList = db.getCatList(0, count, login);
             catList.RemoveAt(0);
-            Parallel.ForEach(catList, (cat) =>
+            foreach(Category cat in catList)
             {
-                dt.Rows.Add(cat.title, cat.desc);
+                dt.Rows.Add(escSequence(cat.title), escSequence(cat.desc));
                 webSettings.setExportProgress(1);
-            });
-            //foreach (Category cat in catList)
-            //{
-            //    dt.Rows.Add(cat.title, cat.desc);
-            //    WebSettings.setExportProgress(1);
-            //}
-
-            //StringBuilder builder = new StringBuilder();
-            //List<string> columnNames = new List<string>();
-            //List<string> rows = new List<string>();
-
-            //foreach (DataColumn column in dt.Columns)
-            //{
-            //    columnNames.Add(column.ColumnName);
-            //}
-
-            //builder.Append(string.Join(",", columnNames.ToArray())).Append("\n");
-
-            //foreach (DataRow row in dt.Rows)
-            //{
-            //    List<string> currentRow = new List<string>();
-
-            //    foreach (DataColumn column in dt.Columns)
-            //    {
-            //        object item = row[column];
-
-            //        currentRow.Add(item.ToString());
-            //    }
-
-            //    rows.Add(string.Join(",", currentRow.ToArray()));
-            //}
-
-            //builder.Append(string.Join("\n", rows.ToArray()));
-
-            System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportCategories.csv"), generateCsv(dt));
+            }
+            File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportCategories.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
         }
 
@@ -240,39 +188,11 @@ namespace FinalProj.Controllers
 
             DBConnect db = new DBConnect();
             Website web = db.getWebsite(login);
-            dt.Rows.Add(web.webTitle, web.noOfPosts, web.thumbWidth, web.thumbHeight, web.mediumWidth
+            dt.Rows.Add(escSequence(web.webTitle), web.noOfPosts, web.thumbWidth, web.thumbHeight, web.mediumWidth
                 , web.mediumHeight, web.largeWidth, web.largeHeight);
 
             webSettings.setExportProgress(1);
-
-            //StringBuilder builder = new StringBuilder();
-            //List<string> columnNames = new List<string>();
-            //List<string> rows = new List<string>();
-
-            //foreach (DataColumn column in dt.Columns)
-            //{
-            //    columnNames.Add(column.ColumnName);
-            //}
-
-            //builder.Append(string.Join(",", columnNames.ToArray())).Append("\n");
-
-            //foreach (DataRow row in dt.Rows)
-            //{
-            //    List<string> currentRow = new List<string>();
-
-            //    foreach (DataColumn column in dt.Columns)
-            //    {
-            //        object item = row[column];
-
-            //        currentRow.Add(item.ToString());
-            //    }
-
-            //    rows.Add(string.Join(",", currentRow.ToArray()));
-            //}
-
-            //builder.Append(string.Join("\n", rows.ToArray()));
-
-            System.IO.File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportWebsite.csv"), generateCsv(dt));
+            File.WriteAllText(mServer.MapPath(webPath+"/Export/ExportWebsite.csv"), generateCsv(dt));
             webSettings.setExportProgress(1);
         }
 
@@ -304,6 +224,15 @@ namespace FinalProj.Controllers
             }
 
             return builder.Append(string.Join("\n", rows.ToArray())).ToString();
+        }
+
+        private string escSequence(string text)
+        {
+            if (text.Contains(","))
+            {
+                return "\"" + text + "\"";
+            }
+            return text;
         }
     }
 }

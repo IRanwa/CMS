@@ -269,8 +269,7 @@ namespace FinalProj.Controllers
 
             FolderHandler folder = FolderHandler.getInstance();
             folder.createDirectory(Server.MapPath(path));
-            folder.setServer(Server);
-            string newFilePath = folder.generateNewFileName(path, filename, ".txt");
+            string newFilePath = folder.generateNewFileName(path, filename, ".txt",Server);
             folder.moveFile(Server.MapPath(postLoc), Server.MapPath(newFilePath));
             post.postLoc = newFilePath;
             db.changePostLoc(post);

@@ -31,6 +31,7 @@ namespace FinalProj.Controllers
             if (login.role != null)
             {
                 Session.Add("user", login);
+                Session.Add("email", login.email);
                 Session.Timeout = 1;
                 ModelState.Clear();
                 Response.Redirect("~/Home/Dashboard",false);
@@ -68,6 +69,7 @@ namespace FinalProj.Controllers
                     db.addCategory(category);
 
                     Session.Add("user", login);
+                    Session.Add("email", login.email);
                     Session.Timeout = 20;
                     ViewBag.Display = "none";
                     ModelState.Clear();

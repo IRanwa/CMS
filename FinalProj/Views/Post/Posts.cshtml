@@ -179,7 +179,7 @@
                         {
                             @Html.ActionLink("Publish", "changeStatus", new { postId = post.postId, status = "Publish" }, new { @class = "btn btn-outline-success" })
                         }
-                        @Html.ActionLink("Edit", "editPost", new { postId = post.postId }, new { @class = "btn btn-outline-secondary" })
+                        @Html.ActionLink("Edit", "editPost", new { postId = post.postId }, new { @class = "btn btn-outline-primary" })
                         @Html.ActionLink("Delete", "deletePost", new { postId = post.postId }, new { @class = "btn btn-outline-danger" })
                     </td>
                 </tr>
@@ -216,33 +216,22 @@
     <!-- Modal content -->
     <div class="popup-content">
         <span class="close">&times;</span>
-        <div>
-            <table>
-                <tr>
-                    <td>
-                        <label style="font-size:15px">Position : </label>
-                    </td>
-                    <td>
-                        <select id="post-commontext-position" class="Custom-Button img-selection" style="background-color:white; color:black;">
-                            <option value="top">Top of the content</option>
-                            <option value="bottom">Bottom of the content</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input class="Custom-Button" type="button" value="Update Posts" onclick="updatePosts()" />
-                    </td>
-
-                </tr>
-            </table>
+        <div id="bulk-options">
+            <label style="font-weight:bold">Position : </label>
+            <select id="post-commontext-position">
+                <option value="top">Top of the content</option>
+                <option value="bottom">Bottom of the content</option>
+            </select>
+            <input class="btn btn-outline-success" type="button" value="Update Posts" onclick="updatePosts()" />
         </div>
-        <div>
+        <div class="card bg-light" style="padding:10px;">
             @Html.Partial("~/Views/Post/ContentEditor.cshtml")
         </div>
     </div>
 </div>
 
 <script>
-    window.onload = switchAction;
+    
     var editor = document.getElementById("editor");
     var mainPopup = document.getElementsByClassName('popup')[0];
     var mainSpan = document.getElementsByClassName("close")[0];
@@ -251,6 +240,7 @@
 
     function addCommonText() {
         mainPopup.style.display = "block";
+        editor.focus();
 
     }
     

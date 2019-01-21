@@ -52,53 +52,44 @@
 <div style="margin-left:160px">
     <h2>Settings</h2>
     <hr />
-    <div class="jumbotron">
+    <div class="card bg-light" style="max-width:60%; padding:10px 30px; margin:0% 20%; margin-bottom:20px;">
         @using (Html.BeginForm("changeSettings", "Home", FormMethod.Post))
         {
-            @Html.HiddenFor(m => m.webID, new {Value= ViewBag.website.webID })
-            <table id="update-table">
-                <tr>
-                    <td>Website Title : </td>
-                    <td>
-                        @Html.TextBoxFor(m => m.webTitle, new {Style= "width:100%;", type="text",
-                       Placeholder = "Website Title", maxlength="30", @required="true", Value= ViewBag.website.webTitle})
-                    </td>
-                </tr>
-                <tr>
-                    <td>Website No of Posts : </td>
-                    <td>
-                        @Html.TextBoxFor(m => m.noOfPosts, new
-                   {
-                       Style = "width:100%;",
-                       maxlength="2",
-                       Placeholder = "No of Posts",
-                       @required = "true",
-                       @onkeypress = "return isNumberKey(event)",
-                       Value = ViewBag.website.noOfPosts
-                   })
-                    </td>
-                </tr>
-                <tr>
-                    <td>Featured Image : </td>
-                    <td>
-                        @Html.HiddenFor(m => m.featuredImage, new { id = "hidden-img", Value = ViewBag.website.featuredImage })
-                        @if (ViewBag.website.featuredImage != "")
-                        {
-                            <img src="@ViewBag.website.featuredImage" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
-                        }
-                        else
-                        {
-                            <img src="~/TextEditor_Icon/no-image-found.png" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
-                        }
-                        <br />
-                        <input class="Custom-Button" style="float:left" type="button" value="Upload Image" onclick="insertImage()" />
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td><input type="submit" value="Save" class="Custom-Button" /></td>
-                </tr>
-            </table>
+            @Html.HiddenFor(m => m.webID, new { Value = ViewBag.website.webID })
+            <h6>Website Title :</h6>
+            @Html.TextBoxFor(m => m.webTitle, new {
+           @class = "form-control",
+           Style = "width:100%;",
+           type ="text",
+           Placeholder = "Website Title",
+           maxlength ="30",
+           @required ="true",
+           Value = ViewBag.website.webTitle})
+            <h6>Website No of Posts :</h6>
+            @Html.TextBoxFor(m => m.noOfPosts, new
+       {
+           @class = "form-control",
+           Style = "width:100%;",
+           maxlength="2",
+           Placeholder = "No of Posts",
+           @required = "true",
+           @onkeypress = "return isNumberKey(event)",
+           Value = ViewBag.website.noOfPosts
+       })
+            <h6>Featured Image : </h6>
+            @Html.HiddenFor(m => m.featuredImage, new { id = "hidden-img", Value = ViewBag.website.featuredImage })
+            if (ViewBag.website.featuredImage != "")
+            {
+                <img src="@ViewBag.website.featuredImage" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+            }
+            else
+            {
+                <img src="@Url.Content("~/background_image.jpg")" class="card" style="width:400px; height:400px; margin-bottom:10px;" id="featured-img" />
+            }
+            <div style="width:100%">
+                <input class="btn btn-outline-primary"  type="button" value="Upload Image" onclick="insertImage()" />
+                <input class="btn btn-outline-success" type="submit" style="float:right"  value="Save" />
+            </div>
         }
     </div>
 </div>
@@ -106,70 +97,8 @@
     <!-- Modal content -->
     <div class="popup-content">
         <span class="close">&times;</span>
-        <div>
-            <h3>Insert Image</h3>
-            <hr />
-            @if (ViewBag.DisplayImages != null)
-            {
-                <table style="width:100%" id="image-table">
-                    @{
-                        int totalCount = ViewBag.DisplayImages.Count;
-                    }
-                    @for (int row = 0; row < ViewBag.DisplayImages.Count; row++)
-                    {
-                        if (row % 3 == 0)
-                        {
-                            int maxIndex = row + 3;
-                            if (maxIndex > totalCount)
-                            {
-                                maxIndex = totalCount;
-                            }
-
-                            <tr>
-                                @for (int imageIndex = row; imageIndex < maxIndex; imageIndex++)
-                                {
-                                    <td class="image-container" onclick="imageClick(this)">
-                                        <img src="@Url.Content(@ViewBag.DisplayImages[imageIndex].imgLoc)" width="150" height="150" />
-                                        <br />
-                                        <h5>@ViewBag.DisplayImages[imageIndex].title</h5>
-                                        <table class="image-selection" style="visibility:hidden; width:100%">
-                                            <tr>
-                                                <td>
-                                                    <input type="button" value="Select" class="Custom-Button" style="padding:2px 8px;
-                                                        float:none;" onclick="addImage('@Url.Content(ViewBag.DisplayImages[imageIndex].imgLoc)')" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    }
-                </table>
-                <div class="pagination">
-                    @for (int page = 1; page <= ViewBag.LibraryProp.noOfPages; page++)
-                    {
-                        if (ViewBag.LibraryProp.currentPage == page)
-                        {
-                            @Html.ActionLink(page.ToString(), "nextImagePage"
-                           , new { nextPage = page}, new { @class = "active" })
-                        }
-                        else
-                        {
-                            @Html.ActionLink(page.ToString(), "nextImagePage"
-                           , new { nextPage = page})
-                        }
-
-                    }
-                </div>
-            }
-            else
-            {
-                <div>
-                    No Images found!
-                </div>
-            }
-        </div>
+         @Html.Partial("~/Views/Post/ImagesContainer.cshtml")
+        
     </div>
 </div>
 <script>
@@ -180,6 +109,11 @@
     var span = document.getElementsByClassName("close")[0];
 
     function insertImage() {
+        var elements = document.getElementsByClassName("img-selection");
+
+        for (var i = 0; i < elements.length; i++) {
+            elements[i].style.display = "none";
+        }
         popup.style.display = "block";
 
     }
@@ -193,6 +127,24 @@
         if (event.target == popup) {
             popup.style.display = "none";
         }
+    }
+
+    function nextPage(nextPage) {
+        $.ajax({
+            type: "POST",
+            url: "/Post/nextImagePage",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ nextPage: nextPage }),
+            success: function (object) {
+                $('#images-popup-container').html(object);
+                var elements = document.getElementsByClassName("img-selection");
+
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].style.display = "none";
+                }
+            }
+        });
+        
     }
 
     function imageClick(image) {

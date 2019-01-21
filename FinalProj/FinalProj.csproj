@@ -149,6 +149,7 @@
     <Compile Include="Models\Category.cs" />
     <Compile Include="Models\DB.cs" />
     <Compile Include="Models\ImageLibrary.cs" />
+    <Compile Include="Models\Logger.cs" />
     <Compile Include="Models\Login.cs" />
     <Compile Include="Models\Post.cs" />
     <Compile Include="Models\Registration.cs" />
@@ -177,10 +178,6 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="ClassDiagram1.cd" />
-    <Content Include="ClassDiagram2.cd" />
-    <Content Include="ClassDiagram3.cd" />
-    <Content Include="ClassDiagram4.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

@@ -18,6 +18,8 @@ namespace FinalProj.Models
         public int noOfPages { get; set; }
         public int currentPage { get; set; }
         public int totalImageCount { get; set; }
+        public int uploadProgess { get; set; }
+        private readonly object locker = new object();
 
         public ImageLibrary()
         {
@@ -43,5 +45,14 @@ namespace FinalProj.Models
             this.modifyDate = modifyDate;
             this.files = null;
         }
+
+        public void incrementUploadProgress()
+        {
+            lock (locker)
+            {
+                uploadProgess++;
+            }
+        }
+
     }
 }

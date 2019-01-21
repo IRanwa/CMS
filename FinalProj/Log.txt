@@ -1,0 +1,140 @@
+[1/21/2019 12:08:15 PM] : System.OperationCanceledException: The operation was canceled.
+   at System.Threading.Tasks.Parallel.ForWorker[TLocal](Int32 fromInclusive, Int32 toExclusive, ParallelOptions parallelOptions, Action`1 body, Action`2 bodyWithState, Func`4 bodyWithLocal, Func`1 localInit, Action`1 localFinally)
+   at System.Threading.Tasks.Parallel.ForEachWorker[TSource,TLocal](IList`1 list, ParallelOptions parallelOptions, Action`1 body, Action`2 bodyWithState, Action`3 bodyWithStateAndIndex, Func`4 bodyWithStateAndLocal, Func`5 bodyWithEverything, Func`1 localInit, Action`1 localFinally)
+   at System.Threading.Tasks.Parallel.ForEachWorker[TSource,TLocal](IEnumerable`1 source, ParallelOptions parallelOptions, Action`1 body, Action`2 bodyWithState, Action`3 bodyWithStateAndIndex, Func`4 bodyWithStateAndLocal, Func`5 bodyWithEverything, Func`1 localInit, Action`1 localFinally)
+   at System.Threading.Tasks.Parallel.ForEach[TSource](IEnumerable`1 source, ParallelOptions parallelOptions, Action`1 body)
+   at FinalProj.Controllers.ImageLibraryController.deletAllImages(List`1 imageList, String layout) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 174. Exception throw on Website ID 1
+[1/21/2019 12:13:17 PM] : System.DivideByZeroException: Attempted to divide by zero.
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass9_0.<deleteImageByLoc>b__0(String currentSize) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 249
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass30_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:13:17 PM] : System.DivideByZeroException: Attempted to divide by zero.
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass9_0.<deleteImageByLoc>b__0(String currentSize) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 249
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass30_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:35 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\CMS_Creative_164657191_Kingfisher.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:35 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\banner.png'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:40 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\banner.png'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:40 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\Code-Lyoko-Wallpaper-Free-Download_1.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:40 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\287089_2.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:40 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\CMS_Creative_164657191_Kingfisher.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:34:40 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\287089_1.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:35:44 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\CMS_Creative_164657191_Kingfisher.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:35:44 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\banner.png'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:36:29 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\CMS_Creative_164657191_Kingfisher.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:36:29 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\banner.png'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1
+[1/21/2019 12:36:29 PM] : System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Website_1\Images\downloadImages\2019-01-21\287089_1.jpg'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)
+   at System.IO.File.Copy(String sourceFileName, String destFileName)
+   at FinalProj.Controllers.ImageLibraryController.<>c__DisplayClass10_0.<downloadImages>b__0(Int32 imageID) in C:\Users\imesh\Downloads\Compressed\CMS\FinalProj\Controllers\ImageLibraryController.cs:line 287
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass31_0`2.<ForEachWorker>b__0(Int32 i)
+   at System.Threading.Tasks.Parallel.<>c__DisplayClass17_0`1.<ForWorker>b__1()
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.InnerInvokeWithArg(Task childTask)
+   at System.Threading.Tasks.Task.<>c__DisplayClass176_0.<ExecuteSelfReplicating>b__0(Object ). Exception throw on Website ID 1

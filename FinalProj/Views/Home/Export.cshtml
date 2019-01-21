@@ -14,7 +14,6 @@
 </style>
 <script>
     var proc;
-    var intervalId;
     function exportAll(checkbox) {
         var status = checkbox.checked;
         var chkboxes = document.getElementsByClassName("sub-checkbox");
@@ -51,29 +50,19 @@
             document.getElementsByClassName("alert-message")[0].innerHTML = "Please select an option!";
         } else {
             var taskCount = 0;
-            var webSettings;
-            //document.getElementById("progress-bar").className = "progress-bar-info";
             document.getElementById("progress-bar").className = "bg-info";
             document.getElementsByClassName("progress-bar-container")[0].hidden = false;
             $.post('/Home/Export', { checkboxes: chkboxValues }, function (result) {
                 taskCount = result.totalCount;
-                webSettings = result.webSettings;
-                progress(taskCount, webSettings);
+                progress(taskCount);
             });
-
-            //intervalId = window.setInterval(function () {
-            //    //alert("taskCount :" + taskCount);
-                
-            //}, 100);
             
         }
                 
     }
-
-    function progress(taskCount, webSettings) {
-        $.post('/Home/ExportTaskProgress', { webSettings: webSettings},function (json) {
-            //alert(json.Progress);
-            //alert("taskCount :" + taskCount);
+    
+    function progress(taskCount) {
+        $.post('/Home/ExportTaskProgress',function (json) {
             console.log(json.Progress);
             console.log(taskCount);
             proc = ((json.Progress / taskCount) * 100.0).toFixed(2);
@@ -105,7 +94,7 @@
             <tr><td><br /></td></tr>
             <tr>
                 <td>
-                    <div class="progress-bar-container">
+                    <div class="progress-bar-container" hidden>
                         Exporting
                         <div class="progress progress-bar bg-info" id="progress-bar" style="height:25px; width:100%; text-align:center;">
                             <label id="progress-bar-text">Waiting...</label>
@@ -116,7 +105,7 @@
             <tr><td><br /></td></tr>
             <tr>
                 <td>
-                    <input type="button" class="Custom-Button" value="Export" onclick="exportData();" />
+                    <input type="button" style="float:right" class="btn btn-outline-success" value="Export" onclick="exportData();" />
                 </td>
             </tr>
         </table>

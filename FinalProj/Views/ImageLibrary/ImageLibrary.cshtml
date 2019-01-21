@@ -27,6 +27,7 @@
     }
 </style>
 <script>
+    
     var layout= '@ViewBag.layoutView';
     function checkBoxAllClick(checked) {
         if (checked == false) {
@@ -61,15 +62,17 @@
         });
         var selection = document.getElementById("bulk-selection").value;
         if (selection == "deleteAll") {
+            document.getElementById("action").disabled = true;
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Images Deleting on Progress!<br>Please Wait!";
             $.ajax({
                 type: "POST",
                 url: "/ImageLibrary/deletAllImages",
                 contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ imageList: images, layout: layout }),
+                data: JSON.stringify({ imageList: images }),
                 success: function (result) {
-                    document.getElementsByClassName("alert")[0].style.display = "block";
                     if (result.success == true) {
-                        var timeleft = 10;
+                        var timeleft = 5;
                         var downloadTimer = setInterval(function () {
                             document.getElementsByClassName("alert-message")[0].innerHTML = result.responseText+"<br>Page Refresh in " + --timeleft + " Seconds";
                             if (timeleft <= 0) {
@@ -79,14 +82,19 @@
                         }, 1000);
                     } else {
                         document.getElementsByClassName("alert-message")[0].innerHTML = result.responseText;
+                        document.getElementById("action").disabled = false;
                     }
+                    
                 }, error: function () {
-                    document.getElementsByClassName("alert")[0].style.display = "block";
                     document.getElementsByClassName("alert-message")[0].innerHTML = "Images Deleting Un-Successful!";
+                    document.getElementById("action").disabled = false;
                    // alert("Error occured!")
                 }
             });
         } else {
+            document.getElementById("action").disabled = true;
+            document.getElementsByClassName("alert")[0].style.display = "block";
+            document.getElementsByClassName("alert-message")[0].innerHTML = "Images Downloading on Progress!<br>Please Wait!";
             $.ajax({
                 type: "POST",
                 url: "/ImageLibrary/downloadImages",
@@ -96,7 +104,7 @@
                     window.document.getElementsByClassName("alert")[0].style.display = "block";
                     //alert(result.success);
                     if (result == undefined) {
-                        var timeleft = 10;
+                        var timeleft = 5;
                         var downloadTimer = setInterval(function () {
                             document.getElementsByClassName("alert-message")[0].innerHTML = "Images Download Successfully!<br>Page Refresh in " + --timeleft + " Seconds";
                             if (timeleft <= 0) {
@@ -110,12 +118,12 @@
                         } else {
                             location.reload();
                         }
-                        
+                        document.getElementById("action").disabled = false;
                     }
                 }, error: function () {
                     document.getElementsByClassName("alert")[0].style.display = "block";
                     document.getElementsByClassName("alert-message")[0].innerHTML = "Images Downloading Un-Successful!";
-                   alert("Error occured!")
+                    document.getElementById("action").disabled = false;
                 }
             });
         }
@@ -321,6 +329,9 @@
 </div>
 
 <script>
+    window.onload = function () {
+        switchAction();
+    };
     // Get the modal
     var popup = document.getElementsByClassName('popup')[0];
 
