@@ -285,7 +285,8 @@ namespace FinalProj.Controllers
                     FolderHandler.getInstance().copyFile(Server.MapPath(img.imgLoc), 
                         Server.MapPath(webPath + "/Images/downloadImages/" + path + filename));
                 });
-                ZipFile.CreateFromDirectory(Server.MapPath(webPath + "/Images/downloadImages"), Server.MapPath(webPath + "/downloadImages.zip"));
+                ZipFile.CreateFromDirectory(Server.MapPath(webPath + "/Images/downloadImages"), 
+                    Server.MapPath(webPath + "/downloadImages.zip"));
                 FolderHandler.getInstance().deleteFolders(Server.MapPath(webPath + "/Images/downloadImages"));
                 byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath + "/downloadImages.zip"));
                 string fileName = "Images.zip";

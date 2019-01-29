@@ -46,7 +46,7 @@ namespace FinalProj.Controllers
                     switch (range)
                     {
                         case 0:
-                            total += postsCount(files[range]);
+                            total += getCount(files[range]);
                             Task.Factory.StartNew(() =>
                             {
                                 ImportPosts(files[range], token);
@@ -65,7 +65,7 @@ namespace FinalProj.Controllers
                             total++;
                             break;
                         case 3:
-                            total += categoriesCount(files[range]);
+                            total += getCount(files[range]);
                             Task.Factory.StartNew(() =>
                             {
                                 ImportCategories(files[range], token);
@@ -87,7 +87,7 @@ namespace FinalProj.Controllers
             return count;
         }
         
-        private int postsCount(HttpPostedFileBase file)
+        private int getCount(HttpPostedFileBase file)
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
             file.SaveAs(csvPath);
@@ -97,31 +97,17 @@ namespace FinalProj.Controllers
 
         private int imagesCount(HttpPostedFileBase imageCSV, HttpPostedFileBase imageZip)
         {
-            string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageCSV.FileName);
-            imageCSV.SaveAs(csvPath);
-            string csvData = System.IO.File.ReadAllText(csvPath);
-            int count = csvData.Split('\n').Length;
+            int count = getCount(imageCSV);
             
-            csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageZip.FileName);
-            imageZip.SaveAs(csvPath);
+            string path = server.MapPath(webPath + "/Import/") + Path.GetFileName(imageZip.FileName);
+            imageZip.SaveAs(path);
             count += count - 1;
             return count;
         }
 
-        private int categoriesCount(HttpPostedFileBase file)
-        {
-            string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
-            file.SaveAs(csvPath);
-            string csvData = System.IO.File.ReadAllText(csvPath);
-            return csvData.Split('\n').Length;
-        }
-
         private int websiteCount(HttpPostedFileBase file)
         {
-            string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
-            file.SaveAs(csvPath);
-            string csvData = System.IO.File.ReadAllText(csvPath);
-            int count = csvData.Split('\n').Length;
+            int count = getCount(file);
             if (count>2)
             {
                 count = 2;
@@ -155,13 +141,17 @@ namespace FinalProj.Controllers
                         switch (columns[i])
                         {
                             case "Post Title":
-                                if (cell.Length > 150)
+                                if (cell.Length <= 150)
                                 {
-                                    post.postTitle = cell.Substring(0, 150);
+                                    post.postTitle = cell;
                                 }
                                 else
                                 {
-                                    post.postTitle = cell;
+                                    if (!token.IsCancellationRequested)
+                                    {
+                                        message = "Posts Files is Corrupted!";
+                                        cts.Cancel();
+                                    }
                                 }
                                 break;
                             case "Post Category":
@@ -237,7 +227,8 @@ namespace FinalProj.Controllers
             
             Parallel.ForEach(rows, post =>
             {
-                string serverPath = webPath + "/Posts/" + post.createdDate.ToString("yyyy-MM-dd") + "/" + post.postStatus + "/";
+                string serverPath = webPath + "/Posts/" + post.createdDate.ToString("yyyy-MM-dd") + "/" 
+                    + post.postStatus + "/";
                 string path = server.MapPath(serverPath);
                 FolderHandler folder = FolderHandler.getInstance();
                 folder.createDirectory(path);
@@ -296,7 +287,11 @@ namespace FinalProj.Controllers
                             case "Image Title":
                                 if (cell.Length > 50)
                                 {
-                                    img.title = cell.Substring(0, 50);
+                                    if (!token.IsCancellationRequested)
+                                    {
+                                        message = "Images Files is Corrupted!";
+                                        cts.Cancel();
+                                    }
                                 }
                                 else
                                 {
@@ -306,7 +301,11 @@ namespace FinalProj.Controllers
                             case "Image Description":
                                 if (cell.Length > 150)
                                 {
-                                    img.imgDesc = cell.Substring(0, 150);
+                                    if (!token.IsCancellationRequested)
+                                    {
+                                        message = "Images Files is Corrupted!";
+                                        cts.Cancel();
+                                    }
                                 }
                                 else
                                 {
@@ -316,7 +315,11 @@ namespace FinalProj.Controllers
                             case "Image Path":
                                 if (cell.Length > 150)
                                 {
-                                    img.imgLoc = cell.Substring(0, 150);
+                                    if (!token.IsCancellationRequested)
+                                    {
+                                        message = "Images Files is Corrupted!";
+                                        cts.Cancel();
+                                    }
                                 }
                                 else
                                 {
@@ -373,7 +376,8 @@ namespace FinalProj.Controllers
                 string extension = '.' + filename.Split('.').Last();
                 filename = filename.Replace(extension, "");
                 path = FolderHandler.getInstance().generateNewFileName(serverPath, filename,extension, server);
-                string tempPath = server.MapPath(webPath + "/Import/TempImages/" + tempImg.imgLoc.Replace(webPath + "/Images/", ""));
+                string tempPath = server.MapPath(webPath + "/Import/TempImages/" 
+                    + tempImg.imgLoc.Replace(webPath + "/Images/", ""));
 
                 if (token.IsCancellationRequested)
                 {
@@ -389,8 +393,10 @@ namespace FinalProj.Controllers
                     string[] resizes = new string[] { "_thumb", "_medium", "_large" };
                     Parallel.For(0, resizes.Length, (range) =>
                     {
-                        string SaveFilePath = Path.Combine(server.MapPath(serverPath) + filename + resizes[range] + extension);
-                        new ImageResizer().ResizeImage(server.MapPath(path), resizeWidths[range], resizeHeights[range], SaveFilePath);
+                        string SaveFilePath = Path.Combine(server.MapPath(serverPath) + filename 
+                            + resizes[range] + extension);
+                        new ImageResizer().ResizeImage(server.MapPath(path), resizeWidths[range], 
+                            resizeHeights[range], SaveFilePath);
                     });
 
                     tempImg.imgLoc = path;
@@ -419,7 +425,7 @@ namespace FinalProj.Controllers
         {
             string csvPath = server.MapPath(webPath + "/Import/") + Path.GetFileName(file.FileName);
             string csvData = System.IO.File.ReadAllText(csvPath);
-            List<Category> rows = new List<Category>();
+            ConcurrentBag<Category> rows = new ConcurrentBag<Category>();
             List<string> columns = new List<string>();
             string[] rowsList = csvData.Split('\n');
             foreach (string cell in rowsList[0].Split(','))

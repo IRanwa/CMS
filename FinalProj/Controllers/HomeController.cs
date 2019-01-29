@@ -106,14 +106,14 @@ namespace FinalProj.Controllers
                     string extension = filename.Substring(filename.LastIndexOf("."));
                     string path = img.imgLoc.Substring(0, img.imgLoc.IndexOf(filename));
                     filename = filename.Replace(extension, "");
-                    Response.Write("<script>alert('" + Thread.CurrentThread.ManagedThreadId + "');</script>");
                     Parallel.For(0, resizes.Length, po, (range) =>
                     {
                         if (prevResize[range, 0] != newResize[range, 0] || prevResize[range, 1] != newResize[range, 1])
                         {
                             string newFilePath = Server.MapPath(path + filename + resizes[range] + extension);
                             FolderHandler.getInstance().deleteFile(newFilePath);
-                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), newResize[range, 0], newResize[range, 1], newFilePath);
+                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), 
+                                newResize[range, 0], newResize[range, 1], newFilePath);
                         }
                     });
                     
@@ -139,7 +139,8 @@ namespace FinalProj.Controllers
                         string newFilePath = Server.MapPath(path + filename + resizes[range] + extension);
                         if (!System.IO.File.Exists(newFilePath))
                         {
-                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), prevResize[range, 0], prevResize[range, 1], newFilePath);
+                            new ImageResizer().ResizeImage(Server.MapPath(img.imgLoc), 
+                                prevResize[range, 0], prevResize[range, 1], newFilePath);
                         }
                     });
                 });
@@ -186,7 +187,6 @@ namespace FinalProj.Controllers
         [SessionListener]
         public ActionResult ExportTaskProgress()
         {
-            Login login = (Login)Session["user"];
             ExportDetails export = (ExportDetails)Session["ExportProgress"];
             if (export != null)
             {
@@ -204,7 +204,6 @@ namespace FinalProj.Controllers
         [SessionListener]
         public ActionResult CancelExport()
         {
-            Login login = (Login)Session["user"];
             ExportDetails export = (ExportDetails)Session["ExportProgress"];
             if (export != null)
             {
@@ -229,7 +228,8 @@ namespace FinalProj.Controllers
             if (Directory.Exists(Server.MapPath(webPath + "Export/")))
             {
                 FolderHandler.getInstance().deleteFile(Server.MapPath(webPath+"Export.zip"));
-                ZipFile.CreateFromDirectory(Server.MapPath(webPath + "Export/"), Server.MapPath(webPath + "Export.zip"));
+                ZipFile.CreateFromDirectory(Server.MapPath(webPath + "Export/"), 
+                    Server.MapPath(webPath + "Export.zip"));
                 FolderHandler.getInstance().deleteFiles(Server.MapPath(webPath + "Export/"));
                 byte[] fileBytes = System.IO.File.ReadAllBytes(Server.MapPath(webPath + "Export.zip"));
                 string fileName = "Export.zip";

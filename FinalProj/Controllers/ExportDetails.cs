@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -25,7 +26,9 @@ namespace FinalProj.Controllers
         }
         public int exportStart(Login login,List<string> checkboxes, HttpServerUtilityBase server)
         {
-            webSettings = new WebSettings();
+            if (webSettings==null) {
+                webSettings = new WebSettings();
+            }
             mServer = server;
             webPath = "~/Website_" + login.webID;
             string path = mServer.MapPath(webPath + "/Export/");
@@ -34,56 +37,71 @@ namespace FinalProj.Controllers
             
             int count = 0;
             CancellationToken token = cts.Token;
-            Parallel.ForEach<string,int>(checkboxes, () => 0, (chkbox, loop, subtotal) =>
+            try
             {
-                int tempCount = 0;
-                DBConnect db = new DBConnect();
-                if (chkbox.Equals("posts"))
+                Parallel.ForEach<string, int>(checkboxes, () => 0, (chkbox, loop, subtotal) =>
+                 {
+                     int tempCount = 0;
+                     DBConnect db = new DBConnect();
+                     if (chkbox.Equals("posts"))
+                     {
+                         tempCount = db.getPostsCount(login);
+                         if (tempCount > 0)
+                         {
+                             Task.Factory.StartNew(() =>
+                             {
+                                 exportPosts(tempCount, login, token);
+                             }, token);
+                             tempCount++;
+                         }
+                     }
+                     else if (chkbox.Equals("images"))
+                     {
+                         tempCount = db.getImageCount(login);
+                         if (tempCount > 0)
+                         {
+                             Task.Factory.StartNew(() =>
+                             {
+                                 exportImages(tempCount, login, token);
+                             }, token);
+                             tempCount++;
+                         }
+                     }
+                     else if (chkbox.Equals("categories"))
+                     {
+                         tempCount = db.getCategoryCount(login);
+                         if (tempCount > 0)
+                         {
+                             Task.Factory.StartNew(() =>
+                             {
+                                 exportCategories(tempCount, login, token);
+                             }, token);
+                         }
+                     }
+                     else if (chkbox.Equals("website"))
+                     {
+                         tempCount = 1;
+                         Task.Factory.StartNew(() =>
+                         {
+                             exportWebsite(login, token);
+                         }, token);
+                         tempCount++;
+                     }
+                     subtotal += tempCount;
+                     return subtotal;
+                 }, (x) => Interlocked.Add(ref count, x));
+                return count;
+            }
+            catch (AggregateException ae)
+            {
+                ae = ae.Flatten();
+                foreach (Exception ex in ae.InnerExceptions)
                 {
-                    tempCount = db.getPostsCount(login);
-                    if (tempCount > 0)
-                    {
-                        Task.Factory.StartNew(() =>
-                        {
-                            exportPosts(tempCount, login, token);
-                        }, token);
-                        tempCount++;
-                    }
-                } else if (chkbox.Equals("images"))
-                {
-                    tempCount = db.getImageCount(login);
-                    if (tempCount > 0)
-                    {
-                        Task.Factory.StartNew(() =>
-                        {
-                            exportImages(tempCount, login, token);
-                        }, token);
-                        tempCount++;
-                    }
+                    Logger.getInstance().setMessage(ex.GetBaseException() + ". Exception throw on Website ID " + login.webID,
+                            server.MapPath("~/Log.txt"));
                 }
-                else if (chkbox.Equals("categories"))
-                {
-                    tempCount = db.getCategoryCount(login);
-                    if (tempCount > 0)
-                    {
-                        Task.Factory.StartNew(() =>
-                        {
-                            exportCategories(tempCount, login, token);
-                        }, token);
-                    }
-                } else if (chkbox.Equals("website"))
-                {
-                    tempCount = 1;
-                    Task.Factory.StartNew(() =>
-                    {
-                        exportWebsite(login, token);
-                    }, token);
-                    tempCount++;
-                }
-                subtotal += tempCount;
-                return subtotal;
-            }, (x) => Interlocked.Add(ref count, x));
-            return count;
+                return 0;
+            }
         }
 
         public void exportPosts(int count, Login login, CancellationToken token)
@@ -98,17 +116,11 @@ namespace FinalProj.Controllers
 
             DBConnect db = new DBConnect();
             List<Post> postsList = db.getPostList(0, count, login);
-            List<string> catList = new List<string>();
             foreach(Post post in postsList)
             {
                 DBConnect innerDB = new DBConnect();
                 string catTitle = escSequence(innerDB.getCategoryByPost(post, login).title);
                 string postContent = FolderHandler.getInstance().readFileText(mServer.MapPath(post.postLoc));
-                if (postContent!=null && postContent.Contains("\n"))
-                {
-                    int index = postContent.LastIndexOf("\n");
-                    postContent = escSequence(postContent.Substring(0, index));
-                }
 
                 dt.Rows.Add(escSequence(post.postTitle), catTitle, postContent, post.postStatus
                     , post.createdDate, post.modifyDate);
@@ -143,7 +155,8 @@ namespace FinalProj.Controllers
                     FolderHandler.getInstance().createDirectory(mServer.MapPath(webPath + "/TempImages/" + path));
                     string newPath = mServer.MapPath(webPath + "/TempImages/" + path + "/" + filename);
                     FolderHandler.getInstance().copyFile(mServer.MapPath(Img.imgLoc), newPath);
-                    dt.Rows.Add(escSequence(Img.title), escSequence(Img.imgDesc), escSequence(Img.imgLoc), Img.uploadDate, Img.modifyDate);
+                    dt.Rows.Add(escSequence(Img.title), escSequence(Img.imgDesc), escSequence(Img.imgLoc), 
+                        Img.uploadDate, Img.modifyDate);
                 }
                 webSettings.setExportProgress(1);
             }
@@ -161,7 +174,8 @@ namespace FinalProj.Controllers
                 {
                     token.ThrowIfCancellationRequested();
                 }
-                ZipFile.CreateFromDirectory(mServer.MapPath(webPath+"/TempImages/"), mServer.MapPath(webPath+"/Export/ImagesLibrary.zip"));
+                ZipFile.CreateFromDirectory(mServer.MapPath(webPath+"/TempImages/"), 
+                    mServer.MapPath(webPath+"/Export/ImagesLibrary.zip"));
                 FolderHandler.getInstance().deleteFolders(mServer.MapPath(webPath + "/TempImages/"));
             }
             webSettings.setExportProgress(1);
@@ -218,29 +232,25 @@ namespace FinalProj.Controllers
         private string generateCsv(DataTable dt)
         {
             StringBuilder builder = new StringBuilder();
-            List<string> columnNames = new List<string>();
-            List<string> rows = new List<string>();
+            ConcurrentBag<string> rows = new ConcurrentBag<string>();
+            
+            string[] columnNames = dt.Columns.Cast<DataColumn>()
+                                 .Select(x => x.ColumnName)
+                                 .ToArray();
 
-            foreach (DataColumn column in dt.Columns)
-            {
-                columnNames.Add(column.ColumnName);
-            }
-
-            builder.Append(string.Join(",", columnNames.ToArray())).Append("\n");
-
-            foreach (DataRow row in dt.Rows)
+            builder.Append(string.Join(",", columnNames)).Append("\n");
+            
+            Parallel.ForEach(dt.Rows.Cast<DataRow>(), row =>
             {
                 List<string> currentRow = new List<string>();
-
-                foreach (DataColumn column in dt.Columns)
+                foreach (string column in columnNames)
                 {
                     object item = row[column];
 
                     currentRow.Add(item.ToString());
                 }
-
                 rows.Add(string.Join(",", currentRow.ToArray()));
-            }
+            });
 
             return builder.Append(string.Join("\n", rows.ToArray())).ToString();
         }
